@@ -1,0 +1,469 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pru_core.hp"
+#include "pru_iep.hp"
+#include "pru_intc.hp"
+#include "pru_ipc_dispatcher.hp"
+#include "pru_gpio.hp"
+#include "pru_epwm.hp"
+#include "pru_ecap.hp"
+#include "pru_eqep.hp"
+#include "pru_memory_access.hp"
+#include "pru_loop.hp"
+
+#include "pru_ipc_devices.hp"
+#include "pru_ipc_device_test.hp"
+#include "pru_ipc_device_core.hp"
+#include "pru_ipc_device_gpio.hp"
+#include "pru_ipc_device_epwm.hp"
+#include "pru_ipc_device_pwms.hp"
+#include "pru_ipc_device_eqep_types.hp"
+#include "pru_shram_layout.hp"
+#include "pru_config_types.hp"
+
+#define LOOPS 	20
+
+#define PRU_ARM_INTERRUPT_IPC PRU0_ARM_INTERRUPT_1
+#define PRU_ARM_INTERRUPT_EVENT PRU0_ARM_INTERRUPT_2
+#define ARM_PRU_INTERRUPT_IPC ARM_PRU0_INTERRUPT
+
+#define ECAP_PWMSS_DEV	PWMSS_DEV_3
+#define EPWM_PWMSS_DEV	PWMSS_DEV_1
+#define EQEP_PWMSS_DEV	PWMSS_DEV_2
+
+static uint32_t m_cnt1 = 0;
+static uint32_t m_cnt2 = 0;
+static uint32_t m_cnt3 = 0;
+static uint32_t m_cnt4 = 0;
+static uint32_t m_cnt5 = 0;
+static uint32_t m_st1 = 0;
+static uint32_t m_st2 = 0;
+static uint32_t m_intrCnt = 0;
+
+static void eQepInterrupt(const PwmDeviceEnum pwmDev);
+static void epwmInterrupt();
+static void iepInterrupt();
+static void testFunc();
+static void ecapInterrupt();
+static void ecapInternalInterrupt();
+static void ecapCaptureInternalInterrupt();
+static void pollPeripherals();
+static void verifyInterrupts();
+static uint16_t deviceTestIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl);
+
+static const struct EQepInterruptHandlerSpec EQepInterruptTable[] =
+{
+		{
+			eQepInterrupt,
+			EQEP_PWMSS_DEV,
+			EQEP_UTIME_INTR,
+		}
+};
+
+static const struct InterruptHandlerSpec HostInterruptTable[] =
+{
+		{
+			IPCBiDirectionalDispatcher,
+			ARM_PRU_INTERRUPT_IPC,
+			INTC_CHANNEL_0,
+			SYS_EV_MASK(ARM_PRU_INTERRUPT_IPC),
+			SYS_EV_REG_OFS(ARM_PRU_INTERRUPT_IPC)
+		},
+		{
+			iepInterrupt,
+			PR1_IEP_TIM_CAP_CMP_PEND,
+			INTC_CHANNEL_0,
+			SYS_EV_MASK(PR1_IEP_TIM_CAP_CMP_PEND),
+			SYS_EV_REG_OFS(PR1_IEP_TIM_CAP_CMP_PEND)
+		},
+		{
+			epwmInterrupt,
+			EPWM0_INTR_INTR_PEND,
+			INTC_CHANNEL_0,
+			SYS_EV_MASK(EPWM0_INTR_INTR_PEND),
+			SYS_EV_REG_OFS(EPWM0_INTR_INTR_PEND)
+		},
+		{
+			ecapInterrupt,
+			ECAP2_INTR_INTR_PEND,
+			INTC_CHANNEL_0,
+			SYS_EV_MASK(ECAP2_INTR_INTR_PEND),
+			SYS_EV_REG_OFS(ECAP2_INTR_INTR_PEND)
+		},
+//		{
+//		ecapInternalInterrupt,
+//		PR1_ECAP_INTR_REQ,
+//		INTC_CHANNEL_0,
+//		SYS_EV_MASK(PR1_ECAP_INTR_REQ),
+//		SYS_EV_REG_OFS(PR1_ECAP_INTR_REQ)
+//		},
+		{
+			ecapCaptureInternalInterrupt,
+			PR1_ECAP_INTR_REQ,
+			INTC_CHANNEL_0,
+			SYS_EV_MASK(PR1_ECAP_INTR_REQ),
+			SYS_EV_REG_OFS(PR1_ECAP_INTR_REQ)
+		},
+		{
+				NULL, 0, 0, 0, 0
+		}
+};
+
+static const struct IPCHandlerSpec IPCHandlerTable[] =
+{
+	{
+		IPCDeviceCore,
+		deviceCoreIPCHandler
+	},
+	{
+		IPCDeviceTest,
+		deviceTestIPCHandler
+	},
+	{
+		IPCDeviceEPwm,
+		deviceEPwmIPCHandler			
+	},
+	{
+		IPCDevicePwms,
+		devicePwmsIPCHandler			
+	},
+	{
+		IPCDeviceGpio,
+		deviceGpioIPCHandler
+	},
+	{
+		0,
+		NULL
+	}
+};
+
+uint16_t deviceTestIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+//	toggleGpio(GPIO_117_P9_25_OUT);
+//	toggleGpio(GPIO_113_P9_28_OUT);
+//	toggleGpio(GPIO_110_P9_31_OUT);
+	
+	testFunc();
+	
+	return sizeof(struct IPCDeviceTest_Trig);
+}
+
+static const LoopFunc pollFunctions[] = 
+{
+		pollPeripherals,
+		pollHost0Interrupts,
+		verifyInterrupts,
+		IPCHostDirectionalDispatcher,
+		NULL
+};
+
+static void pollPeripherals()
+{
+	pollECapInterrupt(ECAP_PWMSS_DEV);
+	pollEPwmInterrupt(EPWM_PWMSS_DEV);
+	pollEQepInterrupts();
+}
+
+static void verifyInterrupts()
+{
+	if (isECapInterruptActive_internal() && !isSystemEventInterruptActive(PR1_ECAP_INTR_REQ))
+	{
+		m_intrCnt++;
+	}
+	
+//	if (isECapInterruptActive(ECAP_PWMSS_DEV) && !isSystemEventInterruptActive(ECAP2_INTR_INTR_PEND))
+//	{
+//		m_intrCnt++;
+//	}
+}
+
+static void eQepInterrupt(const PwmDeviceEnum pwmDev)
+{
+	struct IPCDeviceEQep_Status status =
+	{
+		{
+			IPCDeviceEQep,
+			IPCDeviceEQep_Status
+		},
+
+		0,
+		0,
+		0,
+		0,
+		0
+	};
+
+	readEQepCaptures(pwmDev, &status.capCounter, &status.capTime, &status.capPeriod, &status.capStatus);
+	
+	status.counter = readEQepCounter(pwmDev);
+
+//	status.counter = readEQepIntrFlag(pwmDev);
+//	clearEQepIntrFlag(pwmDev, status.counter);
+	
+	sendIPCToHost((uint8_t*)&status, sizeof(status));
+
+	m_cnt1 += 1;
+}
+
+static void iepInterrupt()
+{
+	acknowledgeIepTimer();
+
+//	toggleGpio(GPIO_xx_P8_12_OUT);
+//	toggleGpio(GPIO_113_P9_28_OUT);
+//	toggleGpio(GPIO_110_P9_31_OUT);
+}
+
+static void epwmInterrupt()
+{
+	acknowledgeEPwmETInterrut(EPWM_PWMSS_DEV);
+
+	m_cnt2 += 1;
+}
+
+static void ecapInterrupt()
+{
+	const uint16_t mask = acknowledgeECapPWMInterrut(ECAP_PWMSS_DEV);
+
+//	toggleGpio(GPIO_117_P9_25_OUT);
+	
+	if (mask & ECAP_PWM_INT_SEL_CMP)
+	{
+		m_cnt3 += 1;
+	}
+}
+
+static void ecapInternalInterrupt()
+{
+	const uint16_t mask = acknowledgeECapPWMInterrut_internal();
+
+//	toggleGpio(GPIO_117_P9_25_OUT);
+	
+	if (mask & ECAP_PWM_INT_SEL_CMP)
+	{
+		m_cnt4 += 1;
+	}
+}
+
+static void ecapCaptureInternalInterrupt()
+{
+	pollOneShotCapturePeriod_internal(&m_cnt4);
+	
+//	toggleGpio(GPIO_117_P9_25_OUT);
+	
+	m_cnt5++;
+}
+
+static void testFunc()
+{
+	static uint8_t i = 0;
+
+	++i;
+			
+toggleGpio(GPIO_117_P9_25_OUT);
+	
+//			triggSystemEventInterrupt(ECAP2_INTR_INTR_PEND);
+//			triggSystemEventInterrupt(EPWM0_INTR_INTR_PEND);
+			
+//			triggECapInterrupt_internal(ECAP_PWM_INT_SEL_CMP);
+//			triggECapInterrupt_internal(ECAP_PWM_INT_SEL_PRD);
+			
+//			uint32_t val = getStatus1();
+//			uint32_t val = getECapCounter_internal();
+//			uint32_t val = getECapCounter(ECAP_PWMSS_DEV);
+//			uint32_t val = getEPwmCounter(EPWM_PWMSS_DEV);
+//			uint32_t val = m_per;
+//			uint32_t val = m_cnt2;
+//			uint32_t val = m_st1;
+//			uint32_t val = m_cnt1;
+//			uint32_t val = getIepClock();
+			
+//			uint16_t prescaleDiv = 1;
+//			uint8_t clkDivRes = 1;
+//			uint8_t hspClkDivRes = 1;
+//			armEPwmPrescalers(50000000 / 0xFFFF, &prescaleDiv, &clkDivRes, &hspClkDivRes);
+//			armEPwmPrescalers(100000000 / 0xFFFF, &prescaleDiv, &clkDivRes, &hspClkDivRes);
+//			uint32_t val = prescaleDiv;
+			
+		uint32_t val = i;
+		writeSHRAM(&val, 0x200, sizeof(val));
+	
+//			acknowledgeEPwmETInterrut(EPWM_PWMSS_DEV);
+//			acknowledgeECapPWMInterrut(ECAP_PWMSS_DEV);
+//			acknowledgeECapPWMInterrut_internal();
+			
+//			val = m_st1;
+//			val = m_cnt3;
+//			val = m_cnt5;
+//			val = 0x213456 + i;
+//			val = getECapCounter_internal();
+//			val = getECapCounter(ECAP_PWMSS_DEV);
+//			val = getEPwmCounter(EPWM_PWMSS_DEV);
+//			val = getStatus2();
+//			val = clkDivRes;
+		val += 1;
+		writeSHRAM(&val, 0x204, sizeof(val));
+			
+//			val = getClockGating();
+//			pollOneShotCapturePeriod_internal(&val);
+//			val = m_cnt2;
+//			val = m_intrCnt;
+//			val = getGpio(GPIO_117_P9_25_OUT);
+//			val = 0x88b + i;
+//			val = hspClkDivRes;
+		val += 1;
+		writeSHRAM(&val, 0x208, sizeof(val));
+			
+		val = 0x11 + i;
+		writeDDR(&val, 0x0000, sizeof(val));
+			
+		val = 0x54321 + i;
+		writeDDR(&val, 0x0004, sizeof(val));
+		
+		val = 0x667 + i;
+		writeDDR(&val, 0x0008, sizeof(val));
+}
+
+static void manageECapPwm(const bool enable)
+{
+	if (enable)
+	{
+		enablePWMSSModule(ECAP_PWMSS_DEV, true);
+		
+		const uint32_t ecapPeriod = armECapPWMFreq(ECAP_PWMSS_DEV, ECAP_PWM_FREQ_1HZ);
+		setECapPWMDuty(ECAP_PWMSS_DEV, ecapPeriod >> 1);
+		enableECapPWMInterrupt(ECAP_PWMSS_DEV, ECAP_PWM_INT_SEL_CMP | ECAP_PWM_INT_SEL_PRD);
+		enableECapClock(ECAP_PWMSS_DEV, true);
+		enableECapPWM(ECAP_PWMSS_DEV);
+	}
+	else
+	{
+		disableECapPWMInterrupt(ECAP_PWMSS_DEV, ECAP_PWM_INT_SEL_CMP);
+		disableECapPWM(ECAP_PWMSS_DEV, false);
+		enableECapClock(ECAP_PWMSS_DEV, false);
+		
+		enablePWMSSModule(ECAP_PWMSS_DEV, false);
+	}
+}
+
+static void manageEQep(const bool enable)
+{
+	if (enable)
+	{
+		enablePWMSSModule(EQEP_PWMSS_DEV, true);
+		
+		enableEQepInterrupts(EQepInterruptTable);
+		enableEQep(EQEP_PWMSS_DEV, EQEP_QUADRATURE_MODE);
+	}
+	else
+	{
+		disableEQep(EQEP_PWMSS_DEV);
+		disableEQepInterrupts();
+		
+		enablePWMSSModule(EQEP_PWMSS_DEV, false);
+	}
+}
+
+static void manageEPwm(const bool enable)
+{
+	if (enable)
+	{
+		enablePWMSSModule(EPWM_PWMSS_DEV, true);
+		enableEPwmClock(EPWM_PWMSS_DEV, true);
+		
+//		const uint16_t pwmPeriod = armEPwmFreq(EPWM_PWMSS_DEV, PWM_FREQ_2HZ);
+		const uint16_t pwmPeriod = armEPwmRawFreq(EPWM_PWMSS_DEV, EPWM_PER_CNT_HZ(2));
+// 		const uint16_t pwmPeriod = armEPwmRawFreq(EPWM_PWMSS_DEV, PWM_FREQ_25KHZ);
+	
+		setEPwmDuty(EPWM_PWMSS_DEV, PWM_CH_A, pwmPeriod >> 1);
+		enableEPwmETInterrupt(EPWM_PWMSS_DEV, PWM_INT_SEL_CH_A_INC);
+		enableEPwm(EPWM_PWMSS_DEV, PWM_CH_A);
+	}
+	else
+	{
+		disableEPwmETInterrupt(EPWM_PWMSS_DEV);
+		disableEPwm(EPWM_PWMSS_DEV, PWM_CH_A, false);
+		enableEPwmClock(EPWM_PWMSS_DEV, false);
+		enablePWMSSModule(EPWM_PWMSS_DEV, false);
+	}
+}
+
+static void manageECapPwm_internal(const bool enable)
+{
+	if (enable)
+	{
+		const uint32_t ecapPeriod = armECapPWMFreq_internal(ECAP_PWM_FREQ_1HZ);
+		setECapPWMDuty_internal(ecapPeriod >> 1);
+		enableECapPWMInterrupt_internal(ECAP_PWM_INT_SEL_CMP | ECAP_PWM_INT_SEL_PRD);
+		enableECapPWM_internal(true);
+	}
+	else
+	{
+		disableECapPWMInterrupt_internal(ECAP_PWM_INT_SEL_CMP);
+		enableECapPWM_internal(false);
+	}
+}
+
+static void manageECapCapture_internal(const bool enable)
+{
+	if (enable)
+	{
+		armECapCapture_internal(ECAP_DELTA_PERIOD_CAPTURE, true);
+//		enableECapCapture_internal(ECAP_CAPTURE_POLL);
+		enableECapCapture_internal(ECAP_CAPTURE_PERIOD_INTR);
+	}
+	else
+	{
+		disableECapCapture_internal(false);
+	}
+}
+
+int main(void)
+{
+	  initOCP();
+
+	  initCTMemoryPtr();
+
+	  initIPCBiDirectionalDispatcher(IPCHandlerTable, PRU_ARM_INTERRUPT_IPC);
+	  initIPCHostDirectionalDispatcher(PRU_ARM_INTERRUPT_EVENT);
+	  
+	  enableHost0Interrupts(HostInterruptTable);
+
+	  enableGlobalInterrupt(true);  
+
+	  setupIepTimer(IEP_DEFAULT_INC_USEC(1000000), IEP_CMP_COUNT_USEC(1000000));
+	  enableIepTimer(true);
+
+	  setGpio(GPIO_xx_P8_12_OUT);
+	  
+	  manageECapPwm(true);
+//	  manageCapPwm_internal(true);
+	  manageECapCapture_internal(true);
+//	  manageEPwm(true);
+	  manageEQep(true);
+
+	  loopExecute(pollFunctions);
+
+	  manageEQep(false);
+//	  manageEPwm(false);
+//	  manageECapPwm_internal(false);
+	  manageECapCapture_internal(false);
+	  manageECapPwm(false);
+
+//	  setGpio(GPIO_xx_P8_12_OUT);
+
+	  enableIepTimer(false);
+	  
+	  __delay_cycles(200000000);
+	  fireArmInterrupt(PRU_ARM_INTERRUPT_IPC);
+	  __delay_cycles(100000000);
+	
+	  enableGlobalInterrupt(false);  
+	  
+	  disableHostInterrupts();
+	  
+	  __halt();
+
+	  return 0;
+}

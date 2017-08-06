@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<rexpfd>
+    <destination path="Neptune.Callisto_usb:/home/root"/>
+    <options createDirectoryStructure="false" createSelectedOnly="false" descriptionFilePath="/MotorAppl/Callisto_usb.rexpfd" overWriteExistingFiles="true" reviewSynchronize="false" saveSettings="true"/>
+    <selectedElements>
+        <file path="/MotorAppl/bin/release/main/motorappl"/>
+        <file path="/MotorAppl/bin/release/pru0/pru0_main.elf.data.bin"/>
+        <file path="/MotorAppl/bin/release/pru0/pru0_main.elf.text.bin"/>
+        <file path="/MotorAppl/src/devicetree/load.sh"/>
+        <file path="/MotorAppl/src/devicetree/pru_enable-00A0.dtbo"/>
+        <file path="/MotorAppl/src/devicetree/pru_pwm-00A0.dtbo"/>
+        <file path="/MotorAppl/src/devicetree/pru_ecap-00A0.dtbo"/>
+        <file path="/MotorAppl/src/devicetree/pru_gpio-00A0.dtbo"/>
+        <file path="/MotorAppl/src/devicetree/pru_gpio_pwm-00A0.dtbo"/>
+        <file path="/MotorAppl/src/devicetree/pru_gpio_all-00A0.dtbo"/>
+    </selectedElements>
+</rexpfd>
