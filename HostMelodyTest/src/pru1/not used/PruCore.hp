@@ -1,0 +1,23 @@
+/*
+ * PruCore.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRUCORE_HP_
+#define PRUCORE_HP_
+
+#include <stdint.h>
+
+class PruCore
+{
+public:
+	PruCore();
+	void set();
+	
+private:
+	uint32_t m_test;
+};
+
+#endif /* PRUCORE_HP_ */

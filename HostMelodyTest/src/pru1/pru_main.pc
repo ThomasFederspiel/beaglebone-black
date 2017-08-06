@@ -1,0 +1,140 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pru_core.hp"
+#include "pru_iep.hp"
+#include "pru_intc.hp"
+#include "pru_ipc_dispatcher.hp"
+#include "pru_gpio.hp"
+#include "pru_epwm.hp"
+#include "pru_ecap.hp"
+#include "pru_memory_access.hp"
+#include "pru_loop.hp"
+
+#include "pru_ipc_devices.hp"
+#include "pru_ipc_device_core.hp"
+#include "pru_ipc_device_gpio.hp"
+#include "pru_ipc_device_epwm.hp"
+#include "pru_ipc_device_pwms.hp"
+#include "pru_ipc_device_test.hp"
+#include "pru_shram_layout.hp"
+
+#define LOOPS 	20
+
+#define PRU_ARM_INTERRUPT PRU1_ARM_INTERRUPT
+#define ARM_PRU_INTERRUPT ARM_PRU1_INTERRUPT
+
+#define ECAP_PWMSS_DEV	PWMSS_DEV_3
+#define EPWM_PWMSS_DEV	PWMSS_DEV_1
+
+static uint32_t m_cnt1 = 0;
+static uint32_t m_cnt2 = 0;
+static uint32_t m_cnt3 = 0;
+static uint32_t m_cnt4 = 0;
+static uint32_t m_cnt5 = 0;
+static uint32_t m_st1 = 0;
+static uint32_t m_st2 = 0;
+static uint32_t m_intrCnt = 0;
+
+static void testFunc();
+static void pollPeripherals();
+static uint16_t deviceTestIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl);
+
+static const struct InterruptHandlerSpec Host1InterruptTable[] =
+{
+	{
+		IPCDispatcher,
+		ARM_PRU_INTERRUPT,
+		INTC_CHANNEL_1,
+		SYS_EV_MASK(ARM_PRU_INTERRUPT),
+		SYS_EV_REG_OFS(ARM_PRU_INTERRUPT)
+	},
+	{
+		NULL, 0, 0, 0, 0
+	}
+};
+
+static const struct IPCHandlerSpec IPCHandlerTable[] =
+{
+	{
+		IPCDeviceCore,
+		deviceCoreIPCHandler
+	},
+	{
+		IPCDeviceTest,
+		deviceTestIPCHandler
+	},
+	{
+		IPCDeviceGpio,
+		deviceGpioIPCHandler
+	},
+	{
+		0,
+		NULL
+	}
+};
+
+uint16_t deviceTestIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	testFunc();
+	
+	return sizeof(struct IPCDeviceTest_Trig);
+}
+
+static const LoopFunc pollFunctions[] = 
+{
+	pollHost1Interrupts,
+	NULL
+};
+
+static void testFunc()
+{
+	static uint8_t i = 1;
+	
+//	toggleGpio(GPIO_xx_P8_12_OUT);
+//	toggleGpio(GPIO_xx_P8_28_OUT);
+//	toggleGpio(GPIO_xx_P8_29_OUT);
+	
+	i++;
+		
+	uint32_t val = i;
+	writeSHRAM(&val, 0x300, sizeof(val));
+	writeSHRAM(&val, 0x304, sizeof(val));
+	writeSHRAM(&val, 0x308, sizeof(val));
+		
+	val = 0x11 + i;
+	writeDDR(&val, 0x0000, sizeof(val));
+		
+	val = 0x54321 + i;
+	writeDDR(&val, 0x0004, sizeof(val));
+	
+	val = 0x667 + i;
+	writeDDR(&val, 0x0008, sizeof(val));
+}
+
+int main(void)
+{
+	initOCP();
+	
+	initCTMemoryPtr();
+	
+	initIPCDispatcher(IPCHandlerTable, PRU_ARM_INTERRUPT);
+	
+	enableHost1Interrupts(Host1InterruptTable);
+	
+	enableGlobalInterrupt(true);  
+	
+	loopExecute(pollFunctions);
+	
+	__delay_cycles(200000000);
+	fireArmInterrupt(PRU_ARM_INTERRUPT);
+	__delay_cycles(100000000);
+	
+	enableGlobalInterrupt(false);  
+	
+	disableHostInterrupts();
+	
+	__halt();
+	
+	return 0;
+}

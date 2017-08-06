@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<rexpfd>
+    <destination path="Neptune.Callisto:/home/root"/>
+    <options createDirectoryStructure="false" createSelectedOnly="false" descriptionFilePath="/HostMelodyTest/Callisto.rexpfd" overWriteExistingFiles="true" reviewSynchronize="false" saveSettings="true"/>
+    <selectedElements>
+        <file path="/HostMelodyTest/bin/release/host/melodyTest"/>
+        <file path="/HostMelodyTest/bin/release/pru0/pru0_main.elf.data.bin"/>
+        <file path="/HostMelodyTest/bin/release/pru0/pru0_main.elf.text.bin"/>
+        <file path="/HostMelodyTest/bin/release/pru1/pru1_main.elf.data.bin"/>
+        <file path="/HostMelodyTest/bin/release/pru1/pru1_main.elf.text.bin"/>
+        <file path="/HostMelodyTest/src/devicetree/load.sh"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_enable-00A0.dtbo"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_pwm-00A0.dtbo"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_ecap-00A0.dtbo"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_gpio-00A0.dtbo"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_gpio_pwm-00A0.dtbo"/>
+        <file path="/HostMelodyTest/src/devicetree/pru_gpio_all-00A0.dtbo"/>
+    </selectedElements>
+</rexpfd>
