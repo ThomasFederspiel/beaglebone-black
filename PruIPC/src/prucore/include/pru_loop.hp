@@ -1,0 +1,18 @@
+/*
+ * pru_loop.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_LOOP_HP_
+#define PRU_LOOP_HP_
+
+// standard
+#include <stdbool.h>
+
+typedef void (*LoopFunc)();
+
+void loopExecute(const LoopFunc* loopFunctions);
+
+#endif /* PRU_LOOP_HP_ */

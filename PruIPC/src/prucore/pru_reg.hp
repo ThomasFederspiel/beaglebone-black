@@ -1,0 +1,52 @@
+/*
+ * pru_reg.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_REG_HP_
+#define PRU_REG_HP_
+
+#include <stdint.h>
+
+#include "pru_cfg.h"
+#include "pru_ctrl.h"
+#include "pru_intc.h"
+#include "pru_iep.h"
+#include "pru_per_reg_types.hp"
+#include "pru_pwms_core.hp"
+
+// PRU memory offsets
+static uint16_t const PRU_SHRAM_SETUP_CONTEXT_OFFSET = 0x00000;
+
+// PRU memory addresses
+static uint8_t* const PRU0_DATARAM = (uint8_t*) 0x00000;
+static uint8_t* const PRU1_DATARAM = (uint8_t*) 0x00000;
+static uint8_t* const PRU0_DATARAM_PRU1 = (uint8_t*) 0x02000;
+static uint8_t* const PRU1_DATARAM_PRU0 = (uint8_t*) 0x02000;
+static uint8_t* const PRU_SHAREDRAM = (uint8_t*) 0x10000;
+
+volatile register uint32_t __R30;
+volatile register uint32_t __R31;
+
+/* Mapping Constant table register to variable */
+volatile far pruIntc CT_INTC __attribute__((cregister("INTC", far), peripheral));
+volatile pruCfg CT_CFG __attribute__((cregister("CFG", near), peripheral));
+
+volatile far pruPwms CT_HRPWM1 __attribute__((cregister("EHRPWM1", near), peripheral));
+volatile far pruPwms CT_HRPWM2 __attribute__((cregister("EHRPWM2", near), peripheral));
+volatile far pruPwms CT_HRPWM3 __attribute__((cregister("EHRPWM3", near), peripheral));
+volatile far pruIep CT_IEP __attribute__((cregister("IEP", near), peripheral));
+volatile far uint32_t CT_L3 __attribute__((cregister("L3OCMC", near), peripheral));
+volatile far uint32_t CT_DDR __attribute__((cregister("DDR", near), peripheral));
+volatile far uint32_t CT_SHRAM __attribute__((cregister("SHRAM", near), peripheral));
+volatile far pruPer CM_PER __attribute__((cregister("PER", near), peripheral));
+volatile far pruECap CT_ECAP __attribute__((cregister("ECAP", near), peripheral));
+
+/* Definition of control register structures. */
+extern volatile far pruCtrl PRU0_CTRL;
+extern volatile far pruCtrl PRU1_CTRL;
+
+
+#endif /* PRU_REG_HP_ */

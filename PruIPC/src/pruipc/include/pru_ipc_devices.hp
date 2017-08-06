@@ -1,0 +1,24 @@
+/*
+ * pru_ipc_devices.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICES_HP_
+#define PRU_IPC_DEVICES_HP_
+
+enum IPCDeviceEnum
+{
+	IPCDeviceCore = 0,
+	IPCDeviceTest,
+	IPCDeviceEPwm,
+	IPCDevicePwms,
+	IPCDeviceGpio,
+	IPCDeviceECap,
+	IPCDeviceEQep
+};
+
+extern const char* toDeviceString(const enum IPCDeviceEnum device);
+
+#endif /* PRU_IPC_DEVICES_HP_ */

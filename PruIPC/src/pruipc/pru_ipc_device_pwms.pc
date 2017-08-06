@@ -1,0 +1,40 @@
+/*
+ * pru_ipc_device_pwms.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_device_pwms.hp"
+
+#include <stdbool.h>
+
+#include "pru_ipc_device_pwms_types.hp"
+#include "pru_pwms.hp"
+
+uint16_t devicePwmsIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	switch (deviceIoctl->ioctl)
+	{
+	case IPCDevicePwms_Open:
+		{
+			const struct IPCDevicePwms_Open* const open = (struct IPCDevicePwms_Open*) deviceIoctl;
+
+			enablePWMSSModule(open->pwmDev, true);
+			
+			return sizeof(struct IPCDevicePwms_Open);
+		}
+	
+	case IPCDevicePwms_Close:
+		{
+			const struct IPCDevicePwms_Close* const close = (struct IPCDevicePwms_Close*) deviceIoctl;
+			
+			enablePWMSSModule(close->pwmDev, false);
+			
+			return sizeof(struct IPCDevicePwms_Close);
+		}
+	}
+
+	return 0;
+}
+

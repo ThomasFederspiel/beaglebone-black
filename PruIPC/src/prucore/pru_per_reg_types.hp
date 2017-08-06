@@ -1,0 +1,68 @@
+/*
+ * pru_per_reg_types.ph
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PER_REG_TYPES_HP_
+#define PRU_PER_REG_TYPES_HP_
+
+
+// PRU_PER_EPWMSS1_CLKCTLR  
+// ========================== 
+// MODULEMODE bits 
+#define PER_MODULE_MODE_DIS 0x0
+#define PER_MODULE_MODE_EN 0x2
+
+// IDLEST bits 
+#define PER_IDLEST_FUNC 0x0
+#define PER_IDLEST_TRANS 0x1
+#define PER_IDLEST_IDLE 0x2
+#define PER_IDLEST_DIS 0x3
+
+typedef struct
+{
+	unsigned modulemode : 2;
+	unsigned rsvd1 : 14;
+	unsigned idlest : 2;
+	unsigned rvsd2 : 14;
+} PruPerModuleClk;
+
+/* PRU_ECAP register set */
+typedef struct
+{
+	volatile uint8_t rsvd1[0xCC];	// 0x00
+	
+	/* PRU_PER_EPWMSS1_CLKCTLR register bit field */
+	union {
+		volatile uint32_t EPWMSS1_CLKCTLR;
+
+		volatile PruPerModuleClk EPWMSS1_CLKCTLR_bit;
+		
+	} ;	// 0xCC
+	
+	volatile uint8_t rsvd2[4];	// 0xD0
+	
+	/* PRU_PER_EPWMSS0_CLKCTLR register bit field */
+	union {
+		volatile uint32_t EPWMSS0_CLKCTLR;
+
+		volatile PruPerModuleClk EPWMSS0_CLKCTLR_bit;
+		
+	} ;	// 0xD4
+	
+	/* PRU_PER_EPWMSS2_CLKCTLR register bit field */
+	union {
+		volatile uint32_t EPWMSS2_CLKCTLR;
+
+		volatile PruPerModuleClk EPWMSS2_CLKCTLR_bit;
+		
+	} ;	// 0xD8
+	
+	volatile uint8_t rsvd3[116];
+	
+} pruPer;
+
+#endif /* PRU_PER_REG_TYPES_HP_ */
+

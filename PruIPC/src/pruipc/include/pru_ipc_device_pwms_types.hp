@@ -1,0 +1,32 @@
+/*
+ * pru_ipc_device_pwms_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_PWMS_TYPES_HP_
+#define PRU_IPC_DEVICE_PWMS_TYPES_HP_
+
+#include "pru_ipc_types.hp"
+#include "pru_pwms_types.hp"
+
+enum IPCDevicePwmsIoctlEnum
+{
+	IPCDevicePwms_Open = 0,
+	IPCDevicePwms_Close
+};
+
+struct IPCDevicePwms_Close
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+};
+
+struct IPCDevicePwms_Open
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+};
+
+#endif /* PRU_IPC_DEVICE_PWMS_TYPES_HP_ */

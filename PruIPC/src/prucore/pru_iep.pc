@@ -1,0 +1,118 @@
+/*
+ * pru_iep.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_iep.hp"
+
+#include "pru_reg.hp"
+
+#define IEP_COMPEN_ZERO	0x00
+
+#define IEP_GLOBAL_STATUS_OVF 0x01
+
+#define IEP_CMP0_STATUS_HIT 0x01
+#define IEP_CMP1_STATUS_HIT 0x02
+#define IEP_CMP2_STATUS_HIT 0x04
+#define IEP_CMP3_STATUS_HIT 0x08
+#define IEP_CMP4_STATUS_HIT 0x10
+#define IEP_CMP5_STATUS_HIT 0x20
+#define IEP_CMP6_STATUS_HIT 0x40
+#define IEP_CMP7_STATUS_HIT 0x80
+#define IEP_CMP_STATUS_ALL_HIT 0xff
+
+#define IEP_CMP0_ENABLE 0x01
+#define IEP_CMP1_ENABLE 0x02
+#define IEP_CMP2_ENABLE 0x04
+#define IEP_CMP3_ENABLE 0x08
+#define IEP_CMP4_ENABLE 0x10
+#define IEP_CMP5_ENABLE 0x20
+#define IEP_CMP6_ENABLE 0x40
+#define IEP_CMP7_ENABLE 0x80
+
+
+#define IEP_SEL_IEP_CLK	0x00
+#define IEP_SEL_OCP_CLK	BIT(1)
+
+static void setIepClock(const uint8_t clk)
+{
+	CT_CFG.IEPCLK = clk;
+}
+
+bool setupIepTimer(const uint8_t inc, const uint32_t cnt)
+{
+	/* Disable counter */
+ 	CT_IEP.TMR_GLB_CFG_bit.CNT_EN = 0;
+ 
+ 	/* Reset Count register */
+ 	CT_IEP.TMR_CNT = 0x0;
+ 
+ 	setIepClock(IEP_SEL_IEP_CLK);
+ 	
+ 	/* Clear overflow status register */
+ 	CT_IEP.TMR_GLB_STS_bit.CNT_OVF = IEP_GLOBAL_STATUS_OVF;
+ 
+ 	// Counter ranges 
+ 	// 0 - 21 474 836 475 ns, def_cnt = 1
+ 	//   - 42 949 672 950 ns, def_cnt = 2
+ 	// ...
+ 	//   - 343 597 383 600 ns, def cnt = 16
+ 	if (inc > 16)
+ 	{
+ 		return false;
+ 	}
+ 	
+	/* Set default increment */
+ 	CT_IEP.TMR_GLB_CFG_bit.DEFAULT_INC = inc;
+ 	
+ 	/* Set compare value */
+ 	CT_IEP.TMR_CMP0 = cnt;
+ 	
+ 	/* Clear compare status */
+ 	CT_IEP.TMR_CMP_STS_bit.CMP_HIT = IEP_CMP_STATUS_ALL_HIT;
+ 
+ 	/* Disable compensation */
+ 	CT_IEP.TMR_COMPEN_bit.COMPEN_CNT = IEP_COMPEN_ZERO;
+ 
+ 	return true;
+}
+
+void acknowledgeIepTimer()
+{
+ 	/* Clear overflow status register */
+ 	CT_IEP.TMR_GLB_STS_bit.CNT_OVF = IEP_GLOBAL_STATUS_OVF;
+	
+ 	/* Clear compare status */
+ 	CT_IEP.TMR_CMP_STS_bit.CMP_HIT = IEP_CMP_STATUS_ALL_HIT;
+}
+
+void enableIepTimer(const bool enable)
+{
+	if (enable)
+	{
+		acknowledgeIepTimer();
+		
+	 	/* Enable CMP0 and reset on event */
+	 	CT_IEP.TMR_CMP_CFG_bit.CMP0_RST_CNT_EN = IEP_CMP0_ENABLE;
+	 	CT_IEP.TMR_CMP_CFG_bit.CMP_EN = IEP_CMP0_ENABLE;
+	 	
+	 	/* Enable counter */
+	 	CT_IEP.TMR_GLB_CFG_bit.CNT_EN = 1;
+	}
+	else
+	{
+	 	/* Disable counter */
+	 	CT_IEP.TMR_GLB_CFG_bit.CNT_EN = 0;
+	 
+	 	/* Disable Compare0 */
+	 	CT_IEP.TMR_CMP_CFG = 0x00;
+	 
+	 	/* Clear Compare status */
+	 	CT_IEP.TMR_CMP_STS_bit.CMP_HIT = IEP_CMP_STATUS_ALL_HIT;
+	 	
+		acknowledgeIepTimer();
+	}
+}
+

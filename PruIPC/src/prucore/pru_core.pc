@@ -1,0 +1,25 @@
+/*
+ * pru_core.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_core.hp"
+
+#include "pru_reg.hp"
+
+void initOCP()
+{
+	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
+}
+
+uint8_t getIepClock()
+{
+	return CT_CFG.IEPCLK_bit.OCP_EN;
+}
+
+uint32_t getClockGating()
+{
+	return CT_CFG.CGR;
+}

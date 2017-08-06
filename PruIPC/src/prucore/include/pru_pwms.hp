@@ -1,0 +1,18 @@
+/*
+ * pru_pwms.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PWMS_HP_
+#define PRU_PWMS_HP_
+
+#include <stdbool.h>
+
+#include "pru_pwms_types.hp"
+
+void enablePWMSSModule(const PwmDeviceEnum pwmDev, const bool enable);
+
+#endif /* PRU_PWMS_HP_ */
+

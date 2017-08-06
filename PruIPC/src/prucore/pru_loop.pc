@@ -1,0 +1,35 @@
+/*
+ * pru_loop.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+#include "pru_loop.hp"
+
+// standard
+#include <stdint.h>
+#include <stddef.h>
+
+// local
+#include "pru_config_types.hp"
+
+void loopExecute(const LoopFunc* loopFunctions)
+{
+	uint8_t i = 0;
+	
+	setActive(true);
+	
+	while (!isTerminated())
+	{
+		while (loopFunctions[i] != NULL)
+		{
+			loopFunctions[i]();
+			
+			++i;
+		}
+		
+		i = 0;
+	}
+	
+	setActive(false);
+}

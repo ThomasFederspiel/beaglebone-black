@@ -1,0 +1,125 @@
+/*
+ * pru_reg.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_GPIO_HP_
+#define PRU_GPIO_HP_
+
+#include <stdint.h>
+
+#include "pru_macros.hp"
+
+// PRU 1
+// out:30.t13, in:31.t13 - P8_20, GPIO 63
+static const uint32_t GPIO_63_P8_20_OUT = BIT(13);
+static const uint32_t GPIO_63_P8_20_IN = BIT(13);
+
+// out:30.t12, in:31.t12 - P8_21, GPIO xx
+static const uint32_t GPIO_xx_P8_21_OUT = BIT(12);
+static const uint32_t GPIO_xx_P8_21_IN = BIT(12);
+
+// out:30.t11, in:31.t11 - P8_30, GPIO xx
+static const uint32_t GPIO_xx_P8_30_OUT = BIT(11);
+static const uint32_t GPIO_xx_P8_30_IN = BIT(11);
+
+// out:30.t10, in:31.t10 - P8_28, GPIO xx
+static const uint32_t GPIO_xx_P8_28_OUT = BIT(10);
+static const uint32_t GPIO_xx_P8_28_IN = BIT(10);
+
+// out:30.t9, in:31.t9 - P8_29, GPIO xx
+static const uint32_t GPIO_xx_P8_29_OUT = BIT(9);
+static const uint32_t GPIO_xx_P8_29_IN = BIT(9);
+
+// out:30.t8, in:31.t8 - P8_27, GPIO xx
+static const uint32_t GPIO_xx_P8_27_OUT = BIT(8);
+static const uint32_t GPIO_xx_P8_27_IN = BIT(8);
+
+// out:30.t7, in:31.t7 - P8_40, GPIO xx
+static const uint32_t GPIO_xx_P8_40_OUT = BIT(7);
+static const uint32_t GPIO_xx_P8_40_IN = BIT(7);
+
+// out:30.t6, in:31.t6 - P8_39, GPIO xx
+static const uint32_t GPIO_xx_P8_39_OUT = BIT(6);
+static const uint32_t GPIO_xx_P8_39_IN = BIT(6);
+
+// out:30.t5, in:31.t5 - P8_42, GPIO xx
+static const uint32_t GPIO_xx_P8_42_OUT = BIT(5);
+static const uint32_t GPIO_xx_P8_42_IN = BIT(5);
+
+// out:30.t4, in:31.t4 - P8_41, GPIO xx
+static const uint32_t GPIO_xx_P8_41_OUT = BIT(4);
+static const uint32_t GPIO_xx_P8_41_IN = BIT(4);
+
+// out:30.t3, in:31.t3 - P8_44, GPIO xx
+static const uint32_t GPIO_xx_P8_44_OUT = BIT(3);
+static const uint32_t GPIO_xx_P8_44_IN = BIT(3);
+
+// out:30.t2, in:31.t2 - P8_43, GPIO xx
+static const uint32_t GPIO_xx_P8_43_OUT = BIT(2);
+static const uint32_t GPIO_xx_P8_43_IN = BIT(2);
+
+// out:30.t1, in:31.t1 - P8_46, GPIO xx
+static const uint32_t GPIO_xx_P8_46_OUT = BIT(1);
+static const uint32_t GPIO_xx_P8_46_IN = BIT(1);
+
+// out:30.t0, in:31.t0 - P8_45, GPIO xx
+static const uint32_t GPIO_xx_P8_45_OUT = BIT(0);
+static const uint32_t GPIO_xx_P8_45_IN = BIT(0);
+
+// PRU 0 
+// out:- in:31.t15 - P8_15, GPIO xx
+static const uint32_t GPIO_xx_P8_15_IN = BIT(15);
+
+// out:- in:31.t14 - P8_16, GPIO xx
+static const uint32_t GPIO_xx_P8_16_IN = BIT(14);
+
+// out:30.t15 in:- - P8_11, GPIO xx
+static const uint32_t GPIO_xx_P8_11_IN = BIT(15);
+
+// out:30.t14 in:- - P8_12, GPIO xx
+static const uint32_t GPIO_xx_P8_12_OUT = BIT(14);
+
+// out:- in:31.t16 - P9_24, GPIO xx
+static const uint32_t GPIO_xx_P9_24_IN = BIT(16);
+
+// out:30.t7, in:31.t7 - P9_25, GPIO 117
+static const uint32_t GPIO_117_P9_25_OUT = BIT(7);
+static const uint32_t GPIO_117_P9_25_IN = BIT(7);
+
+// out:30.t6, in:31.t6 - P9_41, GPIO xx
+static const uint32_t GPIO_xx_P9_41_OUT = BIT(6);
+static const uint32_t GPIO_xx_P9_41_IN = BIT(6);
+
+// out:30.t5, in:31.t5 - P9_27, GPIO xx
+static const uint32_t GPIO_xx_P9_27_OUT = BIT(5);
+static const uint32_t GPIO_xx_P9_27_IN = BIT(5);
+
+// out:30.t4, in:31.t4 - P9_42, GPIO xx
+static const uint32_t GPIO_xx_P9_42_OUT = BIT(4);
+static const uint32_t GPIO_xx_P9_42_IN = BIT(4);
+
+// out:30.t2, in:31.t2 - P9_30, GPIO xx
+static const uint32_t GPIO_xx_P9_30_OUT = BIT(2);
+static const uint32_t GPIO_xx_P9_30_IN = BIT(2);
+
+// out:30.t1, in:31.t1 - P9_29, GPIO xx
+static const uint32_t GPIO_xx_P9_29_OUT = BIT(1);
+static const uint32_t GPIO_xx_P9_29_IN = BIT(1);
+
+// out:30.t3, in:31.t3 - P9_28, GPIO 113
+static const uint32_t GPIO_113_P9_28_OUT = BIT(3);
+static const uint32_t GPIO_113_P9_28_IN = BIT(3);
+
+// out:30.t0, in:31.t0 - P9_31, GPIO 110
+static const uint32_t GPIO_110_P9_31_OUT = BIT(0);
+static const uint32_t GPIO_110_P9_31_IN = BIT(0);
+
+void setGpio(const uint32_t gpio);
+void clrGpio(const uint32_t gpio);
+uint32_t getGpio(const uint32_t gpio);
+void toggleGpio(const uint32_t gpio);
+
+#endif /* PRU_GPIO_HP_ */

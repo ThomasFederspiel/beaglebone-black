@@ -1,0 +1,235 @@
+/*
+ * pru_ecap_reg_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_ECAP_REG_TYPES_HP_
+#define PRU_ECAP_REG_TYPES_HP_
+
+#include "pru_macros.hp"
+
+// ECCTL1 ( ECAP Control Reg 1) 
+//========================== 
+// CAPxPOL bits 
+#define EC_RISING 0x0 
+#define EC_FALLING 0x1
+
+#define ECAP_PWM_CLR_INT	BIT(0)
+#define ECAP_PWM_FLG_INT	BIT(0)
+
+// CTRRSTx bits 
+#define EC_ABS_MODE 0x0 
+#define EC_DELTA_MODE 0x1
+
+// PRESCALE bits 
+#define EC_BYPASS 0x0 
+#define EC_DIV1 0x0 
+#define EC_DIV2 0x1 
+#define EC_DIV4 0x2 
+#define EC_DIV6 0x3 
+#define EC_DIV8 0x4 
+#define EC_DIV10 0x5
+
+// ECCTL2 ( ECAP Control Reg 2) 
+//========================== 
+// CONT/ONESHOT bit 
+#define EC_CONTINUOUS 0x0 
+#define EC_ONESHOT 0x1
+
+// STOPVALUE bit 
+#define EC_EVENT1 0x0 
+#define EC_EVENT2 0x1 
+#define EC_EVENT3 0x2 
+#define EC_EVENT4 0x3
+
+// RE-ARM bit 
+#define EC_ARM 0x1
+
+// TSCTRSTOP bit 
+//#define EC_FREEZE 0x0 
+//#define EC_RUN 0x1
+
+#define EC_FREEZE_MASK	~BIT(4)
+#define EC_RUN 			BIT(4)
+
+// SYNCO_SEL bit 
+//#define EC_SYNCIN 0x0 
+//#define EC_CTR_PRD 0x1 
+//#define EC_SYNCO_DIS 0x2
+
+#define EC_SYNCIN_MASK 	~(BIT(6) | BIT(7)) 
+#define EC_CTR_PRD 		BIT(6) 
+#define EC_SYNCO_DIS 	BIT(7)
+
+// CAP/APWM mode bit 
+//#define EC_CAP_MODE 0x0 
+//#define EC_APWM_MODE 0x1
+
+#define EC_CAP_MODE_MASK 	~BIT(9)
+#define EC_APWM_MODE		BIT(9)
+
+// APWMPOL bit 
+//#define EC_ACTV_HI 0x0 
+//#define EC_ACTV_LO 0x1
+
+#define EC_ACTV_HI_MASK	~BIT(10) 
+#define EC_ACTV_LO		BIT(10)
+
+// Generic 
+//#define EC_DISABLE 0x0 
+//#define EC_ENABLE 0x1 
+#define EC_FORCE 0x1
+
+// SYNCI_EN bit 
+#define EC_DISABLE_MASK	~BIT(5) 
+#define EC_ENABLE		BIT(5) 
+
+/* PRU_ECAP register set */
+typedef struct
+{
+
+	/* PRU_ECAP_TSCTR register bit field */
+	union {
+		volatile uint32_t TSCTR;
+	} ;	// 0x00
+	
+	/* PRU_ECAP_CTRPHS register bit field */
+	union {
+		volatile uint32_t CTRPHS;
+	} ;	// 0x04
+	
+	/* PRU_ECAP_CAP1 register bit field */
+	union {
+		volatile uint32_t CAP1;
+	} ;	// 0x08
+	
+	/* PRU_ECAP_CAP2 register bit field */
+	union {
+		volatile uint32_t CAP2;
+	} ;	// 0x0C
+	
+	/* PRU_ECAP_CAP3 register bit field */
+	union {
+		volatile uint32_t CAP3;
+	} ;	// 0x10
+	
+	/* PRU_ECAP_CAP4 register bit field */
+	union {
+		volatile uint32_t CAP4;
+	} ;	// 0x14
+	
+	volatile uint32_t rsvd1[4];	// 0x18
+	
+	/* PRU_ECAP_ECCTL1 register bit field */
+	/* PRU_ECAP_ECCTL2 register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t ECCTL1;
+			volatile uint16_t ECCTL2;
+		} ECCTL1_ECCTL2;
+
+		volatile struct{
+			// ECCTL1
+			unsigned cap1pol : 1;
+			unsigned ctrrst1 : 1;
+			unsigned cap2pol : 1;
+			unsigned ctrrst2 : 1;
+			unsigned cap3pol : 1;
+			unsigned ctrrst3 : 1;
+			unsigned cap4pol : 1;
+			unsigned ctrrst4 : 1;
+			unsigned caplden : 1;
+			unsigned prescale : 5;
+			unsigned freesoft : 2;
+			
+			// ECCTL2
+			unsigned contonesht : 1;
+			unsigned stopwrap : 2;
+			unsigned rearm : 1;
+			unsigned tsctrstop : 1;
+			unsigned syncien : 1;
+			unsigned syncosel : 2;
+			unsigned swsync : 1;
+			unsigned capapwm : 1;
+			unsigned apwmpol : 1;
+			unsigned rsvd1 : 5;
+		} ECCTL1_ECCTL2_bit;
+	} ;	// 0x28
+	
+	/* PRU_ECAP_ECEINT register bit field */
+	/* PRU_ECAP_ECFLG register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t ECEINT;
+			volatile uint16_t ECFLG;
+		} ECEINT_ECFLG;
+
+		volatile struct{
+			unsigned rsvd1 : 1;
+			unsigned int_cevt1 : 1;
+			unsigned int_cevt2 : 1;
+			unsigned int_cevt3 : 1;
+			unsigned int_cevt4 : 1;
+			unsigned int_cntovf : 1;
+			unsigned int_prdeq : 1;
+			unsigned int_cmpeq : 1;
+			unsigned rsvd2 : 8;
+			
+			unsigned flg_int : 1;
+			unsigned flg_cevt1 : 1;
+			unsigned flg_cevt2 : 1;
+			unsigned flg_cevt3 : 1;
+			unsigned flg_cevt4 : 1;
+			unsigned flg_cntovf : 1;
+			unsigned flg_prdeq : 1;
+			unsigned flg_cmpeq : 1;
+			unsigned rsvd3 : 8;
+		} ECEINT_ECFLG_bit;
+	} ;	// 0x2C
+	
+	/* PRU_ECAP_ECCLR register bit field */
+	/* PRU_ECAP_ECFRC register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t ECCLR;
+			volatile uint16_t ECFRC;
+		} ECCLR_ECFRC;
+
+		volatile struct{
+			// ECCLR
+			unsigned clr_int : 1;
+			unsigned clr_cevt1 : 1;
+			unsigned clr_cevt2 : 1;
+			unsigned clr_cevt3 : 1;
+			unsigned clr_cevt4 : 1;
+			unsigned clr_cntovf : 1;
+			unsigned clr_prdeq : 1;
+			unsigned clr_cmpeq : 1;
+			unsigned rsvd1 : 8;
+			
+			// ECFRC
+			unsigned frc_rsvd2 : 1;
+			unsigned frc_cevt1 : 1;
+			unsigned frc_cevt2 : 1;
+			unsigned frc_cevt3 : 1;
+			unsigned frc_cevt4 : 1;
+			unsigned frc_cntovf : 1;
+			unsigned frc_prdeq : 1;
+			unsigned frc_cmpeq : 1;
+			unsigned frc_rsvd3 : 8;
+		} ECCLR_ECFRC_bit;
+	} ;	// 0x30
+	
+	volatile uint32_t rsvd2[10]; // 0x34
+	
+	/* PRU_ECAP_REVID register bit field */
+	union {
+		volatile uint32_t REVID;
+	} ;	// 0x5C
+	
+} pruECap;
+
+#endif /* PRU_ECAP_REG_TYPES_HP_ */
+

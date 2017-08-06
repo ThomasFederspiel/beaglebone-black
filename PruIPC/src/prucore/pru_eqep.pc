@@ -1,0 +1,177 @@
+/*
+ * pru_eqep.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_eqep.hp"
+
+#include <limits.h>
+#include <stddef.h>
+
+#include "pru_pwms_core.hp"
+
+static const struct EQepInterruptHandlerSpec* m_eQepInterruptTable = NULL;
+
+static void setEQepCounterMode(volatile pruEQep* const eQep, const EQepCounterModeEnum mode)
+{
+	eQep->QDECCTL_QEPCTL.QDECCTL = 0;
+	eQep->QDECCTL_QEPCTL.QDECCTL |= mode; 
+}
+
+void disableEQep(const PwmDeviceEnum pwmDev)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	/* Disable unit timer */
+	eQep->QDECCTL_QEPCTL.QEPCTL &= ~QEP_UTIME;
+	
+	/* Disable EQEP Capture */
+	eQep->QCAPCTL_QPOSCTL.QCAPCTL &= ~QCAP_CAPTURE_EN;
+	
+	// Disable all interrupts
+	eQep->QEINT_QFLG.QEINT &= ~EQEP_ALL_INTR;
+	
+	/* Disable unit time out interupt */
+//	;+ eQep->QEINT_QFLG.QEINT &= ~EQEP_UTIME_INTR;
+}
+
+void enableEQep(const PwmDeviceEnum pwmDev, const EQepCounterModeEnum mode)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	setEQepCounterMode(eQep, mode);
+	
+	/* Enable unit timer
+	 * Enable capture latch on unit time out
+	 * Enable quadrature position counter
+	 * Enable software loading of position counter
+	 * Reset position counter on unit time event to gauge RPM
+	 */
+// ;+	eQep->QDECCTL_QEPCTL.QEPCTL = QDE_PCRM_UTIME | QEP_SWI | QEP_PHEN | QEP_QCLM | QEP_UTIME;
+	eQep->QDECCTL_QEPCTL.QEPCTL = QDE_PCRM_MAX | QEP_SWI | QEP_PHEN | QEP_QCLM | QEP_UTIME;
+	
+	/* Set prescalers for EQEP Capture timer and UPEVNT */
+	/* Note: EQEP Capture unit must be disabled before changing prescalar */
+	//  The value used by TI was 0x0073.  This was causing overflows.
+	eQep->QCAPCTL_QPOSCTL.QCAPCTL = QCAP_CAPCLK_DIV_128 | QCAP_UPEVNT_DIV_1;
+	
+	/* Enable EQEP Capture */
+	eQep->QCAPCTL_QPOSCTL.QCAPCTL |= QCAP_CAPTURE_EN;
+
+	/* Enable unit time out interupt */
+// ;+	eQep->QEINT_QFLG.QEINT |= EQEP_UTIME_INTR;
+
+	/* Clear encoder count */
+	eQep->QPOSCNT = 0x00000000;
+	
+	/* Set max encoder count */
+	eQep->QPOSMAX = UINT_MAX;
+
+	/* Clear timer */
+	eQep->QUTMR = 0x00000000;
+
+	/* Set unit timer period count */
+	/*  QUPRD = Period * 100MHz */
+	eQep->QUPRD = 0x007FFFFF; // (~1/12s) @ 100MHz
+
+	/* Clear all interrupt bits */
+	eQep->QCLR_QFRC.QCLR = EQEP_ALL_INTR;
+}
+
+uint32_t readEQepCounter(const PwmDeviceEnum pwmDev)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	return eQep->QPOSCNT;
+}	
+
+uint32_t readEQepStatus(const PwmDeviceEnum pwmDev)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	const uint32_t status = eQep->QEPSTS_QCTMR.QEPSTS;
+	
+	eQep->QEPSTS_QCTMR.QEPSTS = QEP_ALL_STATUS;
+	
+	return status;
+}	
+
+uint32_t readEQepIntrFlag(const PwmDeviceEnum pwmDev)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	return eQep->QEINT_QFLG.QFLG;
+}	
+
+void clearEQepIntrFlag(const PwmDeviceEnum pwmDev, const uint16_t flags)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+	
+	eQep->QCLR_QFRC.QCLR = flags;
+}	
+
+void readEQepCaptures(const PwmDeviceEnum pwmDev, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
+		uint32_t* const status)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmDev].module->eQep;
+
+	*counter = eQep->QPOSLAT;
+	*time = eQep->QCTMRLAT;
+	*period = eQep->QCPRDLAT;
+	*status = readEQepStatus(pwmDev);
+}	
+
+void disableEQepInterrupts()
+{
+	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
+	
+	if (interruptTable)
+	{
+ 		while (interruptTable->intrCallback != NULL)
+		{
+ 			volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmDev].module->eQep;
+ 			
+ 			eQep->QEINT_QFLG.QEINT &= ~interruptTable->intrFlags;
+			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+			
+			interruptTable++;
+		}
+	}
+}
+
+void enableEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable)
+{
+	m_eQepInterruptTable = interruptTable;
+	
+	while (interruptTable->intrCallback != NULL)
+	{
+		volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmDev].module->eQep;
+		
+		eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+		eQep->QEINT_QFLG.QEINT |= interruptTable->intrFlags;
+		
+		interruptTable++;
+	}
+}
+
+void pollEQepInterrupts()
+{
+	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
+
+	while (interruptTable->intrCallback != NULL)
+	{
+		volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmDev].module->eQep;
+		
+		if ((eQep->QEINT_QFLG.QFLG & interruptTable->intrFlags) != 0)
+		{
+			interruptTable->intrCallback(interruptTable->pwmDev);
+			
+			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+		}
+		
+		interruptTable++;
+	}
+}
+

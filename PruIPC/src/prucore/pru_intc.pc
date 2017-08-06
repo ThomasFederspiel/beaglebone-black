@@ -1,0 +1,261 @@
+/*
+ * pru_intc.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_intc.hp"
+
+#include <stddef.h>
+
+#include "pru_reg.hp"
+
+static const struct InterruptHandlerSpec* m_hostInterruptTable = NULL;
+
+/**
+ * @param systemEvent 0 - 63
+ * 	see http://www.siue.edu/~gengel/bbbWebStuff/am335xPruReferenceGuide.pdf, page 222
+ * @param channel 0 - 9
+ * @param host 0 - 9
+ */
+void enableInterrupt(const uint8_t systemEvent, const uint8_t channel, const uint8_t host)
+{
+	// Set System Interrupt Polarity Register (SIPR0, SIPR1), 1 = active high, 0 = active low
+	// Always set to active high. 
+	// SIPR0.0 - SIPR0.31 = System interrupt 0 - 31
+	// SIPR1.0 - SIPR0.31 = System interrupt 32 - 63
+	if (systemEvent > 31)
+	{
+		CT_INTC.SIPR1 = CT_INTC.SIPR1 | (0x01 << (systemEvent - 32));
+	}
+	else
+	{
+		CT_INTC.SIPR0 = CT_INTC.SIPR0 | (0x01 << systemEvent);
+	}
+
+	// Set System Interrupt Type Register (SITR0, SITR1), 1 = edge, 0 = level/pulse
+	// Always set to level/pulse- 
+	// SITR0.0 - SITR0.31 = System interrupt 0 - 31
+	// SITR1.0 - SITR0.31 = System interrupt 32 - 63
+	if (systemEvent > 31)
+	{
+		CT_INTC.SITR1 = CT_INTC.SITR1 & ~(0x01 << (systemEvent - 32));
+	}
+	else
+	{
+		CT_INTC.SITR0 = CT_INTC.SITR0 & ~(0x01 << systemEvent);
+	}
+
+	// Mapping as currently done by Linux
+	//
+	// System Event				Channel		Host	Dest
+	// PRU1_PRU0_INTERRUPT(18)	0			0		PRU R31.t30
+	// ARM_PRU0_INTERRUPT(21)	0			0		PRU R31.t30
+	// PRU0_PRU1_INTERRUPT(17)	1			1		PRU R31.t31
+	// ARM_PRU1_INTERRUPT(22)	1			1		PRU R31.t31
+	// PRU0_ARM_INTERRUPT(19)	2			2		ARM (Linux)
+	// PRU1_ARM_INTERRUPT(20)	3			3		ARM (Linux)
+	
+	// intr -> channel
+	(&CT_INTC.CMR0)[systemEvent >> 2] = ((&CT_INTC.CMR0)[systemEvent >> 2] & ~(0x0F << ((systemEvent & 0x03) << 3))) | (channel << ((systemEvent & 0x03) << 3));
+	
+	// channel -> host
+	(&CT_INTC.HMR0)[channel >> 2] = ((&CT_INTC.HMR0)[channel >> 2] & ~(0x0F << ((channel & 0x03) << 3))) | (host << ((channel & 0x03) << 3));
+	
+	// SECRx
+	if (systemEvent > 31)
+	{
+		CT_INTC.SECR1 = 0x01 << (systemEvent - 32);
+	}
+	else
+	{
+		CT_INTC.SECR0 = 0x01 << systemEvent;
+	}
+	
+	// ESRx
+	if (systemEvent > 31)
+	{
+		CT_INTC.ESR1 = 0x01 << (systemEvent - 32);
+	}
+	else
+	{
+		CT_INTC.ESR0 = 0x01 << systemEvent;
+	}
+	
+	// HIEISR
+	CT_INTC.HIEISR = 0x01 << host;
+}
+
+void disableInterrupt(const uint8_t systemEvent)
+{
+	// SECRx
+	if (systemEvent > 31)
+	{
+		CT_INTC.SECR1 = 0x01 << (systemEvent - 32);
+	}
+	else
+	{
+		CT_INTC.SECR0 = 0x01 << systemEvent;
+	}
+	
+	// ESRx
+	if (systemEvent > 31)
+	{
+		CT_INTC.ECR1 = 0x01 << (systemEvent - 32);
+	}
+	else
+	{
+		CT_INTC.ECR0 = 0x01 << systemEvent;
+	}
+}
+
+void disableHostInterrupts()
+{
+	const struct InterruptHandlerSpec* interruptTable = m_hostInterruptTable;
+	
+	if (interruptTable)
+	{
+		while (interruptTable->intrCallback != NULL)
+		{
+			disableInterrupt(interruptTable->sysEvent);
+			
+			interruptTable++;
+		}
+	}
+}
+
+void enableHost0Interrupts(const struct InterruptHandlerSpec* interruptTable)
+{
+	m_hostInterruptTable = interruptTable;
+	
+	while (interruptTable->intrCallback != NULL)
+	{
+		enableInterrupt(interruptTable->sysEvent, interruptTable->channel, INTC_HOST_0);
+		
+		interruptTable++;
+	}
+}
+
+void enableHost1Interrupts(const struct InterruptHandlerSpec* interruptTable)
+{
+	m_hostInterruptTable = interruptTable;
+	
+	while (interruptTable->intrCallback != NULL)
+	{
+		enableInterrupt(interruptTable->sysEvent, interruptTable->channel, INTC_HOST_1);
+		
+		interruptTable++;
+	}
+}
+
+void enableGlobalInterrupt(const bool enable)
+{
+	if (enable)
+	{
+		CT_INTC.GER = 0x01;
+	}
+	else
+	{
+		CT_INTC.GER = 0x00;
+	}
+	
+ 	/* Clear the status of all interrupts */
+ 	CT_INTC.SECR0 = 0xFFFFFFFF;
+	CT_INTC.SECR1 = 0xFFFFFFFF;
+}
+
+void triggSystemEventInterrupt(const uint8_t systemEvent)
+{
+	// SRSRx
+	if (systemEvent > 31)
+	{
+		CT_INTC.SRSR1 = 0x01 << (systemEvent - 32);
+	}
+	else
+	{
+		CT_INTC.SRSR0 = 0x01 << systemEvent;
+	}
+}
+
+void fireArmInterrupt(const uint8_t systemEvent)
+{
+	__R31 = R31_STROBE_VECT_OUTPUT | (systemEvent & R31_VECT_OUTPUT_OFFSET_MASK);
+}
+
+bool isSystemEventInterruptActive(const uint8_t systemEvent)
+{
+	// SECRx
+	if (systemEvent > 31)
+	{
+		return (CT_INTC.SECR1 & (0x01 << (systemEvent - 32))) != 0;
+	}
+	
+	return (CT_INTC.SECR0 & (0x01 << systemEvent)) != 0;
+}
+
+void pollHost0Interrupts()
+{
+	// Clear R31?
+	
+	if ((__R31 & R31_BIT30_HOST_0) != 0)
+	{
+		const struct InterruptHandlerSpec* interruptTable = m_hostInterruptTable;
+		
+		while (interruptTable->intrCallback != NULL)
+		{
+			if (((&CT_INTC.SECR0)[interruptTable->sysEventRegOfs] & interruptTable->sysEventMask) != 0)
+			{
+				interruptTable->intrCallback();
+				
+				(&CT_INTC.SECR0)[interruptTable->sysEventRegOfs] = interruptTable->sysEventMask;
+			}
+			
+			interruptTable++;
+		}
+	}
+}
+
+void pollHost1Interrupts()
+{
+	// Clear R31?
+	
+	if ((__R31 & R31_BIT31_HOST_1) != 0)
+	{
+		const struct InterruptHandlerSpec* interruptTable = m_hostInterruptTable;
+		
+		while (interruptTable->intrCallback != NULL)
+		{
+			if (((&CT_INTC.SECR0)[interruptTable->sysEventRegOfs] & interruptTable->sysEventMask) != 0)
+			{
+				interruptTable->intrCallback();
+				
+				(&CT_INTC.SECR0)[interruptTable->sysEventRegOfs] = interruptTable->sysEventMask;
+			}
+			
+			interruptTable++;
+		}
+	}
+}
+
+uint32_t getStatus1()
+{
+//	return CT_INTC.SITR0;
+//	return CT_INTC.CMR9;
+	return CT_INTC.SECR0;
+//	return CT_INTC.ESR0;
+//	return CT_INTC.HIEISR;
+//	return CT_INTC.SIPR0;
+//	return CT_INTC.SRSR0;
+}
+
+uint32_t getStatus2()
+{
+//	return CT_INTC.SITR1;
+//	return CT_INTC.CMR9;
+	return CT_INTC.SECR1;
+//	return CT_INTC.ESR1;
+//	return CT_INTC.SIPR1;
+//	return CT_INTC.SRSR1;
+}
+

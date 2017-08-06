@@ -1,0 +1,89 @@
+/*
+ * pru_ipc_device_epwm_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_EPWM_TYPES_HP_
+#define PRU_IPC_DEVICE_EPWM_TYPES_HP_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pru_ipc_types.hp"
+#include "pru_pwms_types.hp"
+#include "pru_epwm_types.hp"
+
+enum IPCDeviceEPwmIoctlEnum
+{
+	IPCDeviceEPwm_Open = 0,
+	IPCDeviceEPwm_Close,
+	IPCDeviceEPwm_Enable,
+	IPCDeviceEPwm_Disable,
+	IPCDeviceEPwm_ArmRaw,
+	IPCDeviceEPwm_SetFreq,
+	IPCDeviceEPwm_SetDuty,
+	IPCDeviceEPwm_SetPin
+};
+
+struct IPCDeviceEPwm_Close
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+};
+
+struct IPCDeviceEPwm_Open
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+};
+
+struct IPCDeviceEPwm_Enable
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	EPwmChannelEnum pwmCh;
+};
+
+struct IPCDeviceEPwm_Disable
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	EPwmChannelEnum pwmCh;
+	bool outputHigh;
+};
+
+struct IPCDeviceEPwm_ArmRaw
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	uint16_t periodCntr;
+	uint8_t clkDiv;
+	uint8_t hspClkDiv;
+};
+
+struct IPCDeviceEPwm_SetFreq
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	uint16_t periodCntr;
+};
+
+struct IPCDeviceEPwm_SetDuty
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	EPwmChannelEnum pwmCh;
+	uint16_t onTime;
+};
+
+struct IPCDeviceEPwm_SetPin
+{
+	struct IPCDeviceIoctl device;
+	PwmDeviceEnum pwmDev;
+	EPwmChannelEnum pwmCh;
+	bool high;
+};
+
+#endif /* PRU_IPC_DEVICE_EPWM_TYPES_HP_ */

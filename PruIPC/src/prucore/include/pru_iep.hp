@@ -1,0 +1,24 @@
+/*
+ * pru_iep.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IEP_HP_
+#define PRU_IEP_HP_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#define IEP_MAX_COUNTER 0xffffffff // 32 bit couner 
+#define IEP_CLOCK_CYCLE 5 // @ 200 MHz => 5 ns
+
+#define IEP_DEFAULT_INC_USEC(usec) ((uint64_t) usec) * 1000 / IEP_MAX_COUNTER / 5 + 1
+#define IEP_CMP_COUNT_USEC(usec) ((uint64_t) usec) * 1000 / IEP_CLOCK_CYCLE / (IEP_DEFAULT_INC_USEC(usec))
+
+bool setupIepTimer(const uint8_t inc, const uint32_t cnt);
+void enableIepTimer(const bool enable);
+void acknowledgeIepTimer();
+
+#endif /* PRU_IEP_HP_ */

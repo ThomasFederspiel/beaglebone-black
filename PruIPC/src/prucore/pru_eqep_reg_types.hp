@@ -1,0 +1,368 @@
+/*
+ * pru_eqep_reg_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EQEP_REG_TYPES_HP_
+#define PRU_EQEP_REG_TYPES_HP_
+
+// QDECCTL
+#define QDE_QUAD_CNT_MODE_MASK	~(BIT(14) | BIT(15))
+#define QDE_DIR_CNT_MODE		BIT(14)
+#define QDE_UP_CNT_MODE			BIT(15)
+#define QDE_DOWN_CNT_MODE		BIT(14) | BIT(15)
+
+#define QDE_SYNC_DIS_MASK	~BIT(13)
+#define QDE_SYNC_EN			BIT(13)
+
+#define QDE_SYNC_OUT_IDX_MASK	~BIT(12)
+#define QDE_SYNC_OUT_STRB		BIT(12)
+
+#define QDE_EXT_CLK_X2_MASK	~BIT(11)
+#define QDE_EXT_CLK_X1		BIT(11)
+
+#define QDE_NOSWAP_CLK_INP_MASK	~BIT(10)
+#define QDE_SWAP_CLK_INP		BIT(10)
+
+#define QDE_IDX_GATE_DIS_MASK	~BIT(9)
+#define QDE_IDX_GATE_EN			BIT(9)
+
+#define QDE_QAP_POL_DEF_MASK	~BIT(8)
+#define QDE_QAP_POL_NEG			BIT(8)
+
+#define QDE_QBP_POL_DEF_MASK	~BIT(7)
+#define QDE_QBP_POL_NEG			BIT(7)
+
+#define QDE_QIP_POL_DEF_MASK	~BIT(6)
+#define QDE_QIP_POL_NEG			BIT(6)
+
+#define QDE_QSP_POL_DEF_MASK	~BIT(5)
+#define QDE_QSP_POL_NEG			BIT(5)
+
+// QEPCTL
+#define QEP_PCRM_IDX_MASK	~(BIT(12) | BIT(13))
+#define QDE_PCRM_MAX		BIT(12)
+#define QDE_PCRM_IDX_1ST	BIT(13)
+#define QDE_PCRM_UTIME		BIT(12) | BIT(13)
+
+#define QEP_SEI_DIS			BIT(10)
+#define QDE_SEI_RISE		BIT(11)
+#define QDE_SEI_CLK			BIT(10) | BIT(11)
+
+#define QEP_IEI_DIS			BIT(8)
+#define QDE_IEI_RISE		BIT(9)
+#define QDE_IEI_FALL		BIT(8) | BIT(9)
+
+#define QEP_SWI				BIT(7)
+
+#define QEP_SEL				BIT(6)
+
+#define QEP_IEL_RISE		BIT(4)
+#define QDE_IEL_FALL		BIT(5)
+#define QDE_IEL_SIM 		BIT(4) | BIT(5)
+
+#define QEP_PHEN			BIT(3)
+#define QEP_QCLM			BIT(2)
+#define QEP_UTIME			BIT(1)
+#define QEP_WDE				BIT(0)
+
+// QCAPCTL
+#define QCAP_CAPTURE_EN 	BIT(15)
+
+#define QCAP_CAPCLK_DIV_1_MASK 	~(BIT(4) | BIT(5) | BIT(6))
+#define QCAP_CAPCLK_DIV_1 	0
+#define QCAP_CAPCLK_DIV_2 	BIT(4)
+#define QCAP_CAPCLK_DIV_4 	BIT(5)
+#define QCAP_CAPCLK_DIV_8 	BIT(4) | BIT(5)
+#define QCAP_CAPCLK_DIV_16 	BIT(6)
+#define QCAP_CAPCLK_DIV_32 	BIT(4) | BIT(6)
+#define QCAP_CAPCLK_DIV_64 	BIT(5) | BIT(6)
+#define QCAP_CAPCLK_DIV_128 BIT(4) | BIT(5) | BIT(6)
+
+#define QCAP_UPEVNT_DIV_1_MASK 	~(BIT(0) | BIT(1) | BIT(2) | BIT(3))
+#define QCAP_UPEVNT_DIV_1 		0
+#define QCAP_UPEVNT_DIV_2 		BIT(0)
+#define QCAP_UPEVNT_DIV_4 		BIT(1)
+#define QCAP_UPEVNT_DIV_8 		BIT(0) | BIT(1)
+#define QCAP_UPEVNT_DIV_16 		BIT(2)
+#define QCAP_UPEVNT_DIV_32 		BIT(0) | BIT(2)
+#define QCAP_UPEVNT_DIV_64 		BIT(1) | BIT(2)
+#define QCAP_UPEVNT_DIV_128 	BIT(0) | BIT(1) | BIT(2)
+#define QCAP_UPEVNT_DIV_256		BIT(3)
+#define QCAP_UPEVNT_DIV_512		BIT(0) | BIT(3)
+#define QCAP_UPEVNT_DIV_1024	BIT(1) | BIT(3)
+#define QCAP_UPEVNT_DIV_2048	BIT(0) | BIT(1) | BIT(3)
+
+// QEINT
+// Defined in pru_eqep.hp
+//#define QEINT_UTIME_FLG 		BIT(11)
+//#define QEINT_IEL_FLG 			BIT(10)
+//#define QEINT_SEL_FLG 			BIT(9)
+//#define QEINT_PCM_FLG 			BIT(8)
+//#define QEINT_PCR_FLG 			BIT(7)
+//#define QEINT_PCO_FLG 			BIT(6)
+//#define QEINT_PCU_FLG 			BIT(5)
+//#define QEINT_WTO_FLG 			BIT(4)
+//#define QEINT_QDC_FLG 			BIT(3)
+//#define QEINT_PHE_FLG 			BIT(2)
+//#define QEINT_PCE_FLG 			BIT(1)
+// #define QEINT_GLOBAL_FLG 		BIT(0)
+//#define QEINT_ALL_FLG 		 	(QEINT_UTIME_FLG | QEINT_IEL_FLG | QEINT_SEL_FLG | \
+// 	 	 	 	 	 	 	 	 QEINT_PCM_FLG | QEINT_PCR_FLG | QEINT_PCO_FLG | \
+// 	 	 	 	 	 	 	 	 QEINT_PCU_FLG | QEINT_WTO_FLG | QEINT_QDC_FLG | \
+// 	 	 	 	 	 	 	 	 QEINT_PHE_FLG | QEINT_PCE_FLG | QEINT_GLOBAL_FLG) 
+
+// QEPSTS
+#define QEP_ALL_STATUS		BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(4) | BIT(5) | BIT(6) | BIT(7)
+
+/* PRU_EQEP register set */
+typedef struct
+{
+
+	/* PRU_EQEP_QPOSCNT register bit field */
+	union {
+		volatile uint32_t QPOSCNT;
+	} ;	// 0x00
+	
+	/* PRU_EQEP_QPOSINIT register bit field */
+	union {
+		volatile uint32_t QPOSINIT;
+	} ;	// 0x04
+	
+	/* PRU_EQEP_QPOSMAX register bit field */
+	union {
+		volatile uint32_t QPOSMAX;
+	} ;	// 0x08
+	
+	/* PRU_EQEP_QPOSCMP register bit field */
+	union {
+		volatile uint32_t QPOSCMP;
+	} ;	// 0x0C
+	
+	/* PRU_EQEP_QPOSILAT register bit field */
+	union {
+		volatile uint32_t QPOSILAT;
+	} ;	// 0x10
+	
+	/* PRU_EQEP_QPOSSLAT register bit field */
+	union {
+		volatile uint32_t QPOSSLAT;
+	} ;	// 0x14
+	
+	/* PRU_EQEP_QPOSLAT register bit field */
+	union {
+		volatile uint32_t QPOSLAT;
+	} ;	// 0x18
+	
+	/* PRU_EQEP_QUTMR register bit field */
+	union {
+		volatile uint32_t QUTMR;
+	} ;	// 0x1C
+	
+	/* PRU_EQEP_QUPRD register bit field */
+	union {
+		volatile uint32_t QUPRD;
+	} ;	// 0x20
+	
+	/* PRU_EQEP_QWDTMR register bit field */
+	union {
+		volatile uint16_t QWDTMR;
+	} ;	// 0x24
+	
+	/* PRU_EQEP_QWDPRD register bit field */
+	union {
+		volatile uint16_t QWDPRD;
+	} ;	// 0x26
+
+	/* PRU_EQEP_QDECCTL register bit field */
+	/* PRU_EQEP_QEPCTL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t QDECCTL;
+			volatile uint16_t QEPCTL;
+		} QDECCTL_QEPCTL;
+
+		volatile struct{
+			// QDECCTL
+			unsigned rsvd1 : 5;
+			unsigned qsp : 1;
+			unsigned qip : 1;
+			unsigned qbp : 1;
+			unsigned qap : 1;
+			unsigned igate : 1;
+			unsigned swap : 1;
+			unsigned xcr : 1;
+			unsigned spsel : 1;
+			unsigned soen : 1;
+			unsigned qsrc : 2;
+			
+			// QEPCTL
+			unsigned wde : 1;
+			unsigned ute : 1;
+			unsigned qclm : 1;
+			unsigned phen : 1;
+			unsigned iel : 2;
+			unsigned sel : 1;
+			unsigned swi : 1;
+			unsigned iei : 2;
+			unsigned sei : 2;
+			unsigned pcrm : 2;
+			unsigned freesoft : 2;
+		} QDECCTL_QEPCTL_bit;
+	} ;	// 0x28
+
+	/* PRU_EQEP_QCAPCTL register bit field */
+	/* PRU_EQEP_QPOSCTL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t QCAPCTL;
+			volatile uint16_t QPOSCTL;
+		} QCAPCTL_QPOSCTL;
+
+		volatile struct{
+			// QCAPCTL
+			unsigned upps : 4;
+			unsigned ccps : 3;
+			unsigned rsvd1 : 8;
+			unsigned cen : 1;
+
+			// QPOSCTL
+			unsigned pcspw : 12;
+			unsigned pce : 1;
+			unsigned pcpol : 1;
+			unsigned pcload : 1;
+			unsigned pcshdw : 1;
+		} QCAPCTL_QPOSCTL_bit;
+	} ;	// 0x2C
+	
+	/* PRU_EQEP_QEINT register bit field */
+	/* PRU_EQEP_QFLG register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t QEINT;
+			volatile uint16_t QFLG;
+		} QEINT_QFLG;
+
+		volatile struct{
+			// QEINT
+			unsigned rsvd1 : 1;
+			unsigned pce : 1;
+			unsigned phe : 1;
+			unsigned qdc : 1;
+			unsigned wto : 1;
+			unsigned pcu : 1;
+			unsigned pco : 1;
+			unsigned pcr : 1;
+			unsigned pcm : 1;
+			unsigned sel : 1;
+			unsigned iel : 1;
+			unsigned uto : 1;
+			unsigned rsvd2 : 4;
+			
+			// QFLG
+			unsigned INT : 1;
+			unsigned pce_flg : 1;
+			unsigned phe_flg : 1;
+			unsigned qdc_flg : 1;
+			unsigned wto_flg : 1;
+			unsigned pcu_flg : 1;
+			unsigned pco_flg : 1;
+			unsigned pcr_flg : 1;
+			unsigned pcm_flg : 1;
+			unsigned sel_flg : 1;
+			unsigned iel_flg : 1;
+			unsigned uto_flg : 1;
+			unsigned rsvd3 : 4;
+		} QEINT_QFLG_bit;
+	} ;	// 0x30
+	
+	/* PRU_EQEP_QCLR register bit field */
+	/* PRU_EQEP_QFRC register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t QCLR;
+			volatile uint16_t QFRC;
+		} QCLR_QFRC;
+
+		volatile struct{
+			// QCLR
+			unsigned INT : 1;
+			unsigned pce : 1;
+			unsigned phe : 1;
+			unsigned qdc : 1;
+			unsigned wto : 1;
+			unsigned pcu : 1;
+			unsigned pco : 1;
+			unsigned pcr : 1;
+			unsigned pcm : 1;
+			unsigned sel : 1;
+			unsigned iel : 1;
+			unsigned uto : 1;
+			unsigned rsvd1 : 4;
+			
+			// QFRC
+			unsigned rsvd2 : 1;
+			unsigned pce_frc : 1;
+			unsigned phe_frc : 1;
+			unsigned qdc_frc : 1;
+			unsigned wto_frc : 1;
+			unsigned pcu_frc : 1;
+			unsigned pco_frc : 1;
+			unsigned pcr_frc : 1;
+			unsigned pcm_frc : 1;
+			unsigned sel_frc : 1;
+			unsigned iel_frc : 1;
+			unsigned uto_frc : 1;
+			unsigned rsvd3 : 4;
+		} QCLR_QFRC_bit;
+	} ;	// 0x34
+	
+	/* PRU_EQEP_QEPSTS register bit field */
+	/* PRU_EQEP_QCTMR register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t QEPSTS;
+			volatile uint16_t QCTMR;
+		} QEPSTS_QCTMR;
+
+		volatile struct{
+			unsigned pcef : 1;
+			unsigned fimf : 1;
+			unsigned cdef : 1;
+			unsigned coef : 1;
+			unsigned qdlf : 1;
+			unsigned qdf : 1;
+			unsigned fdf : 1;
+			unsigned upevnt : 1;
+			unsigned rsvd1 : 8;
+		} QEPSTS_QCTMR_bit;
+	} ;	// 0x38
+	
+	/* PRU_EQEP_QCPRD register bit field */
+	union {
+		volatile uint16_t QCPRD;
+	} ;	// 0x3C
+	
+	/* PRU_EQEP_QCTMRLAT register bit field */
+	union {
+		volatile uint16_t QCTMRLAT;
+	} ;	// 0x3E
+	
+	/* PRU_EQEP_QCPRDLAT register bit field */
+	union {
+		volatile uint16_t QCPRDLAT;
+	} ;	// 0x40
+	
+	volatile uint16_t rsvd[13];	// 0x42
+	
+	/* PRU_EQEP_REVID register bit field */
+	union {
+		volatile uint32_t REVID;
+	} ;	// 0x5C
+	
+} pruEQep;
+
+#endif /* PRU_EQEP_REG_TYPES_HP_ */
+

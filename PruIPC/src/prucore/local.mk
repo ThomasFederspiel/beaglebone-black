@@ -1,0 +1,3 @@
+MODULE_INCLUDES += prucore
+	
+#MODULE_LIBRARIES +=

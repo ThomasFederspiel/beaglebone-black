@@ -1,0 +1,40 @@
+/*
+ * pru_ipc_device_gpio_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_GPIO_TYPES_HP_
+#define PRU_IPC_DEVICE_GPIO_TYPES_HP_
+
+#include <stdint.h>
+
+#include "pru_ipc_types.hp"
+
+enum IPCDeviceGpioIoctlEnum
+{
+	IPCDeviceGpio_Set = 0,
+	IPCDeviceGpio_Clear,
+	IPCDeviceGpio_Toggle
+};
+
+struct IPCDeviceGpio_Set
+{
+	struct IPCDeviceIoctl device;
+	uint32_t pin;
+};
+
+struct IPCDeviceGpio_Clear
+{
+	struct IPCDeviceIoctl device;
+	uint32_t pin;
+};
+
+struct IPCDeviceGpio_Toggle
+{
+	struct IPCDeviceIoctl device;
+	uint32_t pin;
+};
+
+#endif /* PRU_IPC_DEVICE_GPIO_TYPES_HP_ */

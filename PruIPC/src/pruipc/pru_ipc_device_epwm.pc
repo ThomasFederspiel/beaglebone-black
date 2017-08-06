@@ -1,0 +1,92 @@
+/*
+ * pru_ipc_device_epwm.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_device_epwm.hp"
+
+#include "pru_ipc_device_epwm_types.hp"
+#include "pru_epwm.hp"
+
+uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	switch (deviceIoctl->ioctl)
+	{
+	case IPCDeviceEPwm_Open:
+		{
+			const struct IPCDeviceEPwm_Open* const open = (struct IPCDeviceEPwm_Open*) deviceIoctl;
+
+			enableEPwmClock(open->pwmDev, true);
+			
+			return sizeof(struct IPCDeviceEPwm_Open);
+		}
+	
+	case IPCDeviceEPwm_Close:
+		{
+			const struct IPCDeviceEPwm_Close* const close = (struct IPCDeviceEPwm_Close*) deviceIoctl;
+			
+			enableEPwmClock(close->pwmDev, false);
+			
+			return sizeof(struct IPCDeviceEPwm_Close);
+		}
+		
+	case IPCDeviceEPwm_Enable:
+		{
+			const struct IPCDeviceEPwm_Enable* const enable = (struct IPCDeviceEPwm_Enable*) deviceIoctl;
+			
+			enableEPwm(enable->pwmDev, enable->pwmCh);
+			
+			return sizeof(struct IPCDeviceEPwm_Enable);
+		}
+		
+	case IPCDeviceEPwm_Disable:
+		{
+			const struct IPCDeviceEPwm_Disable* const disable = (struct IPCDeviceEPwm_Disable*) deviceIoctl;
+			
+			disableEPwm(disable->pwmDev, disable->pwmCh, disable->outputHigh);
+			
+			return sizeof(struct IPCDeviceEPwm_Disable);
+		}
+		
+	case IPCDeviceEPwm_ArmRaw:
+		{
+			const struct IPCDeviceEPwm_ArmRaw* const armRaw = (struct IPCDeviceEPwm_ArmRaw*) deviceIoctl;
+			
+			armEPwmRaw(armRaw->pwmDev, armRaw->periodCntr, armRaw->clkDiv, armRaw->hspClkDiv);
+			
+			return sizeof(struct IPCDeviceEPwm_ArmRaw);
+		}
+		
+	case IPCDeviceEPwm_SetFreq:
+		{
+			const struct IPCDeviceEPwm_SetFreq* const setFreq = (struct IPCDeviceEPwm_SetFreq*) deviceIoctl;
+			
+			setEPwmFreq(setFreq->pwmDev, setFreq->periodCntr);
+			
+			return sizeof(struct IPCDeviceEPwm_SetFreq);
+		}
+		
+	case IPCDeviceEPwm_SetDuty:
+		{
+			const struct IPCDeviceEPwm_SetDuty* const setDuty = (struct IPCDeviceEPwm_SetDuty*) deviceIoctl;
+			
+			setEPwmDuty(setDuty->pwmDev, setDuty->pwmCh, setDuty->onTime);
+			
+			return sizeof(struct IPCDeviceEPwm_SetDuty);
+		}
+		
+	case IPCDeviceEPwm_SetPin:
+		{
+			const struct IPCDeviceEPwm_SetPin* const setPin = (struct IPCDeviceEPwm_SetPin*) deviceIoctl;
+			
+			setEPwmPin(setPin->pwmDev, setPin->pwmCh, setPin->high);
+			
+			return sizeof(struct IPCDeviceEPwm_SetPin);
+		}
+	}
+	
+	return 0;
+}
+

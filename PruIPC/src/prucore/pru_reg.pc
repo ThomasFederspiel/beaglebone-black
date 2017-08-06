@@ -1,0 +1,15 @@
+/*
+ * pru_reg.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_reg.hp"
+
+/* Definition of control register structures. */
+#pragma DATA_SECTION(PRU0_CTRL, ".PRU0_CTRL");
+#pragma DATA_SECTION(PRU1_CTRL, ".PRU1_CTRL");
+
+volatile far pruCtrl PRU0_CTRL;
+volatile far pruCtrl PRU1_CTRL;

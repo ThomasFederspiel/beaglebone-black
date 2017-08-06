@@ -1,0 +1,95 @@
+/*
+ * pru_ecap.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_ECAP_HP_
+#define PRU_ECAP_HP_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pru_pwms.hp"
+#include "pru_macros.hp"
+
+typedef enum
+{
+	ECAP_PWM_FREQ_1HZ = 0,
+	ECAP_PWM_FREQ_2HZ,
+	ECAP_PWM_FREQ_10HZ,
+	ECAP_PWM_FREQ_100HZ,
+	ECAP_PWM_FREQ_25KHZ,
+	LAST_ECAP_PWM_FREQ
+} ECapPwmFreqEnum;
+
+typedef enum
+{
+	ECAP_PWM_INT_SEL_CEVT1 = BIT(1),
+	ECAP_PWM_INT_SEL_CEVT2 = BIT(2),
+	ECAP_PWM_INT_SEL_CEVT3 = BIT(3),
+	ECAP_PWM_INT_SEL_CEVT4 = BIT(4),
+	ECAP_PWM_INT_SEL_OVF = BIT(5),
+	ECAP_PWM_INT_SEL_PRD = BIT(6),
+	ECAP_PWM_INT_SEL_CMP = BIT(7),
+	ECAP_PWM_INT_SEL_ALL = ECAP_PWM_INT_SEL_CEVT1 | ECAP_PWM_INT_SEL_CEVT2 | ECAP_PWM_INT_SEL_CEVT3 
+		| ECAP_PWM_INT_SEL_CEVT4 | ECAP_PWM_INT_SEL_OVF | ECAP_PWM_INT_SEL_PRD | ECAP_PWM_INT_SEL_CMP,
+	LAST_ECAP_PWM_INT_SEL = 0x100
+} ECapPwmIntSelEnum;
+
+typedef enum
+{
+	ECAP_CAPTURE_PERIOD_INTR = 0,
+	ECAP_CAPTURE_FULL_INTR,
+	ECAP_CAPTURE_POLL
+} ECapCaptureEnableEnum;
+
+typedef enum
+{
+	ECAP_DELTA_PERIOD_CAPTURE = 0,
+	ECAP_DELTA_FULL_CAPTURE
+} ECapCaptureTypeEnum;
+
+void enableECapClock(const PwmDeviceEnum pwmDev, const bool enable);
+uint32_t armECapPWMFreq(const PwmDeviceEnum pwmDev, const ECapPwmFreqEnum freq);
+bool armECapPWMRaw(const PwmDeviceEnum pwmDev, const uint32_t freq);
+void setECapPWMDuty(const PwmDeviceEnum pwmDev, const uint32_t onTime);
+void enableECapPWM(const PwmDeviceEnum pwmDev);
+void disableECapPWM(const PwmDeviceEnum pwmDev, const bool outputHigh);
+uint16_t acknowledgeECapPWMInterrut(const PwmDeviceEnum pwmDev);
+void enableECapPWMInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel);
+void disableECapPWMInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel);
+uint32_t getECapCounter(const PwmDeviceEnum pwmDev);
+void triggECapInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel);
+bool armECapCapture(const PwmDeviceEnum pwmDev, const ECapCaptureTypeEnum capType,
+		const bool continouos);
+void enableECapCapture(const PwmDeviceEnum pwmDev, const ECapCaptureEnableEnum enable);
+void disableECapCapture(const PwmDeviceEnum pwmDev);
+bool pollOneShotCaptureFull(const PwmDeviceEnum pwmDev, uint32_t* highTime, uint32_t* periodTime);
+bool pollOneShotCapturePeriod(const PwmDeviceEnum pwmDev, uint32_t* periodTime);
+bool isECapInterruptActive(const PwmDeviceEnum pwmDev);
+
+void armECapPWMRaw_internal(const uint32_t freq);
+uint32_t armECapPWMFreq_internal(const ECapPwmFreqEnum freq);
+void setECapPWMDuty_internal(const uint32_t onTime);
+void enableECapPWM_internal();
+void disableECapPWM_internal(const bool outputHigh);
+void enableECapPWMInterrupt_internal(const uint8_t intSel);
+void disableECapPWMInterrupt_internal(const uint8_t intSel);
+uint16_t acknowledgeECapPWMInterrut_internal();
+uint32_t getECapCounter_internal();
+void triggECapInterrupt_internal(const uint8_t intSel);
+bool armECapCapture_internal(const ECapCaptureTypeEnum capType,
+		const bool continouos);
+void enableECapCapture_internal(const ECapCaptureEnableEnum enable);
+void disableECapCapture_internal();
+bool pollOneShotCaptureFull_internal(uint32_t* highTime, uint32_t* periodTime);
+bool pollOneShotCapturePeriod_internal(uint32_t* periodTime);
+bool isECapInterruptActive_internal();
+
+void pollECapInterrupt(const PwmDeviceEnum pwmDev);
+
+uint32_t getECapTmp(const PwmDeviceEnum pwmDev, const uint8_t i);
+
+#endif /* PRU_ECAP_HP_ */

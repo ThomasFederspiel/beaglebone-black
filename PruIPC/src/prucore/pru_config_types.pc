@@ -1,0 +1,22 @@
+#include "pru_config_types.hp"
+
+#pragma DATA_SECTION (m_pruConfig, ".PRU_CONFIG")
+struct PruConfigLayout m_pruConfig;
+
+bool isTerminated()
+{
+	return (m_pruConfig.coreRegister.ctrl & TERMINATE_CTRL_REG_MASK) != 0;
+}
+
+void setActive(const bool set)
+{
+	if (set)
+	{
+		m_pruConfig.coreRegister.status |= PRU_ACTIVE_STATUS_REG_MASK;
+	}
+	else
+	{
+		m_pruConfig.coreRegister.status &= ~PRU_ACTIVE_STATUS_REG_MASK;
+	}
+}
+

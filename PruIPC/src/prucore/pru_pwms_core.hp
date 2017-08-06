@@ -1,0 +1,53 @@
+/*
+ * pru_pwms_core.ph
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PWMS_CORE_HP_
+#define PRU_PWMS_CORE_HP_
+
+#include <stdbool.h>
+
+#include "pru_pwmss_reg_types.hp"
+#include "pru_eqep_reg_types.hp"
+#include "pru_epwm_reg_types.hp"
+#include "pru_epwm_reg_types.hp"
+#include "pru_ecap_reg_types.hp"
+#include "pru_per.hp"
+#include "pru_pwms.hp"
+
+typedef enum
+{
+	PWMSS_MODULE_EPWM = 0,
+	PWMSS_MODULE_EQEP,
+	PWMSS_MODULE_ECAP,
+	LAST_PWM_MODULE
+}  PwmssModuleEnum;
+
+/* PRU_PWM subsytem register set */
+typedef struct
+{
+	pruPwmss pwmss;	// 0x0000 - 0x00FF, 0x00 - 0x0F
+	volatile uint8_t rsvd1[0xF0];	// 0x010 - 0xFF
+	pruECap eCap;	// 0x0100 - 0x017F,  0x00 - 0x5F
+	volatile uint8_t rsvd2[0x20]; 	// 0x160 - 0x17F
+	pruEQep eQep;	// 0x0180 - 0x01FF, 0x00 - 0x5F
+	volatile uint8_t rsvd3[0x20]; 	// 0x1E0 - 0x1FF 
+	pruEPwm ePwm;	// 0x0200 - 0x025F, 0x00 - 0x41
+	volatile uint8_t rsvd4[0x1E]; 	// 0x242 - 0x25F
+} pruPwms;
+
+typedef struct
+{
+	PerModuleClkEnum clk;
+	volatile pruPwms* module;
+} PruPwmsModule;
+
+extern volatile PruPwmsModule const pwmsRegisterBase[];
+
+void enablePWMSSClock(const PwmDeviceEnum pwmDev, const PwmssModuleEnum module, const bool enable);
+
+#endif /* PRU_PWMS_CORE_HP_ */
+

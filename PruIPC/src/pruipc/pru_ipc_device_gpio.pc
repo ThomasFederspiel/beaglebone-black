@@ -1,0 +1,45 @@
+/*
+ * pru_ipc_device_gpio.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_device_gpio.hp"
+
+#include "pru_ipc_device_gpio_types.hp"
+#include "pru_gpio.hp"
+
+uint16_t deviceGpioIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	switch (deviceIoctl->ioctl)
+	{
+	case IPCDeviceGpio_Set:
+		{
+			const struct IPCDeviceGpio_Set* const set = (struct IPCDeviceGpio_Set*) deviceIoctl;
+
+			setGpio(set->pin);
+			
+			return sizeof(struct IPCDeviceGpio_Set);
+		}
+	case IPCDeviceGpio_Clear:
+		{
+			const struct IPCDeviceGpio_Clear* const clear = (struct IPCDeviceGpio_Clear*) deviceIoctl;
+
+			clrGpio(clear->pin);
+			
+			return sizeof(struct IPCDeviceGpio_Clear);
+		}
+	case IPCDeviceGpio_Toggle:
+		{
+			const struct IPCDeviceGpio_Toggle* const toggle = (struct IPCDeviceGpio_Toggle*) deviceIoctl;
+
+			toggleGpio(toggle->pin);
+			
+			return sizeof(struct IPCDeviceGpio_Toggle);
+		}
+	}
+
+	return 0;
+}
+

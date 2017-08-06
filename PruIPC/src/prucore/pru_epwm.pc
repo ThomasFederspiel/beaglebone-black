@@ -1,0 +1,402 @@
+/*
+ * pru_epwm.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_epwm.hp"
+
+#include "pru_reg.hp"
+#include "pru_pwms_core.hp"
+#include "pru_intc.hp"
+
+static uint32_t tmp1 = 0;
+static uint32_t tmp2 = 0;
+
+typedef struct
+{
+	uint16_t periodCntr;
+	uint8_t clkDiv;
+	uint8_t hspClkDiv;
+} EPwmFreqElement; 
+
+// SYSCLKOUT = 100 MHz (10 ns)
+const EPwmFreqElement EPwmFreqTable[] =
+{
+		{	65104, TB_DIV128,	TB_HSP_DIV12 	},		// 1 Hz
+		{	65104, TB_DIV128,	TB_HSP_DIV6 	},		// 2 Hz
+		{	52083, TB_DIV32,	TB_HSP_DIV6		},		// 10 Hz	
+		{	50000, TB_DIV2,		TB_HSP_DIV10    },		// 100 Hz	
+		{	4000,  TB_DIV1,		TB_HSP_DIV1		}		// 25 kHz
+};
+
+const uint8_t EPwmSystemEvent[] = 
+{
+	EPWM0_INTR_INTR_PEND,
+	EPWM1_INTR_INTR_PEND, 
+	EPWM2_INTR_INTR_PEND 
+};
+
+static bool armEPwmPrescalers(const uint32_t rqstPrescaler,
+                uint16_t* const prescaleDiv, uint8_t* const clkDivRes, uint8_t* const hspClkDivRes)
+{
+	 for (uint32_t clkdiv = 0; clkdiv <= 7; ++clkdiv) 
+	 {
+		 // Must be uint32_t other type will cause 1 always to be returned by hspClkDivRes
+		 // BUG in PRU-C compiler
+		 for (uint32_t hspclkdiv = 0; hspclkdiv <= 7; ++hspclkdiv)  
+		 {
+			/*
+			 * calculations for prescaler value :
+			 * prescaleDiv = HSPCLKDIVIDER * CLKDIVIDER.
+			 * CLKDIVIDER = 2 ** clkdiv
+			 * HSPCLKDIVIDER = (1), if hspclkdiv == 0 *OR*
+			 *              (2 * hspclkdiv), if hspclkdiv != 0
+			 *
+			 * Configure prescale_div value such that period
+			 * register value is less than 65535.
+			 */
+ 
+			if (hspclkdiv)
+			{
+				const uint32_t fact1 = (1 << clkdiv);
+				const uint32_t fact2 = (hspclkdiv << 1);
+
+				// need as to make calculations to work 1:st time after reset
+				tmp1 = fact1;
+				tmp2 = fact2;
+				
+				*prescaleDiv = fact1 * fact2;
+			}
+			else
+			{
+				*prescaleDiv = (1 << clkdiv);
+			}
+			
+			if (*prescaleDiv >= rqstPrescaler) 
+			{
+				*clkDivRes = clkdiv;
+				*hspClkDivRes = hspclkdiv;
+				
+				return true;
+			}
+		}
+	}
+	 
+	return false;
+}
+
+void enableEPwmClock(const PwmDeviceEnum pwmDev, const bool enable)
+{
+	enablePWMSSClock(pwmDev, PWMSS_MODULE_EPWM, enable);
+}
+
+uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq)
+{
+	if (freq >= LAST_PWM_FREQ)
+	{
+		return 0;
+	}
+
+	const EPwmFreqElement* const elem = &EPwmFreqTable[freq];
+	
+	if (armEPwmRaw(pwmDev, elem->periodCntr, elem->clkDiv, elem->hspClkDiv))
+	{
+		return elem->periodCntr;
+	}
+	
+	return 0;
+}
+
+uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq)
+{
+	uint16_t prescaleDiv = 0;
+	uint8_t clkDiv = 0;
+	uint8_t hspClkDiv = 0;
+	
+	uint16_t rqstPrescaleDiv = freq / 0xFFFF;
+	
+	if (armEPwmPrescalers(rqstPrescaleDiv,
+			&prescaleDiv, &clkDiv, &hspClkDiv))
+	{
+		const uint16_t periodCntr = freq / prescaleDiv;
+
+		if (armEPwmRaw(pwmDev, periodCntr, clkDiv, hspClkDiv))
+		{
+			return periodCntr; 
+		}
+	}
+	
+	return 0;
+}
+
+bool armEPwmRaw(const PwmDeviceEnum pwmDev, 
+		const uint16_t periodCntr, const uint8_t clkDiv, const uint8_t hspClkDiv)
+{
+	if (pwmDev >= LAST_PWM_DEV)
+	{
+		return false;
+	}
+	
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	// Stop timer and turn off interrupts
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.ctrmode = TB_COUNT_FREEZE;
+	pruPwms->ePwm.TBCTL_TBSTS.TBCTL |= TB_COUNT_FREEZE;
+	
+//	pruPwms->ePwm.TZFRC_ETSEL_bit.inten = ET_INT_DIS;
+	pruPwms->ePwm.TZFRC_ETSEL.ETSEL &= ET_INT_DIS_MASK;
+
+	pruPwms->ePwm.TBPRD = periodCntr;
+	pruPwms->ePwm.TBPHSHR_TBPHS.TBPHS = 0;
+	pruPwms->ePwm.TBCNT = 0;
+
+	// SYSCLKOUT = 100 MHz (10 ns)
+	// TBCLK = SYSCLKOUT/(HSPCLKDIV × CLKDIV)
+	// PWM period = (TBPRD + 1) × TTBCLK
+	// 1 048 586 ns (1.048 ms), div 1 x 1, 100 MHz
+	// ...
+	// 1.17441714 s, div 14 x 128, 55 803 Hz
+	
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.phsen = TB_DISABLE;
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.prdld = TB_SHADOW;
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.syncosel = TB_SYNC_DISABLE;
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.hspclkdiv = hspClkDiv;
+//	pruPwms->ePwm.TBCTL_TBSTS_bit.clkdiv = clkDiv;
+		
+//	tmp = hspClkDiv;
+	
+	pruPwms->ePwm.TBCTL_TBSTS.TBCTL = ((clkDiv << TB_DIV_SHIFT) | (hspClkDiv << TB_HSP_DIV_SHIFT) | TB_SYNC_DISABLE) & TB_DISABLE_MASK & TB_SHADOW_MASK;
+	
+//	pruPwms->ePwm.CMPCTL_bit.shdwamode = CC_SHADOW;
+//	pruPwms->ePwm.CMPCTL_bit.shdwbmode = CC_SHADOW;
+//	pruPwms->ePwm.CMPCTL_bit.loadamode = CC_CTR_ZERO;
+//	pruPwms->ePwm.CMPCTL_bit.loadbmode = CC_CTR_ZERO;
+	
+	pruPwms->ePwm.CMPCTL.CMPCTL &= CC_CTR_ZERO_A_MASK & CC_CTR_ZERO_B_MASK & CC_SHADOW_A_MASK & CC_SHADOW_B_MASK;
+	
+//	pruPwms->ePwm.CMPB_AQCTLA_bit.zro = AQ_SET;
+//	pruPwms->ePwm.CMPB_AQCTLA_bit.cau = AQ_CLEAR;
+	
+	pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_CLEAR | AQ_ZRO_SET;
+	
+//	pruPwms->ePwm.AQCTLB_AQSFRC_bit.zro = AQ_SET;
+//	pruPwms->ePwm.AQCTLB_AQSFRC_bit.cbu = AQ_CLEAR;
+	
+	pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_CLEAR | AQ_ZRO_SET;
+	
+	return true;
+}
+
+void setEPwmFreq(const PwmDeviceEnum pwmDev, const uint16_t periodCntr)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	pruPwms->ePwm.TBPRD = periodCntr;
+}
+
+void setEPwmPin(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_LOAD_IMMEDIAT;
+	
+	switch (pwmCh)
+	{
+	case PWM_CH_A:
+		
+		if (outputHigh)
+		{
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFA_HIGH;
+		}
+		else
+		{
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFA_LOW;
+		}
+		break;
+		
+	case PWM_CH_B:
+		
+		if (outputHigh)
+		{
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFB_HIGH;
+		}
+		else
+		{
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFB_LOW;
+		}
+		break;
+	}
+}
+
+void enableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	switch (pwmCh)
+	{
+	case PWM_CH_A:
+		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC &= AQ_ACTSFA_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK;
+		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC &= AQC_CSFA_NO_ACTION_MASK;
+			
+		pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_CLEAR | AQ_ZRO_SET;
+		
+		pruPwms->ePwm.TBCTL_TBSTS.TBCTL &= TB_COUNT_UP_MASK;
+		break;
+
+	case PWM_CH_B:
+		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC &= AQ_ACTSFB_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK;
+		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC &= AQC_CSFB_NO_ACTION_MASK;
+			
+		pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_CLEAR | AQ_ZRO_SET;
+		
+		pruPwms->ePwm.TBCTL_TBSTS.TBCTL &= TB_COUNT_UP_MASK;
+		break;
+	}
+}
+
+void disableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	switch (pwmCh)
+	{
+	case PWM_CH_A:
+//		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_CLEAR | AQ_LOAD_IMMEDIAT | AQ_OTSFA;
+			
+		pruPwms->ePwm.TBCTL_TBSTS.TBCTL |= TB_COUNT_FREEZE;
+
+#if 0
+		if (outputHigh)
+		{
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_SET | AQ_OTSFA;
+			
+//			pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_SET | AQ_ZRO_SET;
+		}
+		else
+		{
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_CLEAR | AQ_OTSFA;
+			
+//			pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_CLEAR | AQ_ZRO_CLEAR;
+		}
+#endif
+		
+		break;
+
+	case PWM_CH_B:
+//		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFB_CLEAR | AQ_LOAD_IMMEDIAT | AQ_OTSFB;
+			
+		pruPwms->ePwm.TBCTL_TBSTS.TBCTL |= TB_COUNT_FREEZE;
+
+#if 0
+		if (outputHigh)
+		{
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFB_SET | AQ_LOAD_IMMEDIAT | AQ_OTSFB;
+			
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_SET | AQ_ZRO_SET;
+		}
+		else
+		{
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFB_CLEAR | AQ_LOAD_IMMEDIAT | AQ_OTSFB;
+			
+//			pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_CLEAR | AQ_ZRO_CLEAR;
+		}
+#endif
+		
+		break;
+	}
+	
+	setEPwmPin(pwmDev, pwmCh, outputHigh);
+}
+
+void setEPwmDuty(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const uint16_t onTime)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	switch (pwmCh)
+	{
+	case PWM_CH_A:
+		// Shadow register for CMPA
+		pruPwms->ePwm.CMPAHR_CMPA.CMPA = onTime;
+		break;
+		
+	case PWM_CH_B:
+		// Shadow register for CMPB
+		pruPwms->ePwm.CMPB_AQCTLA.CMPB = onTime;
+		break;
+	}
+}
+
+void acknowledgeEPwmETInterrut(const PwmDeviceEnum pwmDev)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	pruPwms->ePwm.ETCLR_ETFRC.ETCLR = EPWM_ETCLR_INT;
+}
+
+bool enableEPwmETInterrupt(const PwmDeviceEnum pwmDev, const EPwmIntSelEnum intSel)
+{
+	if (intSel >= LAST_PWM_INT_SEL)
+	{
+		return false;
+	}
+	
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	acknowledgeEPwmETInterrut(pwmDev);
+
+//	pruPwms->ePwm.ETPS_ETFLG_bit.intprd = ET_1ST;
+	
+	pruPwms->ePwm.ETPS_ETFLG.ETPS |= ET_1ST;
+	
+//	pruPwms->ePwm.TZFRC_ETSEL_bit.intsel = intSel;
+//	pruPwms->ePwm.TZFRC_ETSEL_bit.inten = ET_INT_EN;
+	
+	pruPwms->ePwm.TZFRC_ETSEL.ETSEL |= ET_INT_EN | intSel;
+	
+	return true;
+}
+
+void disableEPwmETInterrupt(const PwmDeviceEnum pwmDev)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+//	pruPwms->ePwm.TZFRC_ETSEL_bit.inten = ET_INT_DIS;
+	
+	pruPwms->ePwm.TZFRC_ETSEL.ETSEL &= ET_INT_DIS_MASK;
+	
+//	pruPwms->ePwm.ETPS_ETFLG_bit.intprd = ET_DISABLE;
+
+	pruPwms->ePwm.ETPS_ETFLG.ETPS &= ET_DISABLE_MASK;
+	
+	acknowledgeEPwmETInterrut(pwmDev);
+}
+
+void pollEPwmInterrupt(const PwmDeviceEnum pwmDev)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	if (pruPwms->ePwm.ETPS_ETFLG.ETFLG & EPWM_ETFLG_INT)
+	{
+		const uint8_t sysEv = EPwmSystemEvent[pwmDev];
+		
+		triggSystemEventInterrupt(sysEv);
+	}
+}
+
+bool isEPwmInterruptActive(const PwmDeviceEnum pwmDev)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	return (pruPwms->ePwm.ETPS_ETFLG.ETFLG & EPWM_ETFLG_INT) != 0;
+}
+
+uint16_t getEPwmCounter(const PwmDeviceEnum pwmDev)
+{
+	const volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+
+	return pruPwms->ePwm.TBCNT;
+}
+
+

@@ -1,0 +1,63 @@
+/*
+ * pru_eqep.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EQEP_HP_
+#define PRU_EQEP_HP_
+
+#include <stdint.h>
+
+#include "pru_pwms.hp"
+#include "pru_macros.hp"
+
+typedef enum
+{
+	EQEP_UTIME_INTR = BIT(11),
+	EQEP_IEL_INTR = BIT(10),
+	EQEP_SEL_INTR = BIT(9),
+	EQEP_PCM_INTR = BIT(8),
+	EQEP_PCR_INTR = BIT(7),
+	EQEP_PCO_INTR = BIT(6),
+	EQEP_PCU_INTR = BIT(5),
+	EQEP_WTO_INTR = BIT(4),
+	EQEP_QDC_INTR = BIT(3),
+	EQEP_PHE_INTR = BIT(2),
+	EQEP_PCE_INTR = BIT(1),
+	EQEP_GLOBAL_INTR = BIT(0),
+	EQEP_ALL_INTR = (EQEP_UTIME_INTR | EQEP_IEL_INTR | EQEP_SEL_INTR |
+					EQEP_PCM_INTR | EQEP_PCR_INTR | EQEP_PCO_INTR |
+					EQEP_PCU_INTR | EQEP_WTO_INTR | EQEP_QDC_INTR |
+					EQEP_PHE_INTR | EQEP_PCE_INTR | EQEP_GLOBAL_INTR) 
+} EQepInterruptEnum;
+
+typedef enum
+{
+	EQEP_QUADRATURE_MODE = 0,
+	EQEP_DIRECTION_COUNT_MODE = BIT(14),
+	EQEP_UP_COUNT_MODE = BIT(15),
+	EQEP_DOWN_COUNT_MODE = BIT(14) | BIT(15)
+} EQepCounterModeEnum;
+
+struct EQepInterruptHandlerSpec
+{
+	void (*intrCallback)(const PwmDeviceEnum pwmDev);
+	PwmDeviceEnum pwmDev;
+	uint16_t intrFlags;
+};
+
+void disableEQepInterrupts();
+void enableEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable);
+void pollEQepInterrupts();
+void enableEQep(const PwmDeviceEnum pwmDev, const EQepCounterModeEnum mode);
+void disableEQep(const PwmDeviceEnum pwmDev);
+uint32_t readEQepCounter(const PwmDeviceEnum pwmDev);
+uint32_t readEQepStatus(const PwmDeviceEnum pwmDev);
+uint32_t readEQepIntrFlag(const PwmDeviceEnum pwmDev);
+void clearEQepIntrFlag(const PwmDeviceEnum pwmDev, const uint16_t flags);
+void readEQepCaptures(const PwmDeviceEnum pwmDev, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
+		uint32_t* const status);
+
+#endif /* PRU_EQEP_HP_ */

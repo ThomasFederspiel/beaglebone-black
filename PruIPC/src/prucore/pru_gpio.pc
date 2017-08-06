@@ -1,0 +1,30 @@
+/*
+ * pru_gpio.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_gpio.hp"
+
+#include "pru_reg.hp"
+
+void setGpio(const uint32_t gpio)
+{
+	__R30 |= gpio;
+}
+
+void clrGpio(const uint32_t gpio)
+{
+	__R30 &= ~gpio;
+}
+
+uint32_t getGpio(const uint32_t gpio)
+{
+	return __R31 & gpio;
+}
+
+void toggleGpio(const uint32_t gpio)
+{
+	__R30 ^= gpio;
+}

@@ -1,0 +1,35 @@
+#include "pru_memory_access.hp"
+#include "pru_config_types.hp"
+
+#include "pru_reg.hp"
+
+uint8_t* getSHRAMBasePtr()
+{
+	return m_pruConfig.shramMap.startAddr;
+}
+
+void initCTMemoryPtr()
+{
+	PRU0_CTRL.CTPPR0_bit.C28_BLK_POINTER = 0x120;
+	PRU0_CTRL.CTPPR1_bit.C31_BLK_POINTER = 0;
+}
+
+void readSHRAM(void* const dest, const uint16_t offset, const size_t size)
+{
+	memcpy(dest, getSHRAMBasePtr() + offset, size);
+}
+
+void writeSHRAM(const void* const source, const uint16_t offset, const size_t size)
+{
+	memcpy(getSHRAMBasePtr() + offset, source, size);
+}
+
+void readDDR(void* const dest, const uint16_t offset, const size_t size)
+{
+	memcpy(dest, m_pruConfig.ddrMap.startAddr + offset, size);
+}
+
+void writeDDR(const void* const source, const uint16_t offset, const size_t size)
+{
+	memcpy(m_pruConfig.ddrMap.startAddr + offset, source, size);
+}

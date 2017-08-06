@@ -1,0 +1,22 @@
+/*
+ * pru_per.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PER_HP_
+#define PRU_PER_HP_
+
+typedef enum
+{
+	PerEPWMSS0 = 0,
+	PerEPWMSS1,
+	PerEPWMSS2
+} PerModuleClkEnum;
+
+void enableModuleClock(const PerModuleClkEnum clk);
+void disableModuleClock(const PerModuleClkEnum clk);
+
+#endif /* PRU_PER_HP_ */
+

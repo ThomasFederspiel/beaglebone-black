@@ -1,0 +1,17 @@
+/*
+ * pru_ipc_device_core.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_CORE_HP_
+#define PRU_IPC_DEVICE_CORE_HP_
+
+#include <stdint.h>
+
+#include "pru_ipc_types.hp"
+
+uint16_t deviceCoreIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl);
+
+#endif /* PRU_IPC_DEVICE_CORE_HP_ */

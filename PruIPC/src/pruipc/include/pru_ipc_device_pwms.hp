@@ -1,0 +1,15 @@
+/*
+ * pru_ipc_device_pwms.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_PWMS_HP_
+#define PRU_IPC_DEVICE_PWMS_HP_
+
+#include "pru_ipc_types.hp"
+
+uint16_t devicePwmsIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl);
+
+#endif /* PRU_IPC_DEVICE_PWMS_HP_ */

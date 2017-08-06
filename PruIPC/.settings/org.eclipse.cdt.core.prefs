@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.538026441/GNU_MAKE/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.538026441/GNU_MAKE/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.538026441/GNU_MAKE/value=C\:\\Packages\\GnuWin32-make\\bin\\make.exe
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.538026441/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.538026441/appendContributed=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.release.991121932/ARCH/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.cross.exe.release.991121932/ARCH/operation=append
+environment/project/cdt.managedbuild.config.gnu.cross.exe.release.991121932/ARCH/value=-march\=armv7-a -mtune\=cortex-a8 -mfloat-abi\=hard -mfpu\=neon
+environment/project/cdt.managedbuild.config.gnu.cross.exe.release.991121932/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.release.991121932/appendContributed=true

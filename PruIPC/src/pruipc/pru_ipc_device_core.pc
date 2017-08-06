@@ -1,0 +1,24 @@
+/*
+ * pru_ipc_device_core.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_device_core.hp"
+
+#include "pru_ipc_device_core_types.hp"
+#include "pru_loop.hp"
+#include "pru_memory_access.hp"
+
+uint16_t deviceCoreIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	switch (deviceIoctl->ioctl)
+	{
+	case IPCDeviceCore_Terminate:
+		return sizeof(struct IPCDeviceCore_Terminate);
+	}
+
+	return 0;
+}
+

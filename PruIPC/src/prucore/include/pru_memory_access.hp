@@ -1,0 +1,21 @@
+/*
+ * pru_memory_access.h
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_MEMORY_ACCESS_H_
+#define PRU_MEMORY_ACCESS_H_
+
+#include <stdint.h>
+#include <stddef.h>
+
+void initCTMemoryPtr();
+uint8_t* getSHRAMBasePtr();
+void readSHRAM(void* const dest, const uint16_t offset, const size_t size);
+void writeSHRAM(const void* const source, const uint16_t offset, const size_t size);
+void readDDR(void* const dest, const uint16_t offset, const size_t size);
+void writeDDR(const void* const source, const uint16_t offset, const size_t size);
+
+#endif /* PRU_MEMORY_ACCESS_H_ */

@@ -1,0 +1,23 @@
+/*
+ * pru_ipc_device_core.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_TEST_HP_
+#define PRU_IPC_DEVICE_TEST_HP_
+
+#include "pru_ipc_types.hp"
+
+enum IPCDeviceTestIoctlEnum
+{
+	IPCDeviceTest_Trig = 0
+};
+
+struct IPCDeviceTest_Trig
+{
+	struct IPCDeviceIoctl device;
+};
+
+#endif /* PRU_IPC_DEVICE_TEST_HP_ */

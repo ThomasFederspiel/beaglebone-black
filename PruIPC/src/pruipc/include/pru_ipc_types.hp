@@ -1,0 +1,53 @@
+/*
+ * pru_ipc_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_TYPES_HP_
+#define PRU_IPC_TYPES_HP_
+
+// standard
+#include <stdint.h>
+
+#define IPC_EOB	0xFFFFFFFF
+
+typedef uint32_t device_t;
+typedef uint32_t ioctl_t;
+
+struct IPCDeviceIoctl
+{
+	device_t device;
+	ioctl_t ioctl;
+};
+
+typedef uint8_t* IPCBufferPtr;
+
+#define PRU_IPC_RX_BUFFER_SIZE		128
+#define PRU_IPC_TX_BUFFER_SIZE		128
+
+#define TRANSMIT_BUFFER_ACTIVE_REG_MASK				BIT(0)
+#define TRANSMIT_BUFFER_ACKNOWLEDGE_REG_MASK		BIT(1)
+#define TRANSMIT_BUFFER_OVERFLOW_MASK				BIT(2)
+
+typedef uint32_t TransmitRegister;
+
+struct IPCBiDirectionalChannelContext
+{
+	uint8_t rxBuffer[PRU_IPC_RX_BUFFER_SIZE];
+	TransmitRegister transmitRegister;
+	uint8_t txBuffer[PRU_IPC_TX_BUFFER_SIZE];
+};
+
+#define UNDEFINED_INDEX				0xFF
+
+struct IPCHostDirectionalChannelContext
+{
+	TransmitRegister transmitRegister;
+	uint32_t transmitBufferIndex;
+	uint8_t buffer_0[PRU_IPC_TX_BUFFER_SIZE];
+	uint8_t buffer_1[PRU_IPC_TX_BUFFER_SIZE];
+};
+
+#endif /* PRU_IPC_TYPES_HP_ */

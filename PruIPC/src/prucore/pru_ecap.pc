@@ -1,0 +1,606 @@
+/*
+ * pru_ecap.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ecap.hp"
+
+#include <stddef.h>
+
+#include "pru_reg.hp"
+#include "pru_pwms_core.hp"
+#include "pru_intc.hp"
+
+#define ECAP_PWM_PER_CNT_HZ(hz) 100000000 / hz
+
+typedef struct
+{
+	uint32_t periodCntr;
+} ECapPwmFreqElement; 
+
+// ARM-ECap, SYSCLKOUT = 100 MHz (10 ns)
+// PRU-ECap, PRUSSOCPCLK = 200 MHz (5 ns) 
+const ECapPwmFreqElement ECapPwmFreqTable[] =
+{
+		{ ECAP_PWM_PER_CNT_HZ(1) },			// 1 Hz
+		{ ECAP_PWM_PER_CNT_HZ(2) },			// 2 Hz
+		{ ECAP_PWM_PER_CNT_HZ(10) },		// 10 Hz
+		{ ECAP_PWM_PER_CNT_HZ(100) },		// 100 Hz
+		{ ECAP_PWM_PER_CNT_HZ(25000) }		// 25 Hz
+};
+
+const uint8_t ECapSystemEvent[] = 
+{
+	ECAP0_INTR_INTR_PEND,
+	ECAP1_INTR_INTR_PEND, 
+	ECAP2_INTR_INTR_PEND 
+};
+
+static void armECapPWMRaw_eCap(volatile pruECap* const eCap, const uint32_t freq)
+{
+//	eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_FREEZE; 
+	
+	eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_FREEZE_MASK; 
+	
+	eCap->CAP3 = freq;
+	eCap->CAP4 = 0x00;
+	eCap->CTRPHS = 0x00;
+	eCap->ECCTL1_ECCTL2.ECCTL1 = 0x00;
+
+//	eCap->ECCTL1_ECCTL2_bit.capapwm = EC_APWM_MODE;
+//	eCap->ECCTL1_ECCTL2_bit.apwmpol = EC_ACTV_HI; 
+//	eCap->ECCTL1_ECCTL2_bit.syncien = EC_DISABLE; 
+//	eCap->ECCTL1_ECCTL2_bit.syncosel = EC_SYNCO_DIS; 
+
+	eCap->ECCTL1_ECCTL2.ECCTL2 = (EC_APWM_MODE | EC_SYNCO_DIS) & EC_ACTV_HI_MASK & EC_DISABLE_MASK; 
+
+}
+
+static uint32_t armECapPWMFreq_eCap(volatile pruECap* const eCap, const ECapPwmFreqEnum freq)
+{
+	if (freq >= LAST_ECAP_PWM_FREQ)
+	{
+		return 0;
+	}
+
+	const ECapPwmFreqElement* const elem = &ECapPwmFreqTable[freq];
+	
+	armECapPWMRaw_eCap(eCap, elem->periodCntr);
+		
+	return elem->periodCntr;
+}
+
+static void setECapPWMDuty_eCap(volatile pruECap* const eCap, const uint32_t onTime)
+{
+	// Shadow register for CAP2
+	eCap->CAP4 = onTime;
+}
+
+static void enableECapPWM_eCap(volatile pruECap* const eCap)
+{
+//		eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_RUN; 
+		
+		eCap->ECCTL1_ECCTL2.ECCTL2 |= EC_RUN; 
+}
+
+static void disableECapPWM_eCap(volatile pruECap* const eCap, const bool outputHigh)
+{
+		if ((eCap->ECCTL1_ECCTL2.ECCTL2 & EC_RUN) != 0)
+		{
+			if (outputHigh)
+			{
+				eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_ACTV_HI_MASK; 
+			}
+			else
+			{
+				eCap->ECCTL1_ECCTL2.ECCTL2 |= EC_ACTV_LO; 
+			}
+
+			eCap->ECCLR_ECFRC.ECCLR = ECAP_PWM_INT_SEL_PRD;
+			
+			while ((eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_PRD) != 0);
+			
+			//		eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_FREEZE; 
+			
+			eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_FREEZE_MASK; 
+		}
+}
+
+
+static void enableECapPWMInterrupt_eCap(volatile pruECap* const eCap, const uint8_t intSel)
+{
+	eCap->ECCLR_ECFRC.ECCLR = ECAP_PWM_INT_SEL_ALL | ECAP_PWM_CLR_INT;
+			
+	eCap->ECEINT_ECFLG.ECEINT |= intSel;
+}
+
+static void disableECapPWMInterrupt_eCap(volatile pruECap* const eCap, const uint8_t intSel)
+{
+	eCap->ECEINT_ECFLG.ECEINT &= ~intSel;
+
+	eCap->ECCLR_ECFRC.ECCLR = intSel;
+	
+	if (eCap->ECEINT_ECFLG.ECEINT == 0)
+	{
+		eCap->ECCLR_ECFRC.ECCLR = ECAP_PWM_CLR_INT;
+	}
+}
+
+static uint16_t acknowledgeECapPWMInterrut_eCap(volatile pruECap* const eCap)
+{
+	const uint16_t firedIntr = eCap->ECEINT_ECFLG.ECFLG 
+			& eCap->ECEINT_ECFLG.ECEINT;
+	
+	eCap->ECCLR_ECFRC.ECCLR = ECAP_PWM_INT_SEL_ALL | ECAP_PWM_CLR_INT;
+	
+	return firedIntr;
+}
+
+static uint32_t getECapCounter_eCap(volatile pruECap* const eCap)
+{
+	return eCap->TSCTR;
+}
+
+static void triggECapInterrupt_eCap(volatile pruECap* const eCap, const uint8_t intSel)
+{
+	eCap->ECCLR_ECFRC.ECFRC |= intSel;
+}
+
+static bool isECapInterruptActive_eCap(volatile pruECap* const eCap)
+{
+	return (eCap->ECEINT_ECFLG.ECFLG 
+			& eCap->ECEINT_ECFLG.ECEINT) != 0; 
+}
+
+/**********************************************************************************/
+static bool armECapCapture_eCap(volatile pruECap* const eCap, const ECapCaptureTypeEnum capType,
+		const bool continouos)
+{
+//	eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_FREEZE; 
+
+	eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_FREEZE_MASK; 
+	
+	switch (capType)
+	{
+	case ECAP_DELTA_PERIOD_CAPTURE:
+		eCap->ECCTL1_ECCTL2_bit.cap1pol = EC_RISING; 
+		eCap->ECCTL1_ECCTL2_bit.cap2pol = EC_RISING; 
+		eCap->ECCTL1_ECCTL2_bit.cap3pol = EC_RISING; 
+		eCap->ECCTL1_ECCTL2_bit.cap4pol = EC_RISING; 
+		break;
+		
+	case ECAP_DELTA_FULL_CAPTURE:
+		eCap->ECCTL1_ECCTL2_bit.cap1pol = EC_RISING; 
+		eCap->ECCTL1_ECCTL2_bit.cap2pol = EC_FALLING; 
+		eCap->ECCTL1_ECCTL2_bit.cap3pol = EC_RISING; 
+		eCap->ECCTL1_ECCTL2_bit.cap4pol = EC_FALLING; 
+		break;
+		
+	default:
+		return false;
+	}
+	
+	switch (capType)
+	{
+	case ECAP_DELTA_PERIOD_CAPTURE:
+	case ECAP_DELTA_FULL_CAPTURE:
+		eCap->ECCTL1_ECCTL2_bit.ctrrst1 = EC_DELTA_MODE;
+		eCap->ECCTL1_ECCTL2_bit.ctrrst2 = EC_DELTA_MODE;
+		eCap->ECCTL1_ECCTL2_bit.ctrrst3 = EC_DELTA_MODE;
+		eCap->ECCTL1_ECCTL2_bit.ctrrst4 = EC_DELTA_MODE;
+		break;
+		
+	default:
+		return false;
+	}
+	
+	eCap->ECCTL1_ECCTL2_bit.caplden = EC_ENABLE;
+	eCap->ECCTL1_ECCTL2_bit.prescale = EC_DIV1;
+	
+//	eCap->ECCTL1_ECCTL2_bit.capapwm = EC_CAP_MODE;
+
+	eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_CAP_MODE_MASK; 
+	
+	if (continouos)
+	{
+		eCap->ECCTL1_ECCTL2_bit.contonesht = EC_CONTINUOUS;
+		eCap->ECCTL1_ECCTL2_bit.stopwrap = EC_EVENT4;
+	}
+	else
+	{
+		eCap->ECCTL1_ECCTL2_bit.contonesht = EC_ONESHOT;
+		eCap->ECCTL1_ECCTL2_bit.stopwrap = EC_EVENT4;
+	}
+	
+//	eCap->ECCTL1_ECCTL2_bit.syncien = EC_DISABLE; 
+//	eCap->ECCTL1_ECCTL2_bit.syncosel = EC_SYNCO_DIS; 
+
+	eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_DISABLE_MASK; 
+	eCap->ECCTL1_ECCTL2.ECCTL2 |= EC_SYNCO_DIS;
+	
+	return true;
+}
+
+static void enableECapCapture_eCap(volatile pruECap* const eCap, const ECapCaptureEnableEnum enable)
+{
+	switch (enable)
+	{
+	case ECAP_CAPTURE_PERIOD_INTR:
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT1);
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT2);
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT3);
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT4);
+		break;
+		
+	case ECAP_CAPTURE_FULL_INTR:
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT2);
+		enableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT4);
+		break;
+	}
+		
+	eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_RUN; 
+}
+
+static void disableECapCapture_eCap(volatile pruECap* const eCap)
+{
+//	eCap->ECCTL1_ECCTL2_bit.tsctrstop = EC_FREEZE; 
+	
+	eCap->ECCTL1_ECCTL2.ECCTL2 &= EC_FREEZE_MASK; 
+
+	disableECapPWMInterrupt_eCap(eCap, ECAP_PWM_INT_SEL_CEVT4);
+}
+
+static bool pollOneShotCapture_eCap(volatile pruECap* const eCap, uint32_t* highTime, uint32_t* periodTime, const bool full)
+{
+	bool captured = false;
+	
+	// Check if capture or counter overflow (= no signal or too long period)
+	while ((eCap->ECEINT_ECFLG.ECFLG & (ECAP_PWM_INT_SEL_CEVT1 
+			| ECAP_PWM_INT_SEL_CEVT2 | ECAP_PWM_INT_SEL_CEVT3 | ECAP_PWM_INT_SEL_CEVT4
+			| ECAP_PWM_INT_SEL_OVF)) == 0);
+ 
+	if ((eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_OVF) == 0)
+	{
+		if (full)
+		{
+			if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT2)
+			{
+				*highTime = eCap->CAP2;
+				*periodTime = eCap->CAP1 + eCap->CAP2;
+			}
+			else if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT4)
+			{
+				*highTime = eCap->CAP4;
+				*periodTime = eCap->CAP3 + eCap->CAP4;
+			}
+			
+			*periodTime = 0xdd;
+		}
+		else
+		{
+			if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT1)
+			{
+				*periodTime = eCap->CAP1;
+			}
+			else if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT2)
+			{
+				*periodTime = eCap->CAP2;
+			}
+			else if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT3)
+			{
+				*periodTime = eCap->CAP3;
+			}
+			else if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_INT_SEL_CEVT4)
+			{
+				*periodTime = eCap->CAP4;
+			}
+		}
+		
+		captured = true;
+	}
+	else
+	{
+		if (full)
+		{
+			*highTime = 0;
+		}
+		
+		*periodTime = 0;
+		*periodTime = 0xff;
+	}
+	
+	acknowledgeECapPWMInterrut_eCap(eCap);
+
+	return captured;
+}
+
+static bool pollOneShotCaptureFull_eCap(volatile pruECap* const eCap, uint32_t* highTime, uint32_t* periodTime)
+{
+	return pollOneShotCapture_eCap(eCap, highTime, periodTime, true);
+}
+
+static bool pollOneShotCapturePeriod_eCap(volatile pruECap* const eCap, uint32_t* periodTime)
+{
+	return pollOneShotCapture_eCap(eCap, NULL, periodTime, false);
+}
+
+/**********************************************************************************/
+uint32_t armECapPWMFreq_internal(const ECapPwmFreqEnum freq)
+{
+	if (freq >= LAST_ECAP_PWM_FREQ)
+	{
+		return 0;
+	}
+
+	const ECapPwmFreqElement* const elem = &ECapPwmFreqTable[freq];
+	
+	const uint32_t period = elem->periodCntr << 1;
+			
+	// 200 MHz instead 100 MHz
+	armECapPWMRaw_eCap(&CT_ECAP, period);
+		
+	return period;
+}
+
+void armECapPWMRaw_internal(const uint32_t freq)
+{
+	armECapPWMRaw_eCap(&CT_ECAP, freq);
+}
+
+void setECapPWMDuty_internal(const uint32_t onTime)
+{
+	setECapPWMDuty_eCap(&CT_ECAP, onTime);
+}
+
+void enableECapPWM_internal()
+{
+	enableECapPWM_eCap(&CT_ECAP);
+}
+
+void disableECapPWM_internal(const bool outputHigh)
+{
+	disableECapPWM_eCap(&CT_ECAP, outputHigh);
+}
+
+void enableECapPWMInterrupt_internal(const uint8_t intSel)
+{
+	enableECapPWMInterrupt_eCap(&CT_ECAP, intSel);
+}
+
+void disableECapPWMInterrupt_internal(const uint8_t intSel)
+{
+	disableECapPWMInterrupt_eCap(&CT_ECAP, intSel);
+}
+
+uint16_t acknowledgeECapPWMInterrut_internal()
+{
+	return acknowledgeECapPWMInterrut_eCap(&CT_ECAP);
+}
+
+uint32_t getECapCounter_internal()
+{
+	return getECapCounter_eCap(&CT_ECAP);
+}
+
+void triggECapInterrupt_internal(const uint8_t intSel)
+{
+	triggECapInterrupt_eCap(&CT_ECAP, intSel);
+}
+
+bool isECapInterruptActive_internal()
+{
+	return isECapInterruptActive_eCap(&CT_ECAP);
+}
+
+/**********************************************************************************/
+bool armECapCapture_internal(const ECapCaptureTypeEnum capType,
+		const bool continouos)
+{
+	return armECapCapture_eCap(&CT_ECAP, capType, continouos);
+}
+
+void enableECapCapture_internal(const ECapCaptureEnableEnum enable)
+{
+	enableECapCapture_eCap(&CT_ECAP, enable);
+}
+
+void disableECapCapture_internal()
+{
+	disableECapCapture_eCap(&CT_ECAP);
+}
+
+/**
+ * highTime and periodTime resolution = 5 ns, PRU-ECap, PRUSSOCPCLK = 200 MHz (5 ns) 
+ */
+bool pollOneShotCaptureFull_internal(uint32_t* highTime, uint32_t* periodTime)
+{
+	return pollOneShotCaptureFull_eCap(&CT_ECAP, highTime, periodTime);
+}
+
+/**
+ * periodTime resolution = 5 ns, PRU-ECap, PRUSSOCPCLK = 200 MHz (5 ns) 
+ */
+bool pollOneShotCapturePeriod_internal(uint32_t* periodTime)
+{
+	return pollOneShotCapturePeriod_eCap(&CT_ECAP, periodTime);
+}
+
+/**********************************************************************************/
+void enableECapClock(const PwmDeviceEnum pwmDev, const bool enable)
+{
+	enablePWMSSClock(pwmDev, PWMSS_MODULE_ECAP, enable);
+}
+
+uint32_t armECapPWMFreq(const PwmDeviceEnum pwmDev, const ECapPwmFreqEnum freq)
+{
+	if (pwmDev >= LAST_PWM_DEV)
+	{
+		return 0;
+	}
+	
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return armECapPWMFreq_eCap(eCap, freq);
+}
+
+bool armECapPWMRaw(const PwmDeviceEnum pwmDev, const uint32_t freq)
+{
+	if (pwmDev >= LAST_PWM_DEV)
+	{
+		return false;
+	}
+	
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+
+	armECapPWMRaw_eCap(eCap, freq);
+	
+	return true;
+}
+
+void setECapPWMDuty(const PwmDeviceEnum pwmDev, const uint32_t onTime)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+
+	setECapPWMDuty_eCap(eCap, onTime);
+}
+
+void enableECapPWM(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	enableECapPWM_eCap(eCap);
+}
+
+void disableECapPWM(const PwmDeviceEnum pwmDev, const bool outputHigh)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	disableECapPWM_eCap(eCap, outputHigh);
+}
+
+uint16_t acknowledgeECapPWMInterrut(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return acknowledgeECapPWMInterrut_eCap(eCap);
+}
+
+void enableECapPWMInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	enableECapPWMInterrupt_eCap(eCap, intSel);
+}
+
+void disableECapPWMInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return disableECapPWMInterrupt_eCap(eCap, intSel);
+}
+
+uint32_t getECapCounter(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return getECapCounter_eCap(eCap);
+}
+
+uint32_t getECapTmp(const PwmDeviceEnum pwmDev, const uint8_t i)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+
+	if (i == 1)
+	{
+		return eCap->TSCTR;
+	}
+	else if (i == 2)
+	{
+		return eCap->CAP1;
+	}
+	else if (i == 3)
+	{
+		return eCap->ECCTL1_ECCTL2.ECCTL1;
+	}
+	else if (i == 4)
+	{
+		return eCap->ECCTL1_ECCTL2.ECCTL2;
+	}
+	else if (i == 5)
+	{
+		return eCap->ECEINT_ECFLG.ECEINT;
+	}
+	return eCap->ECEINT_ECFLG.ECEINT;
+}
+
+void triggECapInterrupt(const PwmDeviceEnum pwmDev, const uint8_t intSel)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	triggECapInterrupt_eCap(eCap, intSel);
+}
+
+void pollECapInterrupt(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+
+	if (eCap->ECEINT_ECFLG.ECFLG & ECAP_PWM_FLG_INT)
+	{
+		const uint8_t sysEv = ECapSystemEvent[pwmDev];
+		
+		triggSystemEventInterrupt(sysEv);
+	}
+}
+
+bool isECapInterruptActive(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return isECapInterruptActive_eCap(eCap);
+}
+
+/**********************************************************************************/
+bool armECapCapture(const PwmDeviceEnum pwmDev, const ECapCaptureTypeEnum capType,
+		const bool continouos)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return armECapCapture_eCap(eCap, capType, continouos);
+}
+
+void enableECapCapture(const PwmDeviceEnum pwmDev, const ECapCaptureEnableEnum enable)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	enableECapCapture_eCap(eCap, enable);
+}
+
+void disableECapCapture(const PwmDeviceEnum pwmDev)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	disableECapCapture_eCap(eCap);
+}
+
+/**
+ * highTime and periodTime resolution = 10 ns, ARM-ECap, SYSCLKOUT = 100 MHz (10 ns)
+ */
+bool pollOneShotCaptureFull(const PwmDeviceEnum pwmDev, uint32_t* highTime, uint32_t* periodTime)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return pollOneShotCaptureFull_eCap(eCap, highTime, periodTime);
+}
+
+/**
+ * periodTime resolution = 10 ns, ARM-ECap, SYSCLKOUT = 100 MHz (10 ns)
+ */
+bool pollOneShotCapturePeriod(const PwmDeviceEnum pwmDev, uint32_t* periodTime)
+{
+	volatile pruECap* const eCap = &pwmsRegisterBase[pwmDev].module->eCap;
+	
+	return pollOneShotCapturePeriod_eCap(eCap, periodTime);
+}
+

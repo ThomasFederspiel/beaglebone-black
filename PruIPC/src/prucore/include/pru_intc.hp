@@ -1,0 +1,89 @@
+/*
+ * pru_intc.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_INTC_HP_
+#define PRU_INTC_HP_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#define INTC_CHANNEL_0 0 
+#define INTC_CHANNEL_1 1 
+#define INTC_CHANNEL_2 2 
+#define INTC_CHANNEL_3 3 
+#define INTC_CHANNEL_4 4 
+#define INTC_CHANNEL_5 5 
+#define INTC_CHANNEL_6 6 
+#define INTC_CHANNEL_7 7 
+#define INTC_CHANNEL_8 8 
+#define INTC_CHANNEL_9 9 
+
+#define INTC_HOST_0 0 
+#define INTC_HOST_1 1 
+#define INTC_HOST_2 2 
+#define INTC_HOST_3 3 
+#define INTC_HOST_4 4 
+#define INTC_HOST_5 5 
+#define INTC_HOST_6 6 
+#define INTC_HOST_7 7 
+#define INTC_HOST_8 8 
+#define INTC_HOST_9 9 
+
+#define PRU0_PRU1_INTERRUPT 17 
+#define PRU1_PRU0_INTERRUPT 18 
+#define PRU0_ARM_INTERRUPT_1 19 
+#define PRU1_ARM_INTERRUPT_1 20 
+#define ARM_PRU0_INTERRUPT 21 
+#define ARM_PRU1_INTERRUPT 22 
+#define PRU0_ARM_INTERRUPT_2 23 
+
+#define PR1_IEP_TIM_CAP_CMP_PEND 7 
+#define PR1_ECAP_INTR_REQ 15 
+#define ECAP1_INTR_INTR_PEND 35 
+#define ECAP2_INTR_INTR_PEND 36 
+#define EPWM2_INTR_INTR_PEND 37 
+#define ECAP0_INTR_INTR_PEND 42 
+#define EPWM0_INTR_INTR_PEND 43 
+#define EQEP0_INTR_INTR_PEND 45 
+#define EPWM1_INTR_INTR_PEND 46 
+#define PWM_TRIP_ZONE 56 		
+
+#define R31_STROBE_VECT_OUTPUT 0x0020
+#define R31_VECT_OUTPUT_OFFSET_MASK 0x0000000f
+
+#define R31_BIT30_HOST_0 0x40000000 
+#define R31_BIT31_HOST_1 0x80000000 
+
+#define SYS_EV_MASK(ev) ev > 31 ? (0x01 << (ev - 32)) : (0x01 << ev) 
+#define SYS_EV_REG_OFS(ev) ev > 31 ? 1 : 0 
+
+struct InterruptHandlerSpec
+{
+	void (*intrCallback)();
+	uint8_t sysEvent;
+	uint8_t channel;
+	uint32_t sysEventMask;
+	uint8_t sysEventRegOfs;
+};
+
+uint32_t getStatus1();
+uint32_t getStatus2();
+
+void enableGlobalInterrupt(const bool enable);
+void enableHost0Interrupts(const struct InterruptHandlerSpec* interruptTable);
+void enableHost1Interrupts(const struct InterruptHandlerSpec* interruptTable);
+void disableHostInterrupts();
+void triggSystemEventInterrupt(const uint8_t systemEvent);
+void fireInterrupt(const uint8_t systemEvent);
+void fireArmInterrupt(const uint8_t systemEvent);
+void pollHost0Interrupts();
+void pollHost1Interrupts();
+bool isSystemEventInterruptActive(const uint8_t systemEvent);
+void enableInterrupt(const uint8_t systemEvent, const uint8_t channel, const uint8_t host);
+void disableInterrupt(const uint8_t systemEvent);
+
+#endif /* PRU_INTC_HP_ */

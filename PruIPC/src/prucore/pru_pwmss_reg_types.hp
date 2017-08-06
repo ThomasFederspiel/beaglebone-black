@@ -1,0 +1,88 @@
+/*
+ * pru_pwmss_reg_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PWMSS_REG_TYPES_HP_
+#define PRU_PWMSS_REG_TYPES_HP_
+
+#include <stdint.h>
+
+#include "pru_macros.hp"
+
+#define EPWM_CLK_STOP_REQ_MASK		BIT(9)
+#define EPWM_CLK_EN_MASK			BIT(8)
+#define EQEP_CLK_STOP_REQ_MASK		BIT(5)
+#define EQEP_CLK_EN_MASK			BIT(4)
+#define ECAP_CLK_STOP_REQ_MASK		BIT(1)
+#define ECAP_CLK_EN_MASK			BIT(0)
+
+/* PRU_PWMSS register set */
+typedef struct
+{
+	/* PRU_PWMSS_IDVER register bit field */
+	union {
+		volatile uint32_t IDVER;
+
+		volatile struct{
+			unsigned y_minor : 6;
+			unsigned custom : 2;
+			unsigned x_major : 3;
+			unsigned r_rtl : 5;
+			unsigned func : 12;
+			unsigned rsvd1 : 2;
+			unsigned scheme : 2;
+		} IDVER_bit;
+	} ;	// 0x00
+	
+	/* PRU_PWMSS_SYSCONFIG register bit field */
+	union {
+		volatile uint32_t SYSCONFIG;
+
+		volatile struct{
+			unsigned softreset : 1;
+			unsigned freeemu : 1;
+			unsigned idlemode : 2;
+			unsigned rsvd1 : 28;
+		} SYSCONFIG_bit;
+	} ;	// 0x04
+
+	/* PRU_PWMSS_CLKCONFIG register bit field */
+	union {
+		volatile uint32_t CLKCONFIG;
+
+		volatile struct{
+			unsigned eCapClk_en : 1;
+			unsigned eCapClkStop_req : 1;
+			unsigned rsvd1 : 2;
+			unsigned eQepClk_en : 1;
+			unsigned eQepClkStop_req : 1;
+			unsigned rsvd2 : 2;
+			unsigned ePwmClk_en : 1;
+			unsigned ePwmClkStop_req : 1;
+			unsigned rsvd3 : 22;
+		} CLKCONFIG_bit;
+	} ;	// 0x08
+
+	/* PRU_PWMSS_CLKSTATUS register bit field */
+	union {
+		volatile uint32_t CLKSTATUS;
+
+		volatile struct{
+			unsigned eCapClk_en_ack : 1;
+			unsigned eCapClkStop_ack : 1;
+			unsigned rsvd1 : 2;
+			unsigned eQepClk_en_ack : 1;
+			unsigned eQepClkStop_ack : 1;
+			unsigned rsvd2 : 2;
+			unsigned ePwmClk_en_ack : 1;
+			unsigned ePwmClkStop_ack : 1;
+			unsigned rsvd3 : 22;
+		} CLKSTATUS_bit;
+	} ;	// 0x0C
+	
+} pruPwmss;
+
+#endif /* PRU_PWMSS_REG_TYPES_HP_ */

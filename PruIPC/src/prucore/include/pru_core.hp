@@ -1,0 +1,17 @@
+/*
+ * pru_core.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_CORE_HP_
+#define PRU_CORE_HP_
+
+#include <stdint.h>
+
+void initOCP();
+uint8_t getIepClock();
+uint32_t getClockGating();
+
+#endif /* PRU_CORE_HP_ */

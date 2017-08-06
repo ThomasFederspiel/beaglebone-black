@@ -1,0 +1,609 @@
+/*
+ * pru_epwm_reg_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EPWM_REG_TYPES_HP_
+#define PRU_EPWM_REG_TYPES_HP_
+
+#define EPWM_ETCLR_INT	BIT(0)
+#define EPWM_ETFLG_INT	BIT(0)
+
+// TBCTL (Time-Base Control) 
+// ========================== 
+// TBCNT MODE bits 
+//#define TB_COUNT_UP 0x0 
+//#define TB_COUNT_DOWN 0x1 
+//#define TB_COUNT_UPDOWN 0x2 
+//#define TB_COUNT_FREEZE 0x3 
+
+#define TB_COUNT_UP_MASK	~(BIT(0) | BIT(1)) 	
+#define TB_COUNT_DOWN		BIT(0) 
+#define TB_COUNT_UPDOWN 	BIT(1) 
+#define TB_COUNT_FREEZE 	BIT(0) | BIT(1) 
+
+// PHSEN bit 
+//#define TB_DISABLE 0x0 
+//#define TB_ENABLE 0x1 
+
+#define TB_DISABLE_MASK	~BIT(2) 
+#define TB_ENABLE		BIT(2) 
+
+// PRDLD bit 
+//#define TB_SHADOW 0x0 
+//#define TB_IMMEDIATE 0x1 
+
+#define TB_SHADOW_MASK 	~BIT(3) 
+#define TB_IMMEDIATE	BIT(3) 
+
+// SYNCOSEL bits 
+//#define TB_SYNC_IN 0x0 
+//#define TB_CTR_ZERO 0x1 
+//#define TB_CTR_CMPB 0x2 
+//#define TB_SYNC_DISABLE 0x3 
+
+#define TB_SYNC_IN 		~BIT(4) | BIT(5) 
+#define TB_CTR_ZERO 	BIT(4) 
+#define TB_CTR_CMPB 	BIT(5) 
+#define TB_SYNC_DISABLE BIT(4) | BIT(5)
+
+// CLKDIV bits 
+#define TB_DIV1 0x0 
+#define TB_DIV2 0x1 
+#define TB_DIV4 0x2 
+#define TB_DIV8 0x3 
+#define TB_DIV16 0x4 
+#define TB_DIV32 0x5 
+#define TB_DIV64 0x6 
+#define TB_DIV128 0x7 
+#define TB_DIV_SHIFT	10 
+
+// HSPCLKDIV  bits 
+#define TB_HSP_DIV1 0x0 
+#define TB_HSP_DIV2 0x1 
+#define TB_HSP_DIV4 0x2 
+#define TB_HSP_DIV6 0x3 
+#define TB_HSP_DIV8 0x4 
+#define TB_HSP_DIV10 0x5 
+#define TB_HSP_DIV12 0x6 
+#define TB_HSP_DIV14 0x7 
+#define TB_HSP_DIV_SHIFT	7 
+
+// PHSDIR bit 
+#define TB_DOWN 0x0 
+#define TB_UP 0x1
+
+// CMPCTL (Compare Control) 
+// ========================== 
+// LOADAMODE and LOADBMODE bits 
+//#define CC_CTR_ZERO 0x0 
+//#define CC_CTR_PRD 0x1 
+//#define CC_CTR_ZERO_PRD 0x2 
+//#define CC_LD_DISABLE 0x3
+
+#define CC_CTR_ZERO_A_MASK	~(BIT(0) | BIT(1)) 
+#define CC_CTR_PRD_A		BIT(0) 
+#define CC_CTR_ZERO_PRD_A 	BIT(1)
+#define CC_LD_DISABLE_A 	BIT(0) | BIT(1)
+
+#define CC_CTR_ZERO_B_MASK	~(BIT(2) | BIT(3)) 
+#define CC_CTR_PRD_B		BIT(2) 
+#define CC_CTR_ZERO_PRD_B 	BIT(3)
+#define CC_LD_DISABLE_B 	BIT(2) | BIT(3)
+
+// SHDWAMODE and SHDWBMODE bits 
+//#define CC_SHADOW 0x0 
+//#define CC_IMMEDIATE 0x1 
+
+#define CC_SHADOW_A_MASK 	~BIT(4) 
+#define CC_IMMEDIATE_A		BIT(4) 
+#define CC_SHADOW_B_MASK 	~BIT(6) 
+#define CC_IMMEDIATE_B		BIT(6) 
+
+// AQCTLA and AQCTLB (Action-qualifier Control) 
+// ========================== 
+// ZRO, PRD, CAU, CAD, CBU, CBD bits 
+//#define AQ_NO_ACTION 0x0 
+//#define AQ_CLEAR 0x1 
+//#define AQ_SET 0x2 
+//#define AQ_TOGGLE 0x3 
+
+#define AQ_ZRO_NO_ACTION_MASK	~(BIT(0) | BIT(1)) 
+#define AQ_ZRO_CLEAR			BIT(0) 
+#define AQ_ZRO_SET				BIT(1) 
+#define AQ_ZRO_TOGGLE			BIT(0) | BIT(1)
+
+#define AQ_PRD_NO_ACTION_MASK	~(BIT(2) | BIT(3)) 
+#define AQ_PRD_CLEAR			BIT(2) 
+#define AQ_PRD_SET				BIT(3) 
+#define AQ_PRD_TOGGLE			BIT(2) | BIT(3)
+
+#define AQ_CAU_NO_ACTION_MASK	~(BIT(4) | BIT(5)) 
+#define AQ_CAU_CLEAR			BIT(4) 
+#define AQ_CAU_SET				BIT(5) 
+#define AQ_CAU_TOGGLE			BIT(4) | BIT(5)
+
+#define AQ_CBU_NO_ACTION_MASK	~(BIT(8) | BIT(9))
+#define AQ_CBU_CLEAR			BIT(8) 
+#define AQ_CBU_SET				BIT(9) 
+#define AQ_CBU_TOGGLE			BIT(8) | BIT(9)
+
+#define AQ_ACTSFB_NO_ACTION_MASK	~(BIT(3) | BIT(4))
+#define AQ_ACTSFB_CLEAR				BIT(3) 
+#define AQ_ACTSFB_SET				BIT(4) 
+#define AQ_ACTSFB_TOGGLE			BIT(3) | BIT(4)
+
+#define AQ_ACTSFA_NO_ACTION_MASK	~(BIT(0) | BIT(1))
+#define AQ_ACTSFA_CLEAR				BIT(0) 
+#define AQ_ACTSFA_SET				BIT(1) 
+#define AQ_ACTSFA_TOGGLE			BIT(0) | BIT(1)
+
+// AQSFRC  
+// ========================== 
+//  RLDCSF, OTSFB, OTSFA bits 
+//#define AQ_LOAD_AT_ZERO 0x0 
+//#define AQ_LOAD_AT_PERIOD 0x1 
+//#define AQ_LOAD_AT_ZERO_OR_PERIOD 0x2 
+//#define AQ_LOAD_IMMEDIAT 0x3 
+
+#define AQ_LOAD_AT_ZERO_MASK 		~(BIT(6) | BIT(7)) 
+#define AQ_LOAD_AT_PERIOD			BIT(6) 
+#define AQ_LOAD_AT_ZERO_OR_PERIOD	BIT(7) 
+#define AQ_LOAD_IMMEDIAT 			BIT(6) | BIT(7) 
+
+#define AQ_OTSFB					BIT(5) 
+#define AQ_OTSFA					BIT(2) 
+
+// AQCSFRC  
+// ========================== 
+
+#define AQC_CSFA_NO_ACTION_MASK		~(BIT(1) | BIT(0))
+#define AQC_CSFA_LOW				BIT(0)
+#define AQC_CSFA_HIGH				BIT(1)
+#define AQC_CSFA_DIS				BIT(1) | BIT(0)
+
+#define AQC_CSFB_NO_ACTION_MASK		~(BIT(3) | BIT(2))
+#define AQC_CSFB_LOW				BIT(2)
+#define AQC_CSFB_HIGH				BIT(3)
+#define AQC_CSFB_DIS				BIT(3) | BIT(2)
+
+// DBCTL (Dead-Band Control) 
+// ========================== 
+// MODE bits 
+#define DB_DISABLE 0x0 
+#define DBA_ENABLE 0x1 
+#define DBB_ENABLE 0x2 
+#define DB_FULL_ENABLE 0x3 
+
+// POLSEL bits 
+#define DB_ACTV_HI 0x0 
+#define DB_ACTV_LOC 0x1 
+#define DB_ACTV_HIC 0x2 
+#define DB_ACTV_LO 0x3 
+
+// PCCTL (chopper control) 
+// ========================== 
+// CHPEN bit 
+#define CHP_ENABLE 0x0 
+#define CHP_DISABLE 0x1 
+
+// CHPFREQ bits 
+#define CHP_DIV1 0x0 
+#define CHP_DIV2 0x1 
+#define CHP_DIV3 0x2 
+#define CHP_DIV4 0x3 
+#define CHP_DIV5 0x4 
+#define CHP_DIV6 0x5 
+#define CHP_DIV7 0x6 
+#define CHP_DIV8 0x7 
+
+// CHPDUTY bits 
+#define CHP1_8TH 0x0 
+#define CHP2_8TH 0x1 
+#define CHP3_8TH 0x2 
+#define CHP4_8TH 0x3 
+#define CHP5_8TH 0x4 
+#define CHP6_8TH 0x5 
+#define CHP7_8TH 0x6 
+
+// TZSEL (Trip-zone Select) 
+// ========================== 
+// CBCn and OSHTn bits 
+#define TZ_ENABLE 0x1 
+#define TZ_DISABLE 0x0 
+
+// TZCTL (Trip-zone Control) 
+// ========================== 
+// TZA and TZB bits 
+#define TZ_HIZ 0x0 
+#define TZ_FORCE_HI 0x1 
+#define TZ_FORCE_LO 0x2 
+#define TZ_NOTHING 0x3 
+
+// ETSEL (Event-trigger Select) 
+// ========================== 
+// INTEN bits 
+//#define ET_INT_DIS 0x0 
+//#define ET_INT_EN 0x1 
+
+#define ET_INT_DIS_MASK	~BIT(3) 
+#define ET_INT_EN		BIT(3) 
+
+// ETSEL (Event-trigger Select) 
+// ========================== 
+// INTSEL, SOCASEL, SOCBSEL bits 
+#define ET_CTR_ZERO 0x1 
+#define ET_CTR_PRD 0x2 
+#define ET_CTRU_CMPA 0x4 
+#define ET_CTRD_CMPA 0x5 
+#define ET_CTRU_CMPB 0x6
+#define ET_CTRD_CMPB 0x7 
+
+// ETPS (Event-trigger Prescale) 
+// ========================== 
+// INTPRD, SOCAPRD, SOCBPRD bits 
+//#define ET_DISABLE 0x0 
+//#define ET_1ST 0x1 
+//#define ET_2ND 0x2 
+//#define ET_3RD 0x3
+
+#define ET_DISABLE_MASK ~(BIT(0) | BIT(1)) 
+#define ET_1ST			BIT(0) 
+#define ET_2ND 			BIT(1) 
+#define ET_3RD 			BIT(0) | BIT(1)
+
+
+// ETCLR (Event-trigger Clear) 
+// ========================== 
+// INT bits 
+#define ET_INT_CLR 0x1 
+
+/* PRU_EPWM register set */
+typedef struct
+{
+	/* PRU_EPWM_TBCTL register bit field */
+	/* PRU_EPWM_TBSTS register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TBCTL;
+			volatile uint16_t TBSTS;
+		} TBCTL_TBSTS;
+
+		volatile struct{
+			// TBCTL
+			unsigned ctrmode : 2;
+			unsigned phsen : 1;
+			unsigned prdld : 1;
+			unsigned syncosel : 2;
+			unsigned swfsync : 1;
+			unsigned hspclkdiv : 3;
+			unsigned clkdiv : 3;
+			unsigned phsdir : 1;
+			unsigned freesoft : 2;
+
+			// TBSTS
+			unsigned ctrdir : 1;
+			unsigned synci : 1;
+			unsigned ctrmax : 1;
+			unsigned rsvd1 : 13;
+		} TBCTL_TBSTS_bit;
+	} ;	// 0x00
+	
+	/* PRU_EPWM_TBPHSHR register bit field */
+	/* PRU_EPWM_TBPHS register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TBPHSHR;
+			volatile uint16_t TBPHS;
+		} TBPHSHR_TBPHS;
+		
+		volatile struct{
+			// TBPHSHR
+			unsigned rsvd1 : 8;
+			unsigned tbphsh : 8;
+			
+			// TBPHS
+			unsigned rsvd2 : 16;
+		} TBPHSHR_TBPHS_bit;
+	} ;	// 0x04
+	
+	/* PRU_EPWM_TBCNT register bit field */
+	union {
+		volatile uint16_t TBCNT;
+	} ;	// 0x08
+	
+	/* PRU_EPWM_TBPRD register bit field */
+	union {
+		volatile uint16_t TBPRD;
+	} ;	// 0x0A
+	
+	/* PRU_EPWM_CMPCTL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t rsvd1;	
+			volatile uint16_t CMPCTL;
+		} CMPCTL;
+
+		volatile struct{
+			// rsvd1
+			unsigned rsvd1 : 16;
+			
+			// CMPCTL
+			unsigned loadamode : 2;
+			unsigned loadbmode : 2;
+			unsigned shdwamode : 1;
+			unsigned rsvd2 : 1;
+			unsigned shdwbmode : 1;
+			unsigned rsvd3 : 1;
+			unsigned shdwafull : 1;
+			unsigned shdwbfull : 1;
+			unsigned rsvd4 : 6;
+		} CMPCTL_bit;
+	} ;	// 0x0C
+	
+	/* PRU_EPWM_CMPAHR register bit field */
+	/* PRU_EPWM_CMPA register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t CMPAHR;
+			volatile uint16_t CMPA;
+		} CMPAHR_CMPA;
+
+		volatile struct{
+			// CMPAHR
+			unsigned rsvd1 : 8;
+			unsigned cmpahr : 8;
+			
+			// CMPA
+			unsigned cmpa : 16;
+		} CMPAHR_CMPA_bit;
+	} ;	// 0x10
+
+	/* PRU_EPWM_CMPB register bit field */
+	/* PRU_EPWM_AQCTLA register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t CMPB;
+			volatile uint16_t AQCTLA;
+		} CMPB_AQCTLA;
+
+		volatile struct{
+			// CMPB
+			unsigned cmpb : 16;
+			
+			// AQCTLA
+			unsigned zro : 2;
+			unsigned prd : 2;
+			unsigned cau : 2;
+			unsigned cad : 2;
+			unsigned cbu : 2;
+			unsigned cbd : 2;
+			unsigned rsvd1 : 4;
+		} CMPB_AQCTLA_bit;
+	} ;	// 0x14
+	
+	/* PRU_EPWM_AQCTLB register bit field */
+	/* PRU_EPWM_AQSFRC register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t AQCTLB;
+			volatile uint16_t AQSFRC;
+		} AQCTLB_AQSFRC;
+
+		volatile struct{
+			// AQCTLB
+			unsigned zro : 2;
+			unsigned prd : 2;
+			unsigned cau : 2;
+			unsigned cad : 2;
+			unsigned cbu : 2;
+			unsigned cbd : 2;
+			unsigned rsvd1 : 4;
+			
+			// AQSFRC
+			unsigned actsfa : 2;
+			unsigned otsfa : 1;
+			unsigned actsfb : 2;
+			unsigned otsfb : 1;
+			unsigned rldcsf : 2;
+			unsigned rsvd2 : 8;
+		} AQCTLB_AQSFRC_bit;
+	} ;	// 0x18
+	
+	/* PRU_EPWM_AQCSFRC register bit field */
+	/* PRU_EPWM_DBCTL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t AQCSFRC;
+			volatile uint16_t DBCTL;
+		} AQCSFRC_DBCTL;
+
+		volatile struct{
+			// AQCSFRC
+			unsigned csfa : 2;
+			unsigned csfb : 2;
+			unsigned rsvd1 : 12;
+			
+			// DBCTL
+			unsigned outmode : 2;
+			unsigned polsel : 2;
+			unsigned inmode : 2;
+			unsigned rsvd2 : 10;
+		} AQCSFRC_DBCTL_bit;
+	} ;	// 0x1C
+	
+	/* PRU_EPWM_DBRED register bit field */
+	/* PRU_EPWM_DBFED register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t DBRED;
+			volatile uint16_t DBFED;
+		} DBRED_DBFED;
+
+		volatile struct{
+			// DBRED
+			unsigned red_del : 10;
+			unsigned rsvd1 : 6;
+			
+			// DBFED
+			unsigned fed_del : 10;
+			unsigned rsvd2 : 6;
+		} DBRED_DBFED_bit;
+	} ;	// 0x20
+	
+	/* PRU_EPWM_TZSEL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TZSEL;
+			volatile uint16_t rsvd2;	
+		} TZSEL;
+
+		volatile struct{
+			unsigned cbcn : 8;
+			unsigned oshtn: 8;
+			
+			unsigned rsvd1: 16;
+		} TZSEL_bit;
+	} ;	// 0x24
+	
+	/* PRU_EPWM_TZCTL register bit field */
+	/* PRU_EPWM_TZEINT register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TZCTL;
+			volatile uint16_t TZEINT;
+		} TZCTL_TZEINT;
+
+		volatile struct{
+			// TZCTL
+			unsigned tza : 2;
+			unsigned tzb : 2;
+			unsigned rsvd1 : 12;
+			
+			// TZEINT
+			unsigned rsvd2 : 1;
+			unsigned cbc : 1;
+			unsigned ost : 1;
+			unsigned rsvd3 : 13;
+		} TZCTL_TZEINT_bit;
+	} ;	// 0x28
+
+	/* PRU_EPWM_TZFLG register bit field */
+	/* PRU_EPWM_TZCLR register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TZFLG;
+			volatile uint16_t TZCLR;
+		} TZFLG_TZCLR;
+
+		volatile struct{
+			// TZFLG
+			unsigned flg_int : 1;
+			unsigned flg_cbc : 1;
+			unsigned flg_ost : 1;
+			unsigned rsvd1 : 13;
+			
+			// TZCLR
+			unsigned clr_int : 1;
+			unsigned clr_cbc : 1;
+			unsigned clr_ost : 1;
+			unsigned rsvd2 : 13;
+		} TZFLG_TZCLR_bit;
+	} ;	// 0x2C
+	
+	/* PRU_EPWM_TZFRC register bit field */
+	/* PRU_EPWM_ETSEL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t TZFRC;
+			volatile uint16_t ETSEL;
+		} TZFRC_ETSEL;
+
+		volatile struct{
+			// TZFRC
+			unsigned rsvd1 : 1;
+			unsigned cbc : 1;
+			unsigned ost : 1;
+			unsigned rsvd2 : 13;
+			
+			// ETSEL
+			unsigned intsel : 3;
+			unsigned inten : 1;
+			unsigned rsvd3 : 12;
+		} TZFRC_ETSEL_bit;
+	} ;	// 0x30
+	
+	/* PRU_EPWM_ETPS register bit field */
+	/* PRU_EPWM_ETFLG register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t ETPS;
+			volatile uint16_t ETFLG;
+		} ETPS_ETFLG;
+
+		volatile struct{
+			// ETPS
+			unsigned intprd : 2;
+			unsigned intcnt : 2;
+			unsigned rsvd1 : 12;
+			
+			// ETFLG
+			unsigned INT : 1;
+			unsigned rsvd2 : 15;
+		} ETPS_ETFLG_bit;
+	} ;	// 0x34
+	
+	/* PRU_EPWM_ETCLR register bit field */
+	/* PRU_EPWM_ETFRC register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t ETCLR;
+			volatile uint16_t ETFRC;
+		} ETCLR_ETFRC;
+
+		volatile struct{
+			// ETCLR
+			unsigned clr_int : 1;
+			unsigned rsvd1 : 15;
+
+			// ETFRC
+			unsigned frc_int : 1;
+			unsigned rsvd2 : 15;
+		} ETCLR_ETFRC_bit;
+	} ;	// 0x38
+	
+	/* PRU_EPWM_PCCTL register bit field */
+	union {
+		volatile struct{
+			volatile uint16_t PCCTL;
+			volatile uint16_t rsvd3;
+		} PCCTL;
+
+		volatile struct{
+			unsigned chpen : 1;
+			unsigned oshtwth : 4;
+			unsigned chpfreq : 3;
+			unsigned chpduty : 3;
+			unsigned rsvd1 : 5;
+			
+			unsigned rsvd2 : 16;
+		} PCCTL_bit;
+	} ;	// 0x3C
+	
+	/* PRU_EPWM_HRCTL register bit field */
+	union {
+		volatile uint16_t HRCTL;
+
+		volatile struct{
+			unsigned delmode : 2;
+			unsigned delbussel : 1;
+			unsigned pulsesel : 1;
+			unsigned rsvd1 : 12;
+		} HRCTL_bit;
+	} ;	// 0x40
+	
+} pruEPwm;
+
+#endif /* PRU_EPWM_REG_TYPES_HP_ */

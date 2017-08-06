@@ -1,0 +1,27 @@
+/*
+ * pru_ipc_dispatcher.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DISPATCHER_HP_
+#define PRU_IPC_DISPATCHER_HP_
+
+#include <stdint.h>
+
+#include "pru_ipc_types.hp"
+
+struct IPCHandlerSpec
+{
+	uint32_t device;
+	uint16_t (*handler)(const struct IPCDeviceIoctl* const deviceIoctl);
+};
+
+void initIPCHostDirectionalDispatcher(const uint8_t acknowledgeEvent);
+void initIPCBiDirectionalDispatcher(const struct IPCHandlerSpec* ipcHandlers, const uint8_t acknowledgeEvent);
+void sendIPCToHost(const uint8_t* const data, const uint8_t size);
+void IPCBiDirectionalDispatcher();
+void IPCHostDirectionalDispatcher();
+
+#endif /* PRU_IPC_DISPATCHER_HP_ */

@@ -1,0 +1,168 @@
+/*
+ * pru_ipc_dispatcher.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_dispatcher.hp"
+
+#include <stddef.h>
+
+#include "pru_intc.hp"
+#include "pru_config_types.hp"
+
+static struct IPCHostDirectionalChannelContext* m_ipcHostDirectionalChannelContextPtr = NULL;
+static uint8_t m_hostDirectionalAcknowledgeEvent = 0;
+
+static bool m_fillBufferActive = false;
+static bool m_fillBufferOverflow = false;
+static IPCBufferPtr m_fillBufferPtr = NULL;
+static IPCBufferPtr m_fillBufferEndPtr = NULL;
+static uint8_t m_bufferIndex = 0;
+
+struct BufferContext
+{
+	IPCBufferPtr start;
+	IPCBufferPtr end;
+};
+
+static struct BufferContext m_buffers[2] = 
+{
+		{ NULL, NULL },
+		{ NULL, NULL }
+};
+
+static struct IPCBiDirectionalChannelContext* m_ipcBiDirectionalChannelContextPtr = NULL;
+static const struct IPCHandlerSpec* m_ipcHandlerTable = NULL;
+static uint8_t m_biDirectionalAcknowledgeEvent = 0;
+
+void initIPCHostDirectionalDispatcher(const uint8_t acknowledgeEvent)
+{
+	m_ipcHostDirectionalChannelContextPtr = m_pruConfig.ipcHostDirectionalChannelContextPtr;
+	m_hostDirectionalAcknowledgeEvent = acknowledgeEvent;
+
+	m_buffers[0].start = m_ipcHostDirectionalChannelContextPtr->buffer_0;
+	m_buffers[0].end = m_buffers[0].start + PRU_IPC_TX_BUFFER_SIZE;
+	m_buffers[1].start = m_ipcHostDirectionalChannelContextPtr->buffer_1;
+	m_buffers[1].end = m_buffers[1].start + PRU_IPC_TX_BUFFER_SIZE;
+	m_bufferIndex = 0;
+	
+	m_fillBufferActive = false;
+	m_fillBufferOverflow = false;
+	m_fillBufferPtr = m_buffers[m_bufferIndex].start;
+	m_fillBufferEndPtr = m_buffers[m_bufferIndex].end;
+	m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex = UNDEFINED_INDEX;
+	m_ipcHostDirectionalChannelContextPtr->transmitRegister = 0x0000;
+}
+
+void IPCHostDirectionalDispatcher()
+{
+	if ((m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex != UNDEFINED_INDEX)
+			&& (m_ipcHostDirectionalChannelContextPtr->transmitRegister & TRANSMIT_BUFFER_ACKNOWLEDGE_REG_MASK))
+	{
+		m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex = UNDEFINED_INDEX;
+		m_ipcHostDirectionalChannelContextPtr->transmitRegister = 0x0000;
+	}
+	
+	if (m_fillBufferActive && (m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex == UNDEFINED_INDEX))
+	{
+		*((uint32_t*) m_fillBufferPtr) = IPC_EOB;
+		
+		m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex = m_bufferIndex;
+
+		TransmitRegister txReg = TRANSMIT_BUFFER_ACTIVE_REG_MASK;
+				
+		if (m_fillBufferOverflow)
+		{
+			txReg |= TRANSMIT_BUFFER_OVERFLOW_MASK;
+		}
+		
+		m_ipcHostDirectionalChannelContextPtr->transmitRegister = txReg;
+		
+		++m_bufferIndex;
+
+		m_bufferIndex = m_bufferIndex % 2;
+		
+		m_fillBufferActive = false;
+		m_fillBufferOverflow = false;
+		m_fillBufferPtr = m_buffers[m_bufferIndex].start;
+		m_fillBufferEndPtr = m_buffers[m_bufferIndex].end;
+		
+		fireArmInterrupt(m_hostDirectionalAcknowledgeEvent);
+	}
+}
+
+void sendIPCToHost(const uint8_t* const data, const uint8_t size)
+{
+	if (!m_fillBufferOverflow)
+	{
+		const IPCBufferPtr bufferPos = m_fillBufferPtr;
+				
+		m_fillBufferPtr += size;
+		
+		if (m_fillBufferPtr < m_fillBufferEndPtr)
+		{
+			m_fillBufferActive = true;
+		
+			memcpy(bufferPos, data, size);
+		}
+		else
+		{
+			m_fillBufferOverflow = true;
+			m_fillBufferPtr = bufferPos;
+		}
+	}
+}
+
+void initIPCBiDirectionalDispatcher(const struct IPCHandlerSpec* ipcHandlers, const uint8_t acknowledgeEvent)
+{
+	m_ipcBiDirectionalChannelContextPtr = m_pruConfig.ipcBiDirectionalChannelContextPtr;
+	m_ipcHandlerTable = ipcHandlers;
+	m_biDirectionalAcknowledgeEvent = acknowledgeEvent;
+}
+
+static uint16_t callIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	const struct IPCHandlerSpec* const handlers = m_ipcHandlerTable;
+	
+	uint8_t i = 0;
+	
+	while (handlers[i].handler != NULL)
+	{
+		if (handlers[i].device == deviceIoctl->device)
+		{
+			return handlers[i].handler(deviceIoctl);
+		}
+		
+		++i;
+	}
+	
+	return 0;
+}
+
+void IPCBiDirectionalDispatcher()
+{
+	IPCBufferPtr buffer = m_ipcBiDirectionalChannelContextPtr->rxBuffer;
+	
+	struct IPCDeviceIoctl* deviceIoctl = (struct IPCDeviceIoctl*) buffer;
+
+	while (deviceIoctl->device != IPC_EOB) 
+	{
+		const uint16_t size = callIPCHandler(deviceIoctl);
+
+		deviceIoctl->device = IPC_EOB;
+		
+		if (size == 0)
+		{
+			break;
+		}
+		
+		buffer += size;
+		
+		deviceIoctl = (struct IPCDeviceIoctl*) buffer;
+	} 
+	
+	fireArmInterrupt(m_biDirectionalAcknowledgeEvent);
+}
+

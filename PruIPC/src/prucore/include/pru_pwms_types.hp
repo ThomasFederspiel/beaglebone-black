@@ -1,0 +1,20 @@
+/*
+ * pru_pwms_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_PWMS_TYPES_HP_
+#define PRU_PWMS_TYPES_HP_
+
+typedef enum
+{
+	PWMSS_DEV_1 = 0,
+	PWMSS_DEV_2,
+	PWMSS_DEV_3,
+	LAST_PWM_DEV
+}  PwmDeviceEnum;
+
+#endif /* PRU_PWMS_TYPES_HP_ */
+

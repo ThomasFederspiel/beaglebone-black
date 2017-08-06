@@ -1,0 +1,28 @@
+/*
+ * pru_ipc_device_eqep_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_EQEP_TYPES_HP_
+#define PRU_IPC_DEVICE_EQEP_TYPES_HP_
+
+#include "pru_ipc_types.hp"
+
+enum IPCDeviceEQepIoctlEnum
+{
+	IPCDeviceEQep_Status = 0
+};
+
+struct IPCDeviceEQep_Status
+{
+	struct IPCDeviceIoctl device;
+	uint32_t capCounter;
+	uint32_t capTime;
+	uint32_t capPeriod;
+	uint32_t capStatus;
+	uint32_t counter;
+};
+
+#endif /* PRU_IPC_DEVICE_EQEP_TYPES_HP_ */

@@ -1,0 +1,14 @@
+/*
+ * pru_macros.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_MACROS_HP_
+#define PRU_MACROS_HP_
+
+#define BIT(b)	(0x01 << b)
+
+#endif /* PRU_MACROS_HP_ */
+

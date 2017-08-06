@@ -1,0 +1,36 @@
+/*
+ * pru_epwm_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EPWM_TYPES_HP_
+#define PRU_EPWM_TYPES_HP_
+
+/**
+ * PWM 0, CH A, P9_31/P9_22, EHRPWM0A  
+ * PWM 0, CH B, P9_29/P9_21, EHRPWM0B
+ * PWM 1, CH A, P8_36/P9_14, EHRPWM1A
+ * PWM 1, CH B, P8_34/P9_16, EHRPWM1B
+ * PWM 2, CH A, P8_45/P8_19, EHRPWM2A
+ * PWM 2, CH B, P8_46/P8_13, EHRPWM2A
+ */
+typedef enum
+{
+	PWM_CH_A = 0,
+	PWM_CH_B,
+	LAST_PWM_CH
+} EPwmChannelEnum;
+
+typedef enum
+{
+	PWM_FREQ_1HZ = 0,
+	PWM_FREQ_2HZ,
+	PWM_FREQ_10HZ,
+	PWM_FREQ_100HZ,
+	PWM_FREQ_25KHZ,
+	LAST_PWM_FREQ
+} EPwmFreqEnum;
+
+#endif /* PRU_EPWM_TYPES_HP_ */

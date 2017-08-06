@@ -1,0 +1,54 @@
+/*
+ * pru_pwms_core.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_pwms_core.hp"
+
+#include <stdbool.h>
+
+#include "pru_reg.hp"
+#include "pru_pwms.hp"
+#include "pru_epwm_types.hp"
+
+volatile PruPwmsModule const pwmsRegisterBase[] =
+{
+	{ PerEPWMSS0, &CT_HRPWM1 },
+	{ PerEPWMSS1, &CT_HRPWM2 },
+	{ PerEPWMSS2, &CT_HRPWM3 }
+};
+
+void enablePWMSSModule(const PwmDeviceEnum pwmDev, const bool enable)
+{
+	if (enable)
+	{
+		enableModuleClock(pwmsRegisterBase[pwmDev].clk);
+	}
+	else
+	{
+		disableModuleClock(pwmsRegisterBase[pwmDev].clk);
+	}
+}
+
+void enablePWMSSClock(const PwmDeviceEnum pwmDev, const PwmssModuleEnum module, const bool enable)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	
+	if (enable)
+	{
+// ;+	    while ((pruPwms->pwmss.CLKSTATUS & EQEP_CLK_EN_MASK) == 0)
+//	    {
+	    	pruPwms->pwmss.CLKCONFIG |= EQEP_CLK_EN_MASK;
+//	    }
+	}
+	else
+	{
+//	;+    while ((pruPwms->pwmss.CLKSTATUS & EQEP_CLK_STOP_REQ_MASK) == 0)
+//	    {
+	    	pruPwms->pwmss.CLKCONFIG |= EQEP_CLK_STOP_REQ_MASK;
+//	    }
+	}
+}
+

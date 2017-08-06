@@ -1,0 +1,49 @@
+/*
+ * pru_epwm.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EPWM_HP_
+#define PRU_EPWM_HP_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "pru_pwms.hp"
+#include "pru_macros.hp"
+
+#include "pru_epwm_types.hp"
+
+#define EPWM_PER_CNT_HZ(hz) 100000000 / hz
+
+typedef enum
+{
+	PWM_INT_SEL_ZERO = BIT(0),
+	PWM_INT_SEL_PERIOD = BIT(1),
+	PWM_INT_SEL_CH_A_INC = BIT(2),
+	PWM_INT_SEL_CH_A_DEC = BIT(2) | BIT(0),
+	PWM_INT_SEL_CH_B_INC = BIT(2) | BIT(1),
+	PWM_INT_SEL_CH_B_DEC = BIT(2) | BIT(1) | BIT(0),
+	LAST_PWM_INT_SEL
+} EPwmIntSelEnum;
+
+void enableEPwmClock(const PwmDeviceEnum pwmDev, const bool enable);
+uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq);
+uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq);
+void setEPwmFreq(const PwmDeviceEnum pwmDev, const uint16_t periodCntr);
+bool armEPwmRaw(const PwmDeviceEnum pwmDev, 
+		const uint16_t periodCntr, const uint8_t clkDiv, const uint8_t hspClkDiv);
+void enableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh);
+void disableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh);
+void setEPwmDuty(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const uint16_t onTime);
+void setEPwmPin(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh);
+bool enableEPwmETInterrupt(const PwmDeviceEnum pwmDev, const EPwmIntSelEnum intSel);
+void disableEPwmETInterrupt(const PwmDeviceEnum pwmDev);
+void acknowledgeEPwmETInterrut(const PwmDeviceEnum pwmDev);
+void pollEPwmInterrupt(const PwmDeviceEnum pwmDev);
+bool isEPwmInterruptActive(const PwmDeviceEnum pwmDev);
+uint16_t getEPwmCounter(const PwmDeviceEnum pwmDev);
+
+#endif /* PRU_EPWM_HP_ */
