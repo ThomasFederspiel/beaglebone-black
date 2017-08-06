@@ -1,0 +1,9 @@
+MODULE_INCLUDES += common logger exception
+MODULE_LIBRARIES += common
+
+DYNAMIC_SYSTEM_LIBRARIES +=
+STATIC_SYSTEM_LIBRARIES +=
+
+#EXTERNAL_PROJECTS += <project>
+#EXTERNAL_INCLUDES_<project> +=  
+#EXTERNAL_LIBRARIES_<project> += 

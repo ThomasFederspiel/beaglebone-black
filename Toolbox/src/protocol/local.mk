@@ -1,0 +1,9 @@
+MODULE_INCLUDES += exception boostasio logger common util 
+MODULE_LIBRARIES += 
+
+DYNAMIC_SYSTEM_LIBRARIES +=
+STATIC_SYSTEM_LIBRARIES +=
+
+#EXTERNAL_PROJECTS += <project>
+#EXTERNAL_INCLUDES_<project> +=  
+#EXTERNAL_LIBRARIES_<project> += 
