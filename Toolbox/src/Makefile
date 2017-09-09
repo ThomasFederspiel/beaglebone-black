@@ -13,6 +13,7 @@ all: allexternal
 	$(MAKE) -C service MAKEFLAGS= all
 	$(MAKE) -C boostasio MAKEFLAGS= all
 	$(MAKE) -C protocol MAKEFLAGS= all
+	$(MAKE) -C factory MAKEFLAGS= all
 	
 clean: cleanexternal
 	$(MAKE) -C util MAKEFLAGS= clean
@@ -26,6 +27,7 @@ clean: cleanexternal
 	$(MAKE) -C service MAKEFLAGS= clean
 	$(MAKE) -C boostasio MAKEFLAGS= clean
 	$(MAKE) -C protocol MAKEFLAGS= clean
+	$(MAKE) -C factory MAKEFLAGS= clean
 
 allexternal:
 
