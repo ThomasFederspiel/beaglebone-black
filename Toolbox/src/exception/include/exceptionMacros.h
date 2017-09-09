@@ -18,7 +18,7 @@
 
 #define TB_ERROR(v) linux_error("%s(%d) - %s", __FILE__, __LINE__, dynamic_cast<std::ostringstream&>(std::ostringstream() << v).str().c_str())
 #define TB_ERRORF(fmt, args...) linux_error("%s(%d) - " fmt, __FILE__, __LINE__, ##args)
-#define TB_DEFAULT(v) default : TB_ERROR(dynamic_cast<std::ostringstream&>(std::ostringstream("Switch default reached. Unknown value ") << v).str())
+#define TB_DEFAULT(v) default : TB_ERROR("Switch default reached. Unknown value " << v)
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
