@@ -18,7 +18,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_Open* const open = (struct IPCDeviceEPwm_Open*) deviceIoctl;
 
-			enableEPwmClock(open->pwmDev, true);
+			enableEPwmClock(open->pwmssDevice, true);
 			
 			return sizeof(struct IPCDeviceEPwm_Open);
 		}
@@ -27,7 +27,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_Close* const close = (struct IPCDeviceEPwm_Close*) deviceIoctl;
 			
-			enableEPwmClock(close->pwmDev, false);
+			enableEPwmClock(close->pwmssDevice, false);
 			
 			return sizeof(struct IPCDeviceEPwm_Close);
 		}
@@ -36,7 +36,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_Enable* const enable = (struct IPCDeviceEPwm_Enable*) deviceIoctl;
 			
-			enableEPwm(enable->pwmDev, enable->pwmCh);
+			enableEPwm(enable->pwmssDevice, enable->pwmCh);
 			
 			return sizeof(struct IPCDeviceEPwm_Enable);
 		}
@@ -45,7 +45,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_Disable* const disable = (struct IPCDeviceEPwm_Disable*) deviceIoctl;
 			
-			disableEPwm(disable->pwmDev, disable->pwmCh, disable->outputHigh);
+			disableEPwm(disable->pwmssDevice, disable->pwmCh, disable->outputHigh);
 			
 			return sizeof(struct IPCDeviceEPwm_Disable);
 		}
@@ -54,7 +54,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_ArmRaw* const armRaw = (struct IPCDeviceEPwm_ArmRaw*) deviceIoctl;
 			
-			armEPwmRaw(armRaw->pwmDev, armRaw->periodCntr, armRaw->clkDiv, armRaw->hspClkDiv);
+			armEPwmRaw(armRaw->pwmssDevice, armRaw->periodCntr, armRaw->clkDiv, armRaw->hspClkDiv);
 			
 			return sizeof(struct IPCDeviceEPwm_ArmRaw);
 		}
@@ -63,7 +63,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_SetFreq* const setFreq = (struct IPCDeviceEPwm_SetFreq*) deviceIoctl;
 			
-			setEPwmFreq(setFreq->pwmDev, setFreq->periodCntr);
+			setEPwmFreq(setFreq->pwmssDevice, setFreq->periodCntr);
 			
 			return sizeof(struct IPCDeviceEPwm_SetFreq);
 		}
@@ -72,7 +72,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_SetDuty* const setDuty = (struct IPCDeviceEPwm_SetDuty*) deviceIoctl;
 			
-			setEPwmDuty(setDuty->pwmDev, setDuty->pwmCh, setDuty->onTime);
+			setEPwmDuty(setDuty->pwmssDevice, setDuty->pwmCh, setDuty->onTime);
 			
 			return sizeof(struct IPCDeviceEPwm_SetDuty);
 		}
@@ -81,7 +81,7 @@ uint16_t deviceEPwmIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEPwm_SetPin* const setPin = (struct IPCDeviceEPwm_SetPin*) deviceIoctl;
 			
-			setEPwmPin(setPin->pwmDev, setPin->pwmCh, setPin->high);
+			setEPwmPin(setPin->pwmssDevice, setPin->pwmCh, setPin->high);
 			
 			return sizeof(struct IPCDeviceEPwm_SetPin);
 		}

@@ -30,26 +30,26 @@ enum IPCDeviceEPwmIoctlEnum
 struct IPCDeviceEPwm_Close
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 };
 
 struct IPCDeviceEPwm_Open
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 };
 
 struct IPCDeviceEPwm_Enable
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	EPwmChannelEnum pwmCh;
 };
 
 struct IPCDeviceEPwm_Disable
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	EPwmChannelEnum pwmCh;
 	bool outputHigh;
 };
@@ -57,7 +57,7 @@ struct IPCDeviceEPwm_Disable
 struct IPCDeviceEPwm_ArmRaw
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	uint16_t periodCntr;
 	uint8_t clkDiv;
 	uint8_t hspClkDiv;
@@ -66,14 +66,14 @@ struct IPCDeviceEPwm_ArmRaw
 struct IPCDeviceEPwm_SetFreq
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	uint16_t periodCntr;
 };
 
 struct IPCDeviceEPwm_SetDuty
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	EPwmChannelEnum pwmCh;
 	uint16_t onTime;
 };
@@ -81,7 +81,7 @@ struct IPCDeviceEPwm_SetDuty
 struct IPCDeviceEPwm_SetPin
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 	EPwmChannelEnum pwmCh;
 	bool high;
 };

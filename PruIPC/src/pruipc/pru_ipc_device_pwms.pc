@@ -20,7 +20,7 @@ uint16_t devicePwmsIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDevicePwms_Open* const open = (struct IPCDevicePwms_Open*) deviceIoctl;
 
-			enablePWMSSModule(open->pwmDev, true);
+			enablePWMSSModule(open->pwmssDevice, true);
 			
 			return sizeof(struct IPCDevicePwms_Open);
 		}
@@ -29,7 +29,7 @@ uint16_t devicePwmsIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDevicePwms_Close* const close = (struct IPCDevicePwms_Close*) deviceIoctl;
 			
-			enablePWMSSModule(close->pwmDev, false);
+			enablePWMSSModule(close->pwmssDevice, false);
 			
 			return sizeof(struct IPCDevicePwms_Close);
 		}

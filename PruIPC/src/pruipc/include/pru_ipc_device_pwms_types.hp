@@ -20,13 +20,13 @@ enum IPCDevicePwmsIoctlEnum
 struct IPCDevicePwms_Close
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 };
 
 struct IPCDevicePwms_Open
 {
 	struct IPCDeviceIoctl device;
-	PwmDeviceEnum pwmDev;
+	PwmssDeviceEnum pwmssDevice;
 };
 
 #endif /* PRU_IPC_DEVICE_PWMS_TYPES_HP_ */

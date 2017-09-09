@@ -9,6 +9,7 @@
 #define PRU_IPC_DEVICE_EQEP_TYPES_HP_
 
 #include "pru_ipc_types.hp"
+#include "pru_pwms_types.hp"
 
 enum IPCDeviceEQepIoctlEnum
 {
@@ -18,6 +19,7 @@ enum IPCDeviceEQepIoctlEnum
 struct IPCDeviceEQep_Status
 {
 	struct IPCDeviceIoctl device;
+	PwmssDeviceEnum pwmssDevice;
 	uint32_t capCounter;
 	uint32_t capTime;
 	uint32_t capPeriod;
