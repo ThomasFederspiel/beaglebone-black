@@ -29,8 +29,10 @@ public:
 	{
 		MotionMessage = exports::MessageTypes::MotionMessage,
 		SoundMessage = exports::MessageTypes::SoundMessage,
-		NetManageMessage = exports::MessageTypes::NetManageMessage
-
+		NetManageMessage = exports::MessageTypes::NetManageMessage,
+		LeftPropulsionOdometerMessage = exports::MessageTypes::LeftPropulsionOdometerMessage,
+		RightPropulsionOdometerMessage = exports::MessageTypes::RightPropulsionOdometerMessage,
+		EOEMessage = exports::MessageTypes::EOEMessage
 	};
 
 	static const char* toString(const MessageType_t type)
