@@ -43,21 +43,21 @@ typedef enum
 
 struct EQepInterruptHandlerSpec
 {
-	void (*intrCallback)(const PwmDeviceEnum pwmDev);
-	PwmDeviceEnum pwmDev;
+	void (*intrCallback)(const PwmssDeviceEnum pwmssDevice);
+	PwmssDeviceEnum pwmssDevice;
 	uint16_t intrFlags;
 };
 
 void disableEQepInterrupts();
 void enableEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable);
 void pollEQepInterrupts();
-void enableEQep(const PwmDeviceEnum pwmDev, const EQepCounterModeEnum mode);
-void disableEQep(const PwmDeviceEnum pwmDev);
-uint32_t readEQepCounter(const PwmDeviceEnum pwmDev);
-uint32_t readEQepStatus(const PwmDeviceEnum pwmDev);
-uint32_t readEQepIntrFlag(const PwmDeviceEnum pwmDev);
-void clearEQepIntrFlag(const PwmDeviceEnum pwmDev, const uint16_t flags);
-void readEQepCaptures(const PwmDeviceEnum pwmDev, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
+void enableEQep(const PwmssDeviceEnum pwmssDevice, const EQepCounterModeEnum mode);
+void disableEQep(const PwmssDeviceEnum pwmssDevice);
+uint32_t readEQepCounter(const PwmssDeviceEnum pwmssDevice);
+uint32_t readEQepStatus(const PwmssDeviceEnum pwmssDevice);
+uint32_t readEQepIntrFlag(const PwmssDeviceEnum pwmssDevice);
+void clearEQepIntrFlag(const PwmssDeviceEnum pwmssDevice, const uint16_t flags);
+void readEQepCaptures(const PwmssDeviceEnum pwmssDevice, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
 		uint32_t* const status);
 
 #endif /* PRU_EQEP_HP_ */

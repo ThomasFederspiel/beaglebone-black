@@ -87,12 +87,12 @@ static bool armEPwmPrescalers(const uint32_t rqstPrescaler,
 	return false;
 }
 
-void enableEPwmClock(const PwmDeviceEnum pwmDev, const bool enable)
+void enableEPwmClock(const PwmssDeviceEnum pwmssDevice, const bool enable)
 {
-	enablePWMSSClock(pwmDev, PWMSS_MODULE_EPWM, enable);
+	enablePWMSSClock(pwmssDevice, PWMSS_MODULE_EPWM, enable);
 }
 
-uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq)
+uint16_t armEPwmFreq(const PwmssDeviceEnum pwmssDevice, const EPwmFreqEnum freq)
 {
 	if (freq >= LAST_PWM_FREQ)
 	{
@@ -101,7 +101,7 @@ uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq)
 
 	const EPwmFreqElement* const elem = &EPwmFreqTable[freq];
 	
-	if (armEPwmRaw(pwmDev, elem->periodCntr, elem->clkDiv, elem->hspClkDiv))
+	if (armEPwmRaw(pwmssDevice, elem->periodCntr, elem->clkDiv, elem->hspClkDiv))
 	{
 		return elem->periodCntr;
 	}
@@ -109,7 +109,7 @@ uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq)
 	return 0;
 }
 
-uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq)
+uint16_t armEPwmRawFreq(const PwmssDeviceEnum pwmssDevice, const uint32_t freq)
 {
 	uint16_t prescaleDiv = 0;
 	uint8_t clkDiv = 0;
@@ -122,7 +122,7 @@ uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq)
 	{
 		const uint16_t periodCntr = freq / prescaleDiv;
 
-		if (armEPwmRaw(pwmDev, periodCntr, clkDiv, hspClkDiv))
+		if (armEPwmRaw(pwmssDevice, periodCntr, clkDiv, hspClkDiv))
 		{
 			return periodCntr; 
 		}
@@ -131,15 +131,15 @@ uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq)
 	return 0;
 }
 
-bool armEPwmRaw(const PwmDeviceEnum pwmDev, 
+bool armEPwmRaw(const PwmssDeviceEnum pwmssDevice, 
 		const uint16_t periodCntr, const uint8_t clkDiv, const uint8_t hspClkDiv)
 {
-	if (pwmDev >= LAST_PWM_DEV)
+	if (pwmssDevice >= LAST_PWM_DEV)
 	{
 		return false;
 	}
 	
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	// Stop timer and turn off interrupts
 //	pruPwms->ePwm.TBCTL_TBSTS_bit.ctrmode = TB_COUNT_FREEZE;
@@ -189,16 +189,16 @@ bool armEPwmRaw(const PwmDeviceEnum pwmDev,
 	return true;
 }
 
-void setEPwmFreq(const PwmDeviceEnum pwmDev, const uint16_t periodCntr)
+void setEPwmFreq(const PwmssDeviceEnum pwmssDevice, const uint16_t periodCntr)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	pruPwms->ePwm.TBPRD = periodCntr;
 }
 
-void setEPwmPin(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh)
+void setEPwmPin(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const bool outputHigh)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_LOAD_IMMEDIAT;
 	
@@ -230,9 +230,9 @@ void setEPwmPin(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const b
 	}
 }
 
-void enableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh)
+void enableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	switch (pwmCh)
 	{
@@ -256,9 +256,9 @@ void enableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh)
 	}
 }
 
-void disableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh)
+void disableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const bool outputHigh)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	switch (pwmCh)
 	{
@@ -307,12 +307,12 @@ void disableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const 
 		break;
 	}
 	
-	setEPwmPin(pwmDev, pwmCh, outputHigh);
+	setEPwmPin(pwmssDevice, pwmCh, outputHigh);
 }
 
-void setEPwmDuty(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const uint16_t onTime)
+void setEPwmDuty(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const uint16_t onTime)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	switch (pwmCh)
 	{
@@ -328,23 +328,23 @@ void setEPwmDuty(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const 
 	}
 }
 
-void acknowledgeEPwmETInterrut(const PwmDeviceEnum pwmDev)
+void acknowledgeEPwmETInterrut(const PwmssDeviceEnum pwmssDevice)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	pruPwms->ePwm.ETCLR_ETFRC.ETCLR = EPWM_ETCLR_INT;
 }
 
-bool enableEPwmETInterrupt(const PwmDeviceEnum pwmDev, const EPwmIntSelEnum intSel)
+bool enableEPwmETInterrupt(const PwmssDeviceEnum pwmssDevice, const EPwmIntSelEnum intSel)
 {
 	if (intSel >= LAST_PWM_INT_SEL)
 	{
 		return false;
 	}
 	
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
-	acknowledgeEPwmETInterrut(pwmDev);
+	acknowledgeEPwmETInterrut(pwmssDevice);
 
 //	pruPwms->ePwm.ETPS_ETFLG_bit.intprd = ET_1ST;
 	
@@ -358,9 +358,9 @@ bool enableEPwmETInterrupt(const PwmDeviceEnum pwmDev, const EPwmIntSelEnum intS
 	return true;
 }
 
-void disableEPwmETInterrupt(const PwmDeviceEnum pwmDev)
+void disableEPwmETInterrupt(const PwmssDeviceEnum pwmssDevice)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 //	pruPwms->ePwm.TZFRC_ETSEL_bit.inten = ET_INT_DIS;
 	
@@ -370,31 +370,31 @@ void disableEPwmETInterrupt(const PwmDeviceEnum pwmDev)
 
 	pruPwms->ePwm.ETPS_ETFLG.ETPS &= ET_DISABLE_MASK;
 	
-	acknowledgeEPwmETInterrut(pwmDev);
+	acknowledgeEPwmETInterrut(pwmssDevice);
 }
 
-void pollEPwmInterrupt(const PwmDeviceEnum pwmDev)
+void pollEPwmInterrupt(const PwmssDeviceEnum pwmssDevice)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	if (pruPwms->ePwm.ETPS_ETFLG.ETFLG & EPWM_ETFLG_INT)
 	{
-		const uint8_t sysEv = EPwmSystemEvent[pwmDev];
+		const uint8_t sysEv = EPwmSystemEvent[pwmssDevice];
 		
 		triggSystemEventInterrupt(sysEv);
 	}
 }
 
-bool isEPwmInterruptActive(const PwmDeviceEnum pwmDev)
+bool isEPwmInterruptActive(const PwmssDeviceEnum pwmssDevice)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	return (pruPwms->ePwm.ETPS_ETFLG.ETFLG & EPWM_ETFLG_INT) != 0;
 }
 
-uint16_t getEPwmCounter(const PwmDeviceEnum pwmDev)
+uint16_t getEPwmCounter(const PwmssDeviceEnum pwmssDevice)
 {
-	const volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	const volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
 	return pruPwms->ePwm.TBCNT;
 }

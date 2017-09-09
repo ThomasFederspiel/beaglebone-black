@@ -29,21 +29,21 @@ typedef enum
 	LAST_PWM_INT_SEL
 } EPwmIntSelEnum;
 
-void enableEPwmClock(const PwmDeviceEnum pwmDev, const bool enable);
-uint16_t armEPwmFreq(const PwmDeviceEnum pwmDev, const EPwmFreqEnum freq);
-uint16_t armEPwmRawFreq(const PwmDeviceEnum pwmDev, const uint32_t freq);
-void setEPwmFreq(const PwmDeviceEnum pwmDev, const uint16_t periodCntr);
-bool armEPwmRaw(const PwmDeviceEnum pwmDev, 
+void enableEPwmClock(const PwmssDeviceEnum pwmssDevice, const bool enable);
+uint16_t armEPwmFreq(const PwmssDeviceEnum pwmssDevice, const EPwmFreqEnum freq);
+uint16_t armEPwmRawFreq(const PwmssDeviceEnum pwmssDevice, const uint32_t freq);
+void setEPwmFreq(const PwmssDeviceEnum pwmssDevice, const uint16_t periodCntr);
+bool armEPwmRaw(const PwmssDeviceEnum pwmssDevice, 
 		const uint16_t periodCntr, const uint8_t clkDiv, const uint8_t hspClkDiv);
-void enableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh);
-void disableEPwm(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh);
-void setEPwmDuty(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const uint16_t onTime);
-void setEPwmPin(const PwmDeviceEnum pwmDev, const EPwmChannelEnum pwmCh, const bool outputHigh);
-bool enableEPwmETInterrupt(const PwmDeviceEnum pwmDev, const EPwmIntSelEnum intSel);
-void disableEPwmETInterrupt(const PwmDeviceEnum pwmDev);
-void acknowledgeEPwmETInterrut(const PwmDeviceEnum pwmDev);
-void pollEPwmInterrupt(const PwmDeviceEnum pwmDev);
-bool isEPwmInterruptActive(const PwmDeviceEnum pwmDev);
-uint16_t getEPwmCounter(const PwmDeviceEnum pwmDev);
+void enableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh);
+void disableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const bool outputHigh);
+void setEPwmDuty(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const uint16_t onTime);
+void setEPwmPin(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, const bool outputHigh);
+bool enableEPwmETInterrupt(const PwmssDeviceEnum pwmssDevice, const EPwmIntSelEnum intSel);
+void disableEPwmETInterrupt(const PwmssDeviceEnum pwmssDevice);
+void acknowledgeEPwmETInterrut(const PwmssDeviceEnum pwmssDevice);
+void pollEPwmInterrupt(const PwmssDeviceEnum pwmssDevice);
+bool isEPwmInterruptActive(const PwmssDeviceEnum pwmssDevice);
+uint16_t getEPwmCounter(const PwmssDeviceEnum pwmssDevice);
 
 #endif /* PRU_EPWM_HP_ */

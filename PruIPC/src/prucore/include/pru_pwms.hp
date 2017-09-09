@@ -12,7 +12,7 @@
 
 #include "pru_pwms_types.hp"
 
-void enablePWMSSModule(const PwmDeviceEnum pwmDev, const bool enable);
+void enablePWMSSModule(const PwmssDeviceEnum pwmssDevice, const bool enable);
 
 #endif /* PRU_PWMS_HP_ */
 

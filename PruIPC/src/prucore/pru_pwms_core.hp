@@ -47,7 +47,7 @@ typedef struct
 
 extern volatile PruPwmsModule const pwmsRegisterBase[];
 
-void enablePWMSSClock(const PwmDeviceEnum pwmDev, const PwmssModuleEnum module, const bool enable);
+void enablePWMSSClock(const PwmssDeviceEnum pwmssDevice, const PwmssModuleEnum module, const bool enable);
 
 #endif /* PRU_PWMS_CORE_HP_ */
 

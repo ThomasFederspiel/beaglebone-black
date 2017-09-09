@@ -14,7 +14,7 @@ typedef enum
 	PWMSS_DEV_2,
 	PWMSS_DEV_3,
 	LAST_PWM_DEV
-}  PwmDeviceEnum;
+}  PwmssDeviceEnum;
 
 #endif /* PRU_PWMS_TYPES_HP_ */
 

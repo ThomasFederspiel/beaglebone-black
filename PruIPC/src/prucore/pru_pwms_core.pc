@@ -20,21 +20,21 @@ volatile PruPwmsModule const pwmsRegisterBase[] =
 	{ PerEPWMSS2, &CT_HRPWM3 }
 };
 
-void enablePWMSSModule(const PwmDeviceEnum pwmDev, const bool enable)
+void enablePWMSSModule(const PwmssDeviceEnum pwmssDevice, const bool enable)
 {
 	if (enable)
 	{
-		enableModuleClock(pwmsRegisterBase[pwmDev].clk);
+		enableModuleClock(pwmsRegisterBase[pwmssDevice].clk);
 	}
 	else
 	{
-		disableModuleClock(pwmsRegisterBase[pwmDev].clk);
+		disableModuleClock(pwmsRegisterBase[pwmssDevice].clk);
 	}
 }
 
-void enablePWMSSClock(const PwmDeviceEnum pwmDev, const PwmssModuleEnum module, const bool enable)
+void enablePWMSSClock(const PwmssDeviceEnum pwmssDevice, const PwmssModuleEnum module, const bool enable)
 {
-	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmDev].module;
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 	
 	if (enable)
 	{
