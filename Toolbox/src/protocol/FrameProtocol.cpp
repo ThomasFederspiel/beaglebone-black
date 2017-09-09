@@ -34,62 +34,6 @@ FrameProtocolConnection::FrameProtocolConnection(IComConnection::ConnectionPtr c
 {
 }
 
-FrameProtocolConnection::IDType FrameProtocolConnection::getId() const
-{
-	return m_connection->getId();
-}
-
-FrameProtocolConnection::ComBuffer& FrameProtocolConnection::getRxBuffer()
-{
-	return m_connection->getRxBuffer();
-}
-
-bool FrameProtocolConnection::isOpen() const
-{
-	return m_connection->isOpen();
-}
-
-void FrameProtocolConnection::close()
-{
-	m_connection->close();
-}
-
-void FrameProtocolConnection::send(const std::string& data)
-{
-	TB_ASSERT(data.size() <= std::numeric_limits<decltype(FrameHeader::length)>::max());
-
-	const FrameHeader header =
-	{
-		FrameSignature,
-		static_cast<decltype(FrameHeader::length)>(data.size())
-	};
-
-	std::string frame;
-	frame.resize(sizeof(header) + data.size());
-	frame.assign(reinterpret_cast<const std::string::value_type*>(&header), reinterpret_cast<const std::string::value_type*>(&header) + sizeof(header));
-	frame.insert(frame.end(), data.begin(), data.end());
-
-	m_connection->send(frame);
-}
-
-void FrameProtocolConnection::send(const std::vector<uint8_t>& data)
-{
-	TB_ASSERT(data.size() <= std::numeric_limits<decltype(FrameHeader::length)>::max());
-
-	const FrameHeader header =
-	{
-		FrameSignature,
-		static_cast<decltype(FrameHeader::length)>(data.size())
-	};
-
-	std::vector<uint8_t> frame;
-	frame.resize(sizeof(header) + data.size());
-	frame.assign(reinterpret_cast<const uint8_t*>(&header), reinterpret_cast<const uint8_t*>(&header) + sizeof(header));
-	frame.insert(frame.end(), data.begin(), data.end());
-
-	m_connection->send(frame);
-}
-
 FrameProtocol::FrameProtocol()
 {
 }
@@ -105,9 +49,6 @@ void FrameProtocol::onConnectionClose(IComConnection::ConnectionPtr connection)
 
 std::size_t FrameProtocol::onReadProgress(IComConnection::ConnectionPtr connection, const boost::system::error_code& error, std::size_t bytes_transferred)
 {
-	// ;+
-	INFO("onReadProgress");
-
 	std::size_t count = 0;
 
 	if (!error)
@@ -140,9 +81,6 @@ std::size_t FrameProtocol::onReadProgress(IComConnection::ConnectionPtr connecti
 		}
 	}
 
-	// ;+
-	INFO("Count " << count);
-
 	return count;
 }
 
@@ -162,27 +100,23 @@ void FrameProtocol::onReadCompletion(IComConnection::ConnectionPtr connection, c
 		INFO("MEMDUMP size = "<< bytes_transferred);
 		LOG_MEMDUMP(connection->getRxBuffer().data().data(), bytes_transferred);
 
-
-//		std::vector<char> line;
-//		const auto& buffer = connection->getRxBuffer();
-//
-//		std::copy_if(buffer.begin(), buffer.begin() + bytes_transferred, std::back_inserter(line), [](const char& ch)
-//				{
-//					return std::isprint(ch) != 0;
-//				});
-//
-//		std::string lineStr = std::string(line.data(), line.size());
-//
-//		Utils::trim(lineStr);
-//
-//		notify(TelnetConnection(connection), lineStr);
+		notify(FrameProtocolConnection(connection), connection->getRxBuffer().data().data() + sizeof(struct FrameHeader),
+				connection->getRxBuffer().contentSize() - sizeof(struct FrameHeader));
 	}
-
 }
 
 void FrameProtocol::onWriteCompletion(IComConnection::ConnectionPtr connection, const boost::system::error_code& error, std::size_t bytes_transferred)
 {
 	// Nothing to do
+}
+
+void FrameProtocol::notify(FrameProtocolConnection connection, const uint8_t* const data, const std::size_t length)
+{
+	notifySubscribers(std::function<void(IFrameProtocolSubscriber& subscriber, FrameProtocolConnection connection, const uint8_t * const data, const std::size_t length)>([](IFrameProtocolSubscriber& subscriber,
+			FrameProtocolConnection connection, const uint8_t * const data, const std::size_t length)
+	{
+		subscriber.onReceivedFrame(connection, data, length);
+	}), connection, data, length);
 }
 
 

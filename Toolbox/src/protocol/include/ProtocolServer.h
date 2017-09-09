@@ -18,6 +18,7 @@
 // project
 #include "exceptionMacros.h"
 #include "IComConnection.h"
+#include "IComServer.h"
 
 // local
 #include "IComProtocol.h"
@@ -26,6 +27,8 @@ template<typename ComServerImpl>
 class ProtocolServer : public ComServerImpl
 {
 public:
+
+	static_assert(std::is_base_of<IComServer, ComServerImpl>::value, "Not inheriting IComServer");
 
 	explicit ProtocolServer(const std::string& name, std::unique_ptr<IComProtocol> protocol) : ComServerImpl(name), m_protocol(std::move(protocol))
 	{
@@ -37,9 +40,10 @@ public:
 		// needed for unique_ptr
 	}
 
-	IComProtocol& getprotocol()
+	template<typename TProtocol>
+	TProtocol& getProtocol()
 	{
-		return *m_protocol;
+		return dynamic_cast<TProtocol&>(*m_protocol);
 	}
 
 protected:
