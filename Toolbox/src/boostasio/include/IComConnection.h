@@ -10,6 +10,7 @@
 
 // standard
 #include <cstdint>
+#include <cstring>
 #include <memory>
 
 class IComConnection
@@ -29,16 +30,10 @@ public:
 			m_contentSize = 0;
 		}
 
-		explicit ComBuffer(const std::string& data) : m_data(data.length())
+		explicit ComBuffer(const uint8_t* const data, const std::size_t length) : m_data(length)
 		{
-			m_data.assign(data.begin(), data.end());
-			m_contentSize = data.size();
-		}
-
-		explicit ComBuffer(const Data& data) : m_data(data.size())
-		{
-			m_data.assign(data.begin(), data.end());
-			m_contentSize = data.size();
+			std::memcpy(m_data.data(), data, length);
+			m_contentSize = m_data.size();
 		}
 
 		void clear()
@@ -123,8 +118,7 @@ public:
 	virtual void close() = 0;
 
 	// Thread safe
-	virtual void send(const std::string& data) = 0;
-	virtual void send(const std::vector<uint8_t>& data) = 0;
+	virtual void send(const uint8_t* const data, const std::size_t length) = 0;
 };
 
 #endif /* TBOX_ICOMCONNECTION_H_ */

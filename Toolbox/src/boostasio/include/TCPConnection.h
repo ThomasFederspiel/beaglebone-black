@@ -50,8 +50,7 @@ public:
 	void close() override;
 
 	// Thread safe
-	virtual void send(const std::string& data) override;
-	virtual void send(const std::vector<uint8_t>& data) override;
+	virtual void send(const uint8_t* const data, const std::size_t length);
 
 private:
 

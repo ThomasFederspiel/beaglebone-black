@@ -73,13 +73,8 @@ bool TCPConnection::isOpen() const
 	return m_socket.is_open();
 }
 
-void TCPConnection::send(const std::string& data)
+void TCPConnection::send(const uint8_t* const data, const std::size_t length)
 {
-	m_tcpServer.doSend(shared_from_this(), ComBuffer(data));
-}
-
-void TCPConnection::send(const std::vector<uint8_t>& data)
-{
-	m_tcpServer.doSend(shared_from_this(), ComBuffer(data));
+	m_tcpServer.doSend(shared_from_this(), ComBuffer(data, length));
 }
 

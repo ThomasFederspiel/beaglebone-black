@@ -193,7 +193,8 @@ void TCPServer::onReadCompletionImpl(TCPConnection::ConnectionPtr connection, co
 		}
 		else if (error != boost::asio::error::operation_aborted)
 		{
-			m_connectionManager.erase(connection);
+			doCloseImpl(connection);
+			onConnectionCloseImpl(connection);
 		}
 	}
 	else

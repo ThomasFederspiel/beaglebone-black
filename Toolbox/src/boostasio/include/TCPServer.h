@@ -19,9 +19,13 @@
 #include "IRunnable.h"
 #include "TCPConnectionManager.h"
 
+// local
+#include "IComConnection.h"
+#include "IComServer.h"
+
 class TCPConnection;
 
-class TCPServer : public IRunnable
+class TCPServer : public IRunnable, public IComServer
 {
 public:
 	friend class TCPConnection;
@@ -35,22 +39,19 @@ public:
 
 protected:
 
-	virtual void onConnectionOpen(IComConnection::ConnectionPtr connection)
+	virtual void onConnectionOpen(IComConnection::ConnectionPtr connection) override
 	{
 	}
 
-	virtual void onConnectionClose(IComConnection::ConnectionPtr connection)
+	virtual void onConnectionClose(IComConnection::ConnectionPtr connection) override
 	{
 	}
-
-	virtual std::size_t onReadProgress(IComConnection::ConnectionPtr connection, const boost::system::error_code& error, std::size_t bytes_transferred) = 0;
-	virtual void onReadCompletion(IComConnection::ConnectionPtr connection, const boost::system::error_code& error, std::size_t bytes_transferred) = 0;
 
 	virtual void onWriteCompletion(IComConnection::ConnectionPtr connection, const boost::system::error_code& error, std::size_t bytes_transferred)
 	{
 	}
 
-	virtual void onShutdown()
+	virtual void onShutdown() override
 	{
 	}
 
