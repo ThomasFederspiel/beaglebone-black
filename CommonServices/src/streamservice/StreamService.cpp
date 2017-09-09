@@ -12,27 +12,19 @@
 // project
 #include "CommonMessageTypes.h"
 #include "exceptionMacros.h"
-#include "FrameProtocol.h"
 #include "Logger.h"
-#include "ProtocolServer.h"
 #include "ServiceMessageBase.h"
 #include "tboxdefs.h"
-#include "TCPServer.h"
 
 // local
+#include "ProtocolManager.h"
 
 MODULE_LOG(StreamService);
 
 using namespace commonservices;
 
-namespace
-{
-	static constexpr int StreamPort = 5555;
-	static std::string StreamServerName = "StreamServer";
-}
-
 StreamService::StreamService(const std::string& name) : AbstractService(name),
-		m_protocolServer(new ProtocolServer<TCPServer>(StreamServerName, tbox::make_unique<FrameProtocol>()))
+		m_protocolManager(new ProtocolManager(*this))
 {
 }
 
@@ -43,12 +35,12 @@ StreamService::~StreamService()
 
 void StreamService::onStart(ServiceAllocator& allocator)
 {
-	m_protocolServer->start(StreamPort);
+	m_protocolManager->start(allocator);
 }
 
 StreamService::StopStatus StreamService::onStop(ServiceAllocator& allocator)
 {
-	m_protocolServer->stop();
+	m_protocolManager->stop(allocator);
 
 	return StopStatus::Done;
 }
@@ -57,9 +49,6 @@ void StreamService::onMessage(const ServiceMessageBase& message)
 {
 	INFO("Got message " << CommonMessageTypes::toString(message.getType()));
 
-	switch (message.getType())
-	{
-	TB_DEFAULT("Unhandled value " << CommonMessageTypes::toString(message.getType()));
-	}
+	m_protocolManager->process(message);
 }
 

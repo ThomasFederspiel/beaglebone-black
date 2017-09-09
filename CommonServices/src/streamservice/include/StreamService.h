@@ -16,17 +16,13 @@
 #include "AbstractService.h"
 #include "ServiceAllocator.h"
 
-template<typename ComServerImpl>
-class ProtocolServer;
-class ServiceMessageBase;
-class TCPServer;
+class ProtocolManager;
 
 class StreamService final : public AbstractService
 {
 public:
 
 	explicit StreamService(const std::string& name);
-
 	~StreamService();
 
 protected:
@@ -36,7 +32,8 @@ protected:
 	StopStatus onStop(ServiceAllocator& allocator) override;
 
 private:
-	std::unique_ptr<ProtocolServer<TCPServer>> m_protocolServer;
+
+	std::unique_ptr<ProtocolManager> m_protocolManager;
 };
 
 #endif /* STREAMSERVICE_H_ */
