@@ -22,9 +22,10 @@ MODULE_LOG(CUICommands);
 namespace
 {
 	static const std::string CommandPath = "/";
+	static const std::string ShutdownCmd = "shutdown";
 }
 
-ShutdownCommand::ShutdownCommand(MainService& service) : AbstractCUICommand("shutdown", CommandPath),
+ShutdownCommand::ShutdownCommand(MainService& service) : AbstractCUICommand(ShutdownCmd, CommandPath),
 	m_service(service)
 {
 }
@@ -39,8 +40,6 @@ void ShutdownCommand::invoke(const ICUICommandParser& commandParser, CUICommandC
 
 	AsyncTaskMessage asyncTaskMessage([](MainService* const service)
 	{
-		ERROR("async");
-
 		service->shutdown();
 	}, &m_service);
 

@@ -41,7 +41,7 @@ static uint32_t m_st1 = 0;
 static uint32_t m_st2 = 0;
 static uint32_t m_intrCnt = 0;
 
-static void eQepInterrupt(const PwmDeviceEnum pwmDev);
+static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice);
 static void epwmInterrupt();
 static void iepInterrupt();
 static void testFunc();
@@ -178,7 +178,7 @@ static void verifyInterrupts()
 //	}
 }
 
-static void eQepInterrupt(const PwmDeviceEnum pwmDev)
+static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 {
 	struct IPCDeviceEQep_Status status =
 	{
@@ -187,6 +187,7 @@ static void eQepInterrupt(const PwmDeviceEnum pwmDev)
 			IPCDeviceEQep_Status
 		},
 
+        pwmssDevice,
 		0,
 		0,
 		0,
@@ -194,12 +195,12 @@ static void eQepInterrupt(const PwmDeviceEnum pwmDev)
 		0
 	};
 
-	readEQepCaptures(pwmDev, &status.capCounter, &status.capTime, &status.capPeriod, &status.capStatus);
+	readEQepCaptures(pwmssDevice, &status.capCounter, &status.capTime, &status.capPeriod, &status.capStatus);
 	
-	status.counter = readEQepCounter(pwmDev);
+	status.counter = readEQepCounter(pwmssDevice);
 
-//	status.counter = readEQepIntrFlag(pwmDev);
-//	clearEQepIntrFlag(pwmDev, status.counter);
+// ;+	status.counter = readEQepIntrFlag(pwmssDevice);
+//	clearEQepIntrFlag(pwmssDevice, status.counter);
 	
 	sendIPCToHost((uint8_t*)&status, sizeof(status));
 
@@ -210,7 +211,7 @@ static void iepInterrupt()
 {
 	acknowledgeIepTimer();
 
-//	toggleGpio(GPIO_xx_P8_12_OUT);
+// ;+	toggleGpio(GPIO_xx_P8_12_OUT);
 //	toggleGpio(GPIO_113_P9_28_OUT);
 //	toggleGpio(GPIO_110_P9_31_OUT);
 }

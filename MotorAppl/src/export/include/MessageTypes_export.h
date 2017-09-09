@@ -26,6 +26,8 @@ public:
 		SoundMessage = 0,
 		MotionMessage,
 		NetManageMessage,
+		LeftPropulsionOdometerMessage,
+		RightPropulsionOdometerMessage,
 
 		// Message types for PruIPC
 		IpcDeviceProxyMessage,
@@ -44,6 +46,8 @@ public:
 			CASE(Type::SoundMessage)
 		    CASE(Type::MotionMessage)
 		    CASE(Type::NetManageMessage)
+		    CASE(Type::LeftPropulsionOdometerMessage)
+		    CASE(Type::RightPropulsionOdometerMessage)
 			CASE(Type::IpcDeviceProxyMessage)
 			CASE(Type::IpcDeviceProxyMessageCompleted)
 			CASE(Type::IpcDeviceProxyEventEQEP)
