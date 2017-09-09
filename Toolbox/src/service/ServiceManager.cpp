@@ -141,6 +141,35 @@ void ServiceManager::runServices()
 	}
 }
 
+std::shared_ptr<AbstractService> ServiceManager::getService(const std::string& name) const
+{
+	std::shared_ptr<AbstractService> service;
+
+	auto iter = m_services.find(name);
+
+	if (iter != m_services.end())
+	{
+		service = iter->second.m_service;
+	}
+
+	return service;
+}
+
+std::shared_ptr<AbstractService> ServiceManager::allocateEventService(const MessageType_t messageType, const IService& service)
+{
+	std::shared_ptr<AbstractService> foundService;
+
+	for (auto& service : m_services)
+	{
+		if (service.second.m_service->hasEventSubscriber(messageType))
+		{
+			foundService = service.second.m_service;
+		}
+	}
+
+	return foundService;
+}
+
 void ServiceManager::allocateService(const std::string& name, const IService& service)
 {
 	auto mapIter = m_allocatedServices.find(name);

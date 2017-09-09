@@ -33,3 +33,8 @@ void ServiceAllocator::unregisterCommand(const ICUICommand& command)
 	m_manager.unregisterCommand(command);
 }
 
+std::shared_ptr<AbstractService> ServiceAllocator::allocateEventService(const MessageType_t messageType, const IService& service)
+{
+	return m_manager.allocateEventService(messageType, service);
+}
+

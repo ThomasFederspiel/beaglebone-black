@@ -14,6 +14,7 @@
 
 // local
 #include "ServiceManager.h"
+#include "ServiceTypes.h"
 
 class IService;
 
@@ -25,6 +26,8 @@ public:
 
 	template <typename T>
 	std::shared_ptr<T> allocateService(const std::string& name, const IService& service);
+
+	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, const IService& service);
 
 	template <typename T>
 	void releaseService(std::shared_ptr<T>& allocatedService, const IService& service);

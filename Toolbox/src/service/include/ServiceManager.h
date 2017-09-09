@@ -104,16 +104,7 @@ public:
 	template <typename T>
 	std::shared_ptr<T> getService(const std::string& name) const
 	{
-		std::shared_ptr<T> service;
-
-		auto iter = m_services.find(name);
-
-		if (iter != m_services.end())
-		{
-			service = std::dynamic_pointer_cast<T>(iter->second.m_service);
-		}
-
-		return service;
+		return std::dynamic_pointer_cast<T>(getService(name));
 	}
 
 	void registerCommand(std::unique_ptr<ICUICommand> command);
@@ -144,10 +135,13 @@ private:
 	template <typename T>
 	std::shared_ptr<T> allocateService(const std::string& name, const IService& service);
 
+	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, const IService& service);
+
 	template <typename Rep, typename Period>
 	bool waitForState(AbstractService& service, const AbstractService::ServiceState state,
 			const std::chrono::duration<Rep, Period>& duration);
 
+	std::shared_ptr<AbstractService> getService(const std::string& name) const;
 	void allocateService(const std::string& name, const IService& service);
 	void releaseService(const std::string& name, const IService& service);
 	bool isServiceAllocated(const std::string& allocatorService, const std::string& serviceToAllocate);

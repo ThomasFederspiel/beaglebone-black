@@ -43,6 +43,11 @@ void AbstractEventMessagePublisher::publishEvent(const ServiceMessageBase& messa
 	}
 }
 
+bool AbstractEventMessagePublisher::hasEventSubscriber(const MessageType_t messageType)
+{
+	return m_messageSubscriberMap.find(messageType) != m_messageSubscriberMap.end();
+}
+
 void AbstractEventMessagePublisher::subscribeEvent(const MessageType_t messageType, IMessageReceiver& subscriber)
 {
 	const auto item = m_messageSubscriberMap.find(messageType);

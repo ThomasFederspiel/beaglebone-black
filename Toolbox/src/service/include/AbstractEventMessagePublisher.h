@@ -31,6 +31,8 @@ public:
 	void unsubscribeEvent(const MessageType_t messageType, const IMessageReceiver& subscriber) override;
 	void unsubscribeAllEvents(const IMessageReceiver& subscriber) override;
 
+	bool hasEventSubscriber(const MessageType_t messageType);
+
 private:
 	using MessageSubscribers = std::vector<IMessageReceiver*>;
 	using MessageSubscriberMap = std::map<MessageType_t, MessageSubscribers>;
