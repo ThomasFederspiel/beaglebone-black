@@ -104,10 +104,10 @@ void TelnetServer::onConnectionOpen(IComConnection::ConnectionPtr connection)
 void TelnetServer::onConnectionClose(IComConnection::ConnectionPtr connection)
 {
 	notifySubscribers(std::function<void(ITelnetServerSubscriber& subscriber, TelnetConnection connection)>([](ITelnetServerSubscriber& subscriber,
-				TelnetConnection connection)
-			{
-				subscriber.onConnectionClose(connection);
-			}), TelnetConnection(connection));
+			TelnetConnection connection)
+		{
+			subscriber.onConnectionClose(connection);
+		}), TelnetConnection(connection));
 }
 
 void TelnetServer::notify(TelnetConnection connection, const std::string& line)

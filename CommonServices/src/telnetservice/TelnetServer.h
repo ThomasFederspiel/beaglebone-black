@@ -41,7 +41,7 @@ public:
 	/// Thread safe
 	void send(const std::string& message)
 	{
-		m_connection->send(message);
+		m_connection->send(reinterpret_cast<const uint8_t*>(message.data()), message.size());
 	}
 
 	/// Thread safe
