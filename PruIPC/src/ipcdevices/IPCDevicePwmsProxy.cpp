@@ -20,12 +20,12 @@ namespace
 };
 
 IPCDevicePwmsProxy::IPCDevicePwmsProxy(IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum pwmDevice) : IPCDevicePwmsProxy(m_sink, proxy, pwmDevice)
+		const PwmssDeviceEnum pwmssDevice) : IPCDevicePwmsProxy(m_sink, proxy, pwmssDevice)
 {
 }
 
 IPCDevicePwmsProxy::IPCDevicePwmsProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum pwmDevice) : AbstractIPCDeviceProxy(receiver, proxy), m_pwmDevice(pwmDevice)
+		const PwmssDeviceEnum pwmssDevice) : AbstractIPCDeviceProxy(receiver, proxy), m_pwmssDevice(pwmssDevice)
 {
 }
 
@@ -37,7 +37,7 @@ void IPCDevicePwmsProxy::open()
 			IPCDevicePwms,
 			IPCDevicePwms_Open
 		},
-		m_pwmDevice
+		m_pwmssDevice
 	};
 
 	sendSyncMessage(reinterpret_cast<uint8_t*>(&open), sizeof(open));
@@ -51,7 +51,7 @@ void IPCDevicePwmsProxy::close()
 			IPCDevicePwms,
 			IPCDevicePwms_Close
 		},
-		m_pwmDevice
+		m_pwmssDevice
 	};
 
 	sendSyncMessage(reinterpret_cast<uint8_t*>(&close), sizeof(close));

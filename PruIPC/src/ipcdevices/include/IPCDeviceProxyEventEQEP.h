@@ -22,6 +22,7 @@
 #include "pru_ipc_device_eqep_types.hp"
 #include "pru_ipc_devices.hp"
 #include "pru_ipc_types.hp"
+#include "pru_pwms_types.hp"
 
 using namespace pruipcservice;
 
@@ -36,19 +37,19 @@ public:
 
 	explicit IPCDeviceProxyEventEQEP(const PrussDriver::PruProxy::PruIdEnum pruId,
 			const pruEvenType_t& eCapStatus) : ServiceMessageBase(IPCMessageTypes::Type::IpcDeviceProxyEventEQEP),
-		m_pruId(pruId), m_capCounter(eCapStatus.capCounter), m_capTime(eCapStatus.capTime), m_capPeriod(eCapStatus.capPeriod),
+		m_pruId(pruId), m_pwmssDevice(eCapStatus.pwmssDevice), m_capCounter(eCapStatus.capCounter), m_capTime(eCapStatus.capTime), m_capPeriod(eCapStatus.capPeriod),
 		m_capStatus(eCapStatus.capStatus), m_counter(eCapStatus.counter)
 	{
 	}
 
 	explicit IPCDeviceProxyEventEQEP(const IPCDeviceProxyEventEQEP& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
-			m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
+			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
 			m_capStatus(idpe.m_capStatus), m_counter(idpe.m_counter)
 	{
 	}
 
 	explicit IPCDeviceProxyEventEQEP(IPCDeviceProxyEventEQEP&& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
-			m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
+			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
 			m_capStatus(idpe.m_capStatus), m_counter(idpe.m_counter)
 	{
 	}
@@ -64,6 +65,7 @@ public:
 	{
 		using std::swap;
 		swap(first.m_pruId, second.m_pruId);
+		swap(first.m_pwmssDevice, second.m_pwmssDevice);
 		swap(first.m_capCounter, second.m_capCounter);
 		swap(first.m_capTime, second.m_capTime);
 		swap(first.m_capPeriod, second.m_capPeriod);
@@ -79,6 +81,11 @@ public:
 	PrussDriver::PruProxy::PruIdEnum getPruId() const
 	{
 		return m_pruId;
+	}
+
+	PwmssDeviceEnum getPwmssDevice() const
+	{
+		return m_pwmssDevice;
 	}
 
 	uint32_t getCapCounter() const
@@ -108,6 +115,7 @@ public:
 
 private:
 	PrussDriver::PruProxy::PruIdEnum m_pruId;
+	PwmssDeviceEnum m_pwmssDevice;
 	uint32_t m_capCounter;
 	uint32_t m_capTime;
 	uint32_t m_capPeriod;

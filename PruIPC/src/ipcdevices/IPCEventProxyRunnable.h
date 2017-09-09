@@ -36,7 +36,7 @@ public:
 
 	void addPruEventDefinition(EventDefinitionPtr definition);
 
-	void registerEventMessages(AbstractService& service);
+	void registerEventMessages();
 
 	void stop() override;
 

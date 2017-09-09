@@ -66,7 +66,7 @@ void IPCEventProxyRunnable::addPruEventDefinition(EventDefinitionPtr definition)
 	ioctlMap[ioctl] = std::move(definition);
 }
 
-void IPCEventProxyRunnable::registerEventMessages(AbstractService& service)
+void IPCEventProxyRunnable::registerEventMessages()
 {
 	std::size_t count = 0;
 

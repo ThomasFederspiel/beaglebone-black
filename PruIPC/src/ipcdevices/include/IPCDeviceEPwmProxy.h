@@ -44,11 +44,11 @@ public:
 		IPCDeviceEPwmProxy& m_epwmProxy;
 	};
 
-	explicit IPCDeviceEPwmProxy(IPCDeviceProxyService& proxy, const PwmDeviceEnum pwmDevice);
+	explicit IPCDeviceEPwmProxy(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice);
 	explicit IPCDeviceEPwmProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-			const PwmDeviceEnum pwmDevice, const EPwmChannelEnum channel);
+			const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum channel);
 	explicit IPCDeviceEPwmProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-			const PwmDeviceEnum pwmDevice);
+			const PwmssDeviceEnum pwmssDevice);
 
 	void open() override;
 	void close() override;
@@ -64,7 +64,7 @@ private:
 	bool calcPrescalers(const uint32_t rqstPrescaler,
 	                uint16_t& prescaleDiv, uint8_t& clkDivRes, uint8_t& hspClkDivRes);
 
-	PwmDeviceEnum m_pwmDevice;
+	PwmssDeviceEnum m_pwmssDevice;
 	EPwmChannel m_channelA;
 	EPwmChannel m_channelB;
 	IEPwmChannel* m_defaultChannel;

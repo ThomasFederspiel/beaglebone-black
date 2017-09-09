@@ -38,7 +38,7 @@ void IPCDeviceEPwmProxy::EPwmChannel::enable()
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_Enable
 		},
-		m_epwmProxy.m_pwmDevice,
+		m_epwmProxy.m_pwmssDevice,
 		m_channel
 	};
 
@@ -53,7 +53,7 @@ void IPCDeviceEPwmProxy::EPwmChannel::disable(const bool pinHigh)
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_Disable
 		},
-		m_epwmProxy.m_pwmDevice,
+		m_epwmProxy.m_pwmssDevice,
 		m_channel,
 		pinHigh
 	};
@@ -69,7 +69,7 @@ void IPCDeviceEPwmProxy::EPwmChannel::setDuty(const uint16_t onTime)
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_SetDuty
 		},
-		m_epwmProxy.m_pwmDevice,
+		m_epwmProxy.m_pwmssDevice,
 		m_channel,
 		onTime
 	};
@@ -86,7 +86,7 @@ void IPCDeviceEPwmProxy::EPwmChannel::pinLow()
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_SetPin
 		},
-		m_epwmProxy.m_pwmDevice,
+		m_epwmProxy.m_pwmssDevice,
 		m_channel,
 		high
 	};
@@ -103,7 +103,7 @@ void IPCDeviceEPwmProxy::EPwmChannel::pinHigh()
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_SetPin
 		},
-		m_epwmProxy.m_pwmDevice,
+		m_epwmProxy.m_pwmssDevice,
 		m_channel,
 		high
 	};
@@ -112,19 +112,19 @@ void IPCDeviceEPwmProxy::EPwmChannel::pinHigh()
 }
 
 IPCDeviceEPwmProxy::IPCDeviceEPwmProxy(IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum pwmDevice) : IPCDeviceEPwmProxy(m_sink, proxy,
-				pwmDevice)
+		const PwmssDeviceEnum pwmssDevice) : IPCDeviceEPwmProxy(m_sink, proxy,
+				pwmssDevice)
 {
 }
 
 IPCDeviceEPwmProxy::IPCDeviceEPwmProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum pwmDevice) : IPCDeviceEPwmProxy(m_sink, proxy, pwmDevice, PWM_CH_A)
+		const PwmssDeviceEnum pwmssDevice) : IPCDeviceEPwmProxy(m_sink, proxy, pwmssDevice, PWM_CH_A)
 {
 }
 
 IPCDeviceEPwmProxy::IPCDeviceEPwmProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum pwmDevice, const EPwmChannelEnum channel) : AbstractIPCDeviceProxy(receiver, proxy),
-	m_pwmDevice(pwmDevice), m_channelA(PWM_CH_A, *this), m_channelB(PWM_CH_B, *this), m_defaultChannel(nullptr),
+		const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum channel) : AbstractIPCDeviceProxy(receiver, proxy),
+	m_pwmssDevice(pwmssDevice), m_channelA(PWM_CH_A, *this), m_channelB(PWM_CH_B, *this), m_defaultChannel(nullptr),
 	m_currentPrescaleDiv(0)
 {
 	setDefaultChannel(channel);
@@ -158,7 +158,7 @@ void IPCDeviceEPwmProxy::open()
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_Open
 		},
-		m_pwmDevice
+		m_pwmssDevice
 	};
 
 	sendSyncMessage(reinterpret_cast<const uint8_t*>(&open), sizeof(open));
@@ -172,7 +172,7 @@ void IPCDeviceEPwmProxy::close()
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_Close
 		},
-		m_pwmDevice
+		m_pwmssDevice
 	};
 
 	sendSyncMessage(reinterpret_cast<const uint8_t*>(&close), sizeof(close));
@@ -192,7 +192,7 @@ uint16_t IPCDeviceEPwmProxy::setFreq(const uint32_t freq)
 				IPCDeviceEPwm,
 				IPCDeviceEPwm_SetFreq
 			},
-			m_pwmDevice,
+			m_pwmssDevice,
 			periodCntr
 		};
 
@@ -239,7 +239,7 @@ void IPCDeviceEPwmProxy::armFreq(const uint16_t periodCntr, const uint8_t clkDiv
 			IPCDeviceEPwm,
 			IPCDeviceEPwm_ArmRaw
 		},
-		m_pwmDevice,
+		m_pwmssDevice,
 		periodCntr,
 		clkDiv,
 		hspClkDiv

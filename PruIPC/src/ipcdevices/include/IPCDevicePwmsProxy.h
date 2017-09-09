@@ -20,14 +20,14 @@ class IPCDevicePwmsProxy final : public IIPCDevicePwmsProxy, protected AbstractI
 {
 public:
 
-	explicit IPCDevicePwmsProxy(IPCDeviceProxyService& proxy, const PwmDeviceEnum pwmDevice);
-	explicit IPCDevicePwmsProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy, const PwmDeviceEnum pwmDevice);
+	explicit IPCDevicePwmsProxy(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice);
+	explicit IPCDevicePwmsProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmDevice);
 
 	void open() override;
 	void close() override;
 
 private:
-	const PwmDeviceEnum m_pwmDevice;
+	const PwmssDeviceEnum m_pwmssDevice;
 };
 
 #endif /* PRUIPC_IPCDEVICECEPWPROXY_H_ */

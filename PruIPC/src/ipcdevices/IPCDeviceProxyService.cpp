@@ -68,7 +68,7 @@ void IPCDeviceProxyService::onStart(ServiceAllocator& allocator)
 {
 	if (m_ipcEventProxyRunnable)
 	{
-		m_ipcEventProxyRunnable->registerEventMessages(*this);
+		m_ipcEventProxyRunnable->registerEventMessages();
 
 		createWorker(*m_ipcEventProxyRunnable);
 	}
