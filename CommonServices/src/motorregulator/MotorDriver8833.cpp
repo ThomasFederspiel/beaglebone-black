@@ -22,11 +22,11 @@ MODULE_LOG(MotorDriver8833);
 namespace
 {
 	static constexpr uint16_t PWMFreq = 25000;
-	static constexpr float StallLevel = 0.62;
+	static constexpr float StallLevel = 0.62f;
 }
 
-MotorDriver8833::Motor::Motor(IPCDeviceProxyService& proxy, const PwmDeviceEnum pwmDevice) :
-		m_epwmProxy(proxy, pwmDevice), m_pwmsProxy(proxy, pwmDevice), m_forward(false), m_pwmEnabled(false)
+MotorDriver8833::Motor::Motor(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice) :
+		m_epwmProxy(proxy, pwmssDevice), m_pwmsProxy(proxy, pwmssDevice), m_forward(false), m_pwmEnabled(false)
 {
 }
 
@@ -70,6 +70,7 @@ void MotorDriver8833::Motor::setSpeed(const float speed)
 		m_pwmEnabled = true;
 	}
 
+	// ;+
 	INFO("duty = " << duty);
 
 	m_epwmProxy.getChannel(PWM_CH_A).setDuty(duty);
@@ -135,7 +136,7 @@ void MotorDriver8833::Motor::setDirection(const bool forward)
 }
 
 MotorDriver8833::MotorDriver8833(IPCDeviceProxyService& proxy,
-		const PwmDeviceEnum leftMotorPwmDevice, const PwmDeviceEnum rightMotorPwmDevice,
+		const PwmssDeviceEnum leftMotorPwmDevice, const PwmssDeviceEnum rightMotorPwmDevice,
 		const IPCDeviceGpioProxy::GpioPins nSleep, const IPCDeviceGpioProxy::GpioPins nFault) :
 				m_leftMotor(proxy, leftMotorPwmDevice), m_rightMotor(proxy, rightMotorPwmDevice),
 				m_gpioProxy(proxy), m_nSleep(nSleep), m_nFault(nFault)

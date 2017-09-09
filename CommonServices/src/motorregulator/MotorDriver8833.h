@@ -31,7 +31,7 @@ public:
 	{
 	public:
 
-		explicit Motor(IPCDeviceProxyService& proxy, const PwmDeviceEnum pwmDevice);
+		explicit Motor(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice);
 
 		void open();
 		void close();
@@ -52,7 +52,7 @@ public:
 	};
 
 	explicit MotorDriver8833(IPCDeviceProxyService& proxy,
-			const PwmDeviceEnum leftMotorPwmDevice, const PwmDeviceEnum rightMotorPwmDevice,
+			const PwmssDeviceEnum leftMotorPwmDevice, const PwmssDeviceEnum rightMotorPwmDevice,
 			const IPCDeviceGpioProxy::GpioPins nSleep, const IPCDeviceGpioProxy::GpioPins nFault);
 
 	void setSleepMode(const bool enable);

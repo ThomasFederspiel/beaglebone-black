@@ -18,6 +18,7 @@
 #include "AbstractService.h"
 #include "ServiceAllocator.h"
 
+class IPCDeviceProxyEventEQEP;
 class IPCDeviceProxyService;
 class MotionMessage;
 class MotorDriver8833;
@@ -40,9 +41,10 @@ protected:
 private:
 	void applyMotion(const MotionMessage& message);
 	void manageCUICommands(ServiceAllocator& allocator, const bool register);
+	void registerEvents();
+	void publishPropulsionOdometer(const IPCDeviceProxyEventEQEP& eqep);
 
 	std::shared_ptr<IPCDeviceProxyService> m_pru0IpcProxyService;
-
 	std::unique_ptr<MotorDriver8833> m_motorDriver;
 };
 

@@ -24,9 +24,10 @@ MODULE_LOG(CUICommands);
 namespace
 {
 	static const std::string CommandPath = "/services/motor";
+	static const std::string SetMotorSpeedCmd = "sms";
 }
 
-SetMotorSpeedCommand::SetMotorSpeedCommand(MotorRegulatorService& service) : AbstractCUICommand("sms", CommandPath),
+SetMotorSpeedCommand::SetMotorSpeedCommand(MotorRegulatorService& service) : AbstractCUICommand(SetMotorSpeedCmd, CommandPath),
 	m_service(service)
 {
 }

@@ -20,8 +20,12 @@
 #include "Logger.h"
 #include "MotionMessage.h"
 #include "MotorDriver8833.h"
+#include "PropulsionOdometerMessage.h"
 #include "ServiceMessageBase.h"
 #include "tboxdefs.h"
+
+// local
+#include "PropulsionOdometerMessage.h"
 
 MODULE_LOG(MotorRegulatorService);
 
@@ -57,11 +61,18 @@ static void applyAction(const MotionMessage::MotorAction action, MotorDriver8833
 MotorRegulatorService::MotorRegulatorService(const std::string& name) : AbstractService(name), m_pru0IpcProxyService(),
 		m_motorDriver()
 {
+	registerEvents();
 }
 
 MotorRegulatorService::~MotorRegulatorService()
 {
 	// needed for unique_ptr
+}
+
+void MotorRegulatorService::registerEvents()
+{
+	registerEvent(commonservices::CommonMessageTypes::Type::LeftPropulsionOdometerMessage);
+	registerEvent(commonservices::CommonMessageTypes::Type::RightPropulsionOdometerMessage);
 }
 
 void MotorRegulatorService::onStart(ServiceAllocator& allocator)
@@ -110,15 +121,7 @@ void MotorRegulatorService::onMessage(const ServiceMessageBase& message)
 
 	case pruipcservice::IPCMessageTypes::IpcDeviceProxyEventEQEP:
 	{
-		const IPCDeviceProxyEventEQEP& eqep = message.getCasted<IPCDeviceProxyEventEQEP>();
-
-		// ;+
-//		INFO("EQEP pru = " << eqep.getPruId());
-//		INFO("EQEP cap counter = " << eqep.getCapCounter());
-//		INFO("EQEP cap time = " << eqep.getCapTime());
-//		INFO("EQEP cap period = " << eqep.getCapPeriod());
-//		INFO("EQEP cap status = " << eqep.getCapStatus());
-//		INFO("EQEP counter = " << eqep.getCounter());
+		publishPropulsionOdometer(message.getCasted<IPCDeviceProxyEventEQEP>());
 	}
 	break;
 
@@ -159,3 +162,29 @@ void MotorRegulatorService::manageCUICommands(ServiceAllocator& allocator, const
 	}
 }
 
+void MotorRegulatorService::publishPropulsionOdometer(const IPCDeviceProxyEventEQEP& eqep)
+{
+	PropulsionOdometerMessage::Motor motor = PropulsionOdometerMessage::Motor::RightMotor;
+
+	switch (eqep.getPwmssDevice())
+	{
+	case PWMSS_DEV_2:
+		motor = PropulsionOdometerMessage::Motor::RightMotor;
+		break;
+
+	case PWMSS_DEV_3:
+		motor = PropulsionOdometerMessage::Motor::LeftMotor;
+		break;
+
+	TB_DEFAULT(eqep.getPwmssDevice());
+	}
+
+	const PropulsionOdometerMessage message(motor,
+			eqep.getCapCounter(),
+			eqep.getCapTime(),
+			eqep.getCapPeriod(),
+			eqep.getCounter()
+			);
+
+	publishEvent(message);
+}
