@@ -25,6 +25,8 @@ namespace
 {
 	static const std::string CommandPath = "/services/sound";
 
+	static const std::string PlaySoundCmd = "ps";
+
 	static const SoundMessage::Sound sounds[] =
 	{
 		SoundMessage::Sound::MarioMainTheme,
@@ -32,7 +34,7 @@ namespace
 	};
 }
 
-PlaySoundCommand::PlaySoundCommand(SoundService& service) : AbstractCUICommand("ps", CommandPath),
+PlaySoundCommand::PlaySoundCommand(SoundService& service) : AbstractCUICommand(PlaySoundCmd, CommandPath),
 	m_service(service)
 {
 }

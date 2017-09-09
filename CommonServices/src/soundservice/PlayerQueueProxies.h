@@ -91,7 +91,7 @@ public:
 	};
 
 	explicit PlayerQueueEPwmProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-			const PwmDeviceEnum pwmDevice, const EPwmChannelEnum channel) : m_proxy(receiver, proxy, pwmDevice, channel),
+			const PwmssDeviceEnum pwmDevice, const EPwmChannelEnum channel) : m_proxy(receiver, proxy, pwmDevice, channel),
 			m_channelA(m_proxy.getChannel(PWM_CH_A), *this), m_channelB(m_proxy.getChannel(PWM_CH_B), *this), m_defaultChannel(nullptr),
 			m_completed(false), m_terminated(false), m_lock(), m_signal()
 	{
@@ -244,7 +244,7 @@ class PlayerQueuePwmsProxy final : public IIPCDevicePwmsProxy
 public:
 
 	explicit PlayerQueuePwmsProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-			const PwmDeviceEnum pwmDevice) : m_proxy(receiver, proxy, pwmDevice),
+			const PwmssDeviceEnum pwmDevice) : m_proxy(receiver, proxy, pwmDevice),
 			m_completed(false), m_terminated(false), m_lock(), m_signal()
 	{
 	}
