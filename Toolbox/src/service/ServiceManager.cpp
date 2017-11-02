@@ -155,22 +155,41 @@ std::shared_ptr<AbstractService> ServiceManager::getService(const std::string& n
 	return service;
 }
 
-std::shared_ptr<AbstractService> ServiceManager::allocateEventService(const MessageType_t messageType, const IService& service)
+std::shared_ptr<AbstractService> ServiceManager::allocateEventService(const MessageType_t messageType, const IService& allocatorService)
 {
 	std::shared_ptr<AbstractService> foundService;
 
-	for (auto& service : m_services)
+	for (auto& eventService : m_services)
 	{
-		if (service.second.m_service->hasEventSubscriber(messageType))
+		if (eventService.second.m_service->hasEventSubscriber(messageType))
 		{
-			foundService = service.second.m_service;
+			foundService = eventService.second.m_service;
+
+			if (!isServiceAllocated(allocatorService.name(), foundService->name()))
+			{
+				allocateService(foundService->name(), allocatorService);
+			}
 		}
 	}
 
 	return foundService;
 }
 
-void ServiceManager::allocateService(const std::string& name, const IService& service)
+const std::string& ServiceManager::getEventServiceName(const MessageType_t messageType) const
+{
+	for (auto& service : m_services)
+	{
+		if (service.second.m_service->hasEventSubscriber(messageType))
+		{
+			return service.second.m_service->name();
+		}
+	}
+
+	static std::string emptyName;
+	return emptyName;
+}
+
+void ServiceManager::allocateService(const std::string& name, const IService& allocatorService)
 {
 	auto mapIter = m_allocatedServices.find(name);
 
@@ -179,25 +198,25 @@ void ServiceManager::allocateService(const std::string& name, const IService& se
 		m_allocatedServices[name] = {};
 	}
 
-	auto setIter = m_allocatedServices[name].find(service.name());
+	auto setIter = m_allocatedServices[name].find(allocatorService.name());
 
 	if (setIter == m_allocatedServices[name].end())
 	{
-		m_allocatedServices[name].insert(service.name());
+		m_allocatedServices[name].insert(allocatorService.name());
 	}
 	else
 	{
-		TB_ERROR("Service " << service.name() << " has already allocated service " << name);
+		TB_ERROR("Service " << allocatorService.name() << " has already allocated service " << name);
 	}
 }
 
-void ServiceManager::releaseService(const std::string& name, const IService& service)
+void ServiceManager::releaseService(const std::string& name, const IService& allocatorService)
 {
 	auto mapIter = m_allocatedServices.find(name);
 
 	if (mapIter != m_allocatedServices.end())
 	{
-		auto setIter = mapIter->second.find(service.name());
+		auto setIter = mapIter->second.find(allocatorService.name());
 
 		if (setIter != mapIter->second.end())
 		{
@@ -210,12 +229,12 @@ void ServiceManager::releaseService(const std::string& name, const IService& ser
 		}
 		else
 		{
-			TB_ERROR("Service " << service.name() << " hasn't allocated service " << name);
+			TB_ERROR("Service " << allocatorService.name() << " hasn't allocated service " << name);
 		}
 	}
 	else
 	{
-		TB_ERROR("Service " << service.name() << " hasn't allocated service " << name);
+		TB_ERROR("Service " << allocatorService.name() << " hasn't allocated service " << name);
 	}
 }
 

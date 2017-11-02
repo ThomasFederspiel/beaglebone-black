@@ -133,17 +133,18 @@ private:
 	};
 
 	template <typename T>
-	std::shared_ptr<T> allocateService(const std::string& name, const IService& service);
+	std::shared_ptr<T> allocateService(const std::string& name, const IService& allocatorService);
 
-	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, const IService& service);
+	const std::string& getEventServiceName(const MessageType_t messageType) const;
+	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, const IService& allocatorService);
 
 	template <typename Rep, typename Period>
 	bool waitForState(AbstractService& service, const AbstractService::ServiceState state,
 			const std::chrono::duration<Rep, Period>& duration);
 
 	std::shared_ptr<AbstractService> getService(const std::string& name) const;
-	void allocateService(const std::string& name, const IService& service);
-	void releaseService(const std::string& name, const IService& service);
+	void allocateService(const std::string& name, const IService& allocatorService);
+	void releaseService(const std::string& name, const IService& allocatorService);
 	bool isServiceAllocated(const std::string& allocatorService, const std::string& serviceToAllocate);
 	void addServiceLayerId(const ServiceLayerExtendedId id);
 	void logActiveServices() const;
@@ -170,9 +171,9 @@ private:
 };
 
 template <typename T>
-std::shared_ptr<T> ServiceManager::allocateService(const std::string& name, const IService& service)
+std::shared_ptr<T> ServiceManager::allocateService(const std::string& name, const IService& allocatorService)
 {
-	allocateService(name, service);
+	allocateService(name, allocatorService);
 
 	return getService<T>(name);
 }

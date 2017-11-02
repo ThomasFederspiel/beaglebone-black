@@ -61,14 +61,16 @@ void AbstractService::setState(const AbstractService::ServiceState state)
 
 void AbstractService::start(ServiceAllocator& allocator)
 {
-	TB_ASSERT(state() == ServiceState::Created);
+	TB_ASSERT(state() == ServiceState::Created,
+		"Service " << name() << ", state = " << toString(state()));
 
 	postInternal(StartServiceMessage(allocator));
 }
 
 void AbstractService::stop(ServiceAllocator& allocator)
 {
-	TB_ASSERT(state() == ServiceState::Running);
+	TB_ASSERT(state() == ServiceState::Running,
+		"Service " << name() << ", state = " << toString(state()));
 
 	signalStopStarted();
 
@@ -94,7 +96,8 @@ bool AbstractService::isWorkerActive(WorkerThreadManager::IWorkerRunnable& runna
 
 void AbstractService::post(const ServiceMessageBase& message)
 {
-	TB_ASSERT((state() == ServiceState::Running) || (state() == ServiceState::Stopping));
+	TB_ASSERT((state() == ServiceState::Running) || (state() == ServiceState::Stopping),
+			"Service " << name() << ", state = " << toString(state()));
 
 	postInternal(message);
 }
@@ -104,27 +107,23 @@ void AbstractService::postInternal(const ServiceMessageBase& message)
 	m_queue.put(message.clone());
 }
 
-void AbstractService::signalStopStarted()
-{
-	setState(ServiceState::Stopping);
-
-	onStopStarted();
-}
-
 void AbstractService::waitOnStart()
 {
 	std::unique_ptr<ServiceMessageBase> message = m_queue.get();
 
-	TB_ASSERT(message->isSystemMessage());
+	TB_ASSERT(message->isSystemMessage(),
+			"Service " << name());
 
 	const StartServiceMessage* startMessage = nullptr;
 	// TODO: Create instanceof that takes smart pointers
 	const bool isInstance = tbox::instanceof<const StartServiceMessage>(*message, startMessage);
 	TB_ASSERT(isInstance);
 
-	onStart(startMessage->getAllocator());
-
+	// Need to be done before onStart() as service might get posts while
+	// in onStart() from services on lower layers
 	setState(ServiceState::Running);
+
+	onStart(startMessage->getAllocator());
 }
 
 void AbstractService::onSystemMessage(ServiceMessageBase& message)
@@ -205,6 +204,13 @@ void AbstractService::onStopMessage(ServiceMessageBase& message)
 	}
 
 	m_terminate = true;
+}
+
+void AbstractService::signalStopStarted()
+{
+	setState(ServiceState::Stopping);
+
+	onStopStarted();
 }
 
 void AbstractService::operator()()

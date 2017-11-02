@@ -27,6 +27,7 @@ public:
 	template <typename T>
 	std::shared_ptr<T> allocateService(const std::string& name, const IService& service);
 
+	const std::string& getEventServiceName(const MessageType_t messageType) const;
 	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, const IService& service);
 
 	template <typename T>
