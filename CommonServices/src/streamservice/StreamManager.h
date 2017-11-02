@@ -14,11 +14,12 @@
 #include <vector>
 
 // project
-#include "AbstractService.h"
 #include "CommonMessageTypes.h"
 #include "FrameProtocol.h"
+#include "ServiceCollection.h"
 #include "StreamSelectMessage.h"
 
+class AbstractService;
 class ServiceAllocator;
 class ServiceMessageBase;
 
@@ -59,6 +60,7 @@ private:
 	void unsubscribeEvent(const CommonMessageTypes::Type type);
 
 	AbstractService& m_service;
+	ServiceCollection m_serviceCollection;
 	ActiveStreamMap m_activeStreams;
 	std::vector<StreamServiceContext> m_streamContexts;
 };

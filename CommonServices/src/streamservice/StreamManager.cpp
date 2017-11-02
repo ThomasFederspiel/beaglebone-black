@@ -12,6 +12,7 @@
 #include <vector>
 
 // project
+#include "AbstractService.h"
 #include "exceptionMacros.h"
 #include "BinaryComSerializer.h"
 #include "CommonMessageTypes.h"
@@ -51,7 +52,7 @@ namespace
 	}};
 }
 
-StreamManager::StreamManager(AbstractService& service) : m_service(service), m_activeStreams(), m_streamContexts()
+StreamManager::StreamManager(AbstractService& service) : m_service(service), m_serviceCollection(service), m_activeStreams(), m_streamContexts()
 {
 }
 
@@ -59,8 +60,7 @@ void StreamManager::start(ServiceAllocator& allocator)
 {
 	for (const auto& item : StreamTable)
 	{
-		auto service = allocator.allocateEventService(item.m_messageType, m_service);
-
+		auto service = m_serviceCollection.allocateEventService(item.m_messageType, allocator);
 		TB_ASSERT(service);
 
 		m_streamContexts.emplace_back(item.m_streamId, item.m_messageType, service);
@@ -69,10 +69,9 @@ void StreamManager::start(ServiceAllocator& allocator)
 
 void StreamManager::stop(ServiceAllocator& allocator)
 {
-	for (auto& stream : m_streamContexts)
-	{
-		allocator.releaseService(stream.m_service, m_service);
-	}
+	m_serviceCollection.releaseServices(allocator);
+
+	m_streamContexts.clear();
 }
 
 void StreamManager::addStream(FrameProtocolConnection& connection, const StreamSelectMessage& message)
@@ -88,9 +87,6 @@ void StreamManager::addStream(FrameProtocolConnection& connection, const StreamS
 	// New value was inserted
 	if (element.second)
 	{
-		// ;+
-		ERROR("addStream " << messageType);
-
 		subscribeEvent(messageType);
 	}
 }
@@ -155,9 +151,6 @@ CommonMessageTypes::Type StreamManager::getSelectedMessage(const StreamSelectMes
 
 void StreamManager::subscribeEvent(const CommonMessageTypes::Type type)
 {
-	// ;+
-	ERROR("subscribeEvent " << type);
-
 	for (const auto& stream : m_streamContexts)
 	{
 		if (stream.m_messageType == type)
@@ -172,9 +165,6 @@ void StreamManager::subscribeEvent(const CommonMessageTypes::Type type)
 
 void StreamManager::unsubscribeEvent(const CommonMessageTypes::Type type)
 {
-	// ;+
-	ERROR("unsubscribeEvent " << type);
-
 	for (const auto& stream : m_streamContexts)
 	{
 		if (stream.m_messageType == type)

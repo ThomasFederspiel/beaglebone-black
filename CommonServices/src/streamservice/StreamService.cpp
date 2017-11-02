@@ -47,8 +47,6 @@ StreamService::StopStatus StreamService::onStop(ServiceAllocator& allocator)
 
 void StreamService::onMessage(const ServiceMessageBase& message)
 {
-	INFO("Got message " << CommonMessageTypes::toString(message.getType()));
-
 	m_protocolManager->process(message);
 }
 
