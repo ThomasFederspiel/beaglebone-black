@@ -1,0 +1,51 @@
+/*
+ * pru_eqep_types.hp
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#ifndef PRU_EQEP_TYPES_HP_
+#define PRU_EQEP_TYPES_HP_
+
+#include "pru_macros.hp"
+
+typedef enum
+{
+	EQEP_CAPCLK_DIV_1 = 0,					// @100 MHz, tick = 100 ns, max = 655.35 us
+	EQEP_CAPCLK_DIV_2 = BIT(4),				// @100 MHz, tick = 200 ns, max = 1.31007 ms
+	EQEP_CAPCLK_DIV_4 = BIT(5),				// @100 MHz, tick = 400 ns, max = 2.62140 ms
+	EQEP_CAPCLK_DIV_8 = BIT(4) | BIT(5),	// @100 MHz, tick = 800 ns, max = 5.24280 ms
+	EQEP_CAPCLK_DIV_16 = BIT(6),			// @100 MHz, tick = 1600 ns, max = 10.48560 ms
+	EQEP_CAPCLK_DIV_32 = BIT(4) | BIT(6),	// @100 MHz, tick = 3200 ns, max = 20.9712 ms
+	EQEP_CAPCLK_DIV_64 = BIT(5) | BIT(6),	// @100 MHz, tick = 6400 ns, max = 41.9424 ms
+	EQEP_CAPCLK_DIV_128 = BIT(4) | BIT(5) | BIT(6)	// @100 MHz, tick = 12800 ns, max = 83.8848 ms
+} EQepCapClkDivisor;
+
+typedef enum
+{
+	EQEP_UPEVNT_DIV_1 = 0,
+	EQEP_UPEVNT_DIV_2 = BIT(0),
+	EQEP_UPEVNT_DIV_4 = BIT(1),
+	EQEP_UPEVNT_DIV_8 = BIT(0) | BIT(1),
+	EQEP_UPEVNT_DIV_16 = BIT(2),
+	EQEP_UPEVNT_DIV_32 = BIT(0) | BIT(2),
+	EQEP_UPEVNT_DIV_64 = BIT(1) | BIT(2),
+	EQEP_UPEVNT_DIV_128 = BIT(0) | BIT(1) | BIT(2),
+	EQEP_UPEVNT_DIV_256 = BIT(3),
+	EQEP_UPEVNT_DIV_512 = BIT(0) | BIT(3),
+	EQEP_UPEVNT_DIV_1024 = BIT(1) | BIT(3),
+	EQEP_UPEVNT_DIV_2048 = BIT(0) | BIT(1) | BIT(3)
+} EQepUpEventDivisor;
+
+typedef enum 
+{
+	EQEP_UNIT_TIMER_PERIOD_200ms = 0x1312D00,	// @100 MHz, period 200 ms
+	EQEP_UNIT_TIMER_PERIOD_100ms = 0x989680,	// @100 MHz, period 100 ms
+	EQEP_UNIT_TIMER_PERIOD_20ms	= 0x1E8480,		// @100 MHz, period 20 ms
+	EQEP_UNIT_TIMER_PERIOD_10ms	= 0xF4240,		// @100 MHz, period 10 ms
+	EQEP_UNIT_TIMER_PERIOD_2ms = 0x30D40,		// @100 MHz, period 2 ms
+	EQEP_UNIT_TIMER_PERIOD_1ms = 0x186A0		// @100 MHz, period 1 ms
+} EQepUnitTimerPeriod;
+
+#endif /* PRU_EQEP_TYPES_HP_ */

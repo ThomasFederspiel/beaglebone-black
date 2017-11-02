@@ -1,0 +1,38 @@
+/*
+ * pru_ipc_device_eqep.pc
+ *
+ *  Created on: 25 dec 2015
+ *      Author: Thomas
+ */
+
+#include "pru_ipc_device_eqep.hp"
+
+#include "pru_ipc_device_eqep_types.hp"
+#include "pru_eqep.hp"
+
+uint16_t deviceEQepIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
+{
+	switch (deviceIoctl->ioctl)
+	{
+	case IPCDeviceEQep_EnableQuadrature:
+		{
+			const struct IPCDeviceEQep_EnableQuadrature* const enable = (struct IPCDeviceEQep_EnableQuadrature*) deviceIoctl;
+
+			enableEQepQuadrature(enable->pwmssDevice, enable->utimerPeriod, enable->capClkDivisor, enable->upEventDivisor);
+			
+			return sizeof(struct IPCDeviceEQep_EnableQuadrature);
+		}
+	
+	case IPCDeviceEQep_disable:
+		{
+			const struct IPCDeviceEQep_disable* const disable = (struct IPCDeviceEQep_disable*) deviceIoctl;
+			
+			disableEQep(disable->pwmssDevice);
+			
+			return sizeof(struct IPCDeviceEQep_disable);
+		}
+	}
+	
+	return 0;
+}
+

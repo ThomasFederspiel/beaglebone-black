@@ -38,19 +38,19 @@ public:
 	explicit IPCDeviceProxyEventEQEP(const PrussDriver::PruProxy::PruIdEnum pruId,
 			const pruEvenType_t& eCapStatus) : ServiceMessageBase(IPCMessageTypes::Type::IpcDeviceProxyEventEQEP),
 		m_pruId(pruId), m_pwmssDevice(eCapStatus.pwmssDevice), m_capCounter(eCapStatus.capCounter), m_capTime(eCapStatus.capTime), m_capPeriod(eCapStatus.capPeriod),
-		m_capStatus(eCapStatus.capStatus), m_counter(eCapStatus.counter)
+		m_capStatus(eCapStatus.capStatus), m_intrStatus(eCapStatus.intrStatus), m_counter(eCapStatus.counter)
 	{
 	}
 
 	explicit IPCDeviceProxyEventEQEP(const IPCDeviceProxyEventEQEP& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
 			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
-			m_capStatus(idpe.m_capStatus), m_counter(idpe.m_counter)
+			m_capStatus(idpe.m_capStatus), m_intrStatus(idpe.m_intrStatus), m_counter(idpe.m_counter)
 	{
 	}
 
 	explicit IPCDeviceProxyEventEQEP(IPCDeviceProxyEventEQEP&& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
 			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
-			m_capStatus(idpe.m_capStatus), m_counter(idpe.m_counter)
+			m_capStatus(idpe.m_capStatus), m_intrStatus(idpe.m_intrStatus), m_counter(idpe.m_counter)
 	{
 	}
 
@@ -70,6 +70,7 @@ public:
 		swap(first.m_capTime, second.m_capTime);
 		swap(first.m_capPeriod, second.m_capPeriod);
 		swap(first.m_capStatus, second.m_capStatus);
+		swap(first.m_intrStatus, second.m_intrStatus);
 		swap(first.m_counter, second.m_counter);
 	}
 
@@ -108,6 +109,11 @@ public:
 		return m_capStatus;
 	}
 
+	uint32_t getIntrStatus() const
+	{
+		return m_intrStatus;
+	}
+
 	uint32_t getCounter() const
 	{
 		return m_counter;
@@ -120,6 +126,7 @@ private:
 	uint32_t m_capTime;
 	uint32_t m_capPeriod;
 	uint32_t m_capStatus;
+	uint32_t m_intrStatus;
 	uint32_t m_counter;
 };
 

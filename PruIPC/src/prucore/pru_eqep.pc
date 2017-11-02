@@ -20,6 +20,42 @@ static void setEQepCounterMode(volatile pruEQep* const eQep, const EQepCounterMo
 	eQep->QDECCTL_QEPCTL.QDECCTL |= mode; 
 }
 
+static void disableEQepInterrupts()
+{
+	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
+	
+	if (interruptTable)
+	{
+ 		while (interruptTable->intrCallback != NULL)
+		{
+ 			volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
+ 			
+ 			eQep->QEINT_QFLG.QEINT &= ~interruptTable->intrFlags;
+			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+			
+			interruptTable++;
+		}
+	}
+}
+
+static void enableEQepInterrupts()
+{
+	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
+	
+	if (interruptTable)
+	{
+		while (interruptTable->intrCallback != NULL)
+		{
+			volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
+			
+			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+			eQep->QEINT_QFLG.QEINT |= interruptTable->intrFlags;
+			
+			interruptTable++;
+		}
+	}
+}
+
 void disableEQep(const PwmssDeviceEnum pwmssDevice)
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
@@ -33,15 +69,15 @@ void disableEQep(const PwmssDeviceEnum pwmssDevice)
 	// Disable all interrupts
 	eQep->QEINT_QFLG.QEINT &= ~EQEP_ALL_INTR;
 	
-	/* Disable unit time out interupt */
-//	;+ eQep->QEINT_QFLG.QEINT &= ~EQEP_UTIME_INTR;
+	disableEQepInterrupts();
 }
 
-void enableEQep(const PwmssDeviceEnum pwmssDevice, const EQepCounterModeEnum mode)
+void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimerPeriod utimerPeriod,
+		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor)
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
 	
-	setEQepCounterMode(eQep, mode);
+	setEQepCounterMode(eQep, EQEP_QUADRATURE_MODE);
 	
 	/* Enable unit timer
 	 * Enable capture latch on unit time out
@@ -49,19 +85,29 @@ void enableEQep(const PwmssDeviceEnum pwmssDevice, const EQepCounterModeEnum mod
 	 * Enable software loading of position counter
 	 * Reset position counter on unit time event to gauge RPM
 	 */
-// ;+	eQep->QDECCTL_QEPCTL.QEPCTL = QDE_PCRM_UTIME | QEP_SWI | QEP_PHEN | QEP_QCLM | QEP_UTIME;
 	eQep->QDECCTL_QEPCTL.QEPCTL = QDE_PCRM_MAX | QEP_SWI | QEP_PHEN | QEP_QCLM | QEP_UTIME;
+	
+	/* Disable EQEP Capture */
+	eQep->QCAPCTL_QPOSCTL.QCAPCTL &= ~QCAP_CAPTURE_EN;
 	
 	/* Set prescalers for EQEP Capture timer and UPEVNT */
 	/* Note: EQEP Capture unit must be disabled before changing prescalar */
-	//  The value used by TI was 0x0073.  This was causing overflows.
-	eQep->QCAPCTL_QPOSCTL.QCAPCTL = QCAP_CAPCLK_DIV_128 | QCAP_UPEVNT_DIV_1;
+	
+	// The value used by TI was 0x0073 (QCAP_CAPCLK_DIV_128 | QCAP_UPEVNT_DIV_8).  
+	// This was causing overflows.
+
+	// Setup for Low Speed Calculation
+	//
+	// capClkDivisor - specifies the divisor used for down sampling the sys clock (100 Mhz)
+	//				   as to measure the time (max 65535 ticks) it takes to count
+	//				   number of quadrature flanks as defined by upEventDivisor
+	// upEventDivisor - specifies number of quadrature flanks needed for capture to occur
+	//					DIV_4/16/32... and above specifes number of whole quadrature periods
+	//					between captures
+	eQep->QCAPCTL_QPOSCTL.QCAPCTL = capClkDivisor | upEventDivisor;
 	
 	/* Enable EQEP Capture */
 	eQep->QCAPCTL_QPOSCTL.QCAPCTL |= QCAP_CAPTURE_EN;
-
-	/* Enable unit time out interupt */
-// ;+	eQep->QEINT_QFLG.QEINT |= EQEP_UTIME_INTR;
 
 	/* Clear encoder count */
 	eQep->QPOSCNT = 0x00000000;
@@ -72,12 +118,15 @@ void enableEQep(const PwmssDeviceEnum pwmssDevice, const EQepCounterModeEnum mod
 	/* Clear timer */
 	eQep->QUTMR = 0x00000000;
 
+	// Setup for High Speed Calculation
+	//
 	/* Set unit timer period count */
-	/*  QUPRD = Period * 100MHz */
-	eQep->QUPRD = 0x007FFFFF; // (~1/12s) @ 100MHz
+	eQep->QUPRD = utimerPeriod;
 
 	/* Clear all interrupt bits */
 	eQep->QCLR_QFRC.QCLR = EQEP_ALL_INTR;
+	
+	enableEQepInterrupts();
 }
 
 uint32_t readEQepCounter(const PwmssDeviceEnum pwmssDevice)
@@ -117,61 +166,42 @@ void readEQepCaptures(const PwmssDeviceEnum pwmssDevice, uint32_t* const counter
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
 
+	// Position counter value latched when unit timer match has occured
 	*counter = eQep->QPOSLAT;
+
+	// ;+ what is this
 	*time = eQep->QCTMRLAT;
+	
+	// Time passed during a unit period defined by QCAP_UPEVNT_DIV value set in QCAPCTL 
 	*period = eQep->QCPRDLAT;
+	
 	*status = readEQepStatus(pwmssDevice);
 }	
 
-void disableEQepInterrupts()
-{
-	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
-	
-	if (interruptTable)
-	{
- 		while (interruptTable->intrCallback != NULL)
-		{
- 			volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
- 			
- 			eQep->QEINT_QFLG.QEINT &= ~interruptTable->intrFlags;
-			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
-			
-			interruptTable++;
-		}
-	}
-}
-
-void enableEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable)
+void setEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable)
 {
 	m_eQepInterruptTable = interruptTable;
-	
-	while (interruptTable->intrCallback != NULL)
-	{
-		volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
-		
-		eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
-		eQep->QEINT_QFLG.QEINT |= interruptTable->intrFlags;
-		
-		interruptTable++;
-	}
 }
 
 void pollEQepInterrupts()
 {
 	const struct EQepInterruptHandlerSpec* interruptTable = m_eQepInterruptTable;
 
-	while (interruptTable->intrCallback != NULL)
+	if (interruptTable)
 	{
-		volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
-		
-		if ((eQep->QEINT_QFLG.QFLG & interruptTable->intrFlags) != 0)
+		while (interruptTable->intrCallback != NULL)
 		{
-			interruptTable->intrCallback(interruptTable->pwmssDevice);
+			volatile pruEQep* const eQep = &pwmsRegisterBase[interruptTable->pwmssDevice].module->eQep;
 			
-			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+			if ((eQep->QEINT_QFLG.QFLG & interruptTable->intrFlags) != 0)
+			{
+				interruptTable->intrCallback(interruptTable->pwmssDevice);
+				
+				eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
+			}
+			
+			interruptTable++;
 		}
-		
-		interruptTable++;
 	}
 }
 

@@ -21,7 +21,7 @@
 
 #define TB_COUNT_UP_MASK	~(BIT(0) | BIT(1)) 	
 #define TB_COUNT_DOWN		BIT(0) 
-#define TB_COUNT_UPDOWN 	BIT(1) 
+#define TB_COUNT_UPDOWN 	BIT(1) 	
 #define TB_COUNT_FREEZE 	BIT(0) | BIT(1) 
 
 // PHSEN bit 
@@ -130,15 +130,10 @@
 #define AQ_CBU_SET				BIT(9) 
 #define AQ_CBU_TOGGLE			BIT(8) | BIT(9)
 
-#define AQ_ACTSFB_NO_ACTION_MASK	~(BIT(3) | BIT(4))
-#define AQ_ACTSFB_CLEAR				BIT(3) 
-#define AQ_ACTSFB_SET				BIT(4) 
-#define AQ_ACTSFB_TOGGLE			BIT(3) | BIT(4)
-
-#define AQ_ACTSFA_NO_ACTION_MASK	~(BIT(0) | BIT(1))
-#define AQ_ACTSFA_CLEAR				BIT(0) 
-#define AQ_ACTSFA_SET				BIT(1) 
-#define AQ_ACTSFA_TOGGLE			BIT(0) | BIT(1)
+#define AQ_CBD_NO_ACTION_MASK	~(BIT(10) | BIT(11))
+#define AQ_CBD_CLEAR			BIT(10) 
+#define AQ_CBD_SET				BIT(11) 
+#define AQ_CBD_TOGGLE			BIT(10) | BIT(11)
 
 // AQSFRC  
 // ========================== 
@@ -146,15 +141,26 @@
 //#define AQ_LOAD_AT_ZERO 0x0 
 //#define AQ_LOAD_AT_PERIOD 0x1 
 //#define AQ_LOAD_AT_ZERO_OR_PERIOD 0x2 
-//#define AQ_LOAD_IMMEDIAT 0x3 
+//#define AQ_LOAD_IMMEDIATE 0x3 
 
 #define AQ_LOAD_AT_ZERO_MASK 		~(BIT(6) | BIT(7)) 
 #define AQ_LOAD_AT_PERIOD			BIT(6) 
 #define AQ_LOAD_AT_ZERO_OR_PERIOD	BIT(7) 
-#define AQ_LOAD_IMMEDIAT 			BIT(6) | BIT(7) 
+#define AQ_LOAD_IMMEDIATE 			BIT(6) | BIT(7) 
 
 #define AQ_OTSFB					BIT(5) 
+
+#define AQ_ACTSFB_NO_ACTION_MASK	~(BIT(3) | BIT(4))
+#define AQ_ACTSFB_CLEAR				BIT(3) 
+#define AQ_ACTSFB_SET				BIT(4) 
+#define AQ_ACTSFB_TOGGLE			BIT(3) | BIT(4)
+
 #define AQ_OTSFA					BIT(2) 
+
+#define AQ_ACTSFA_NO_ACTION_MASK	~(BIT(0) | BIT(1))
+#define AQ_ACTSFA_CLEAR				BIT(0) 
+#define AQ_ACTSFA_SET				BIT(1) 
+#define AQ_ACTSFA_TOGGLE			BIT(0) | BIT(1)
 
 // AQCSFRC  
 // ========================== 
@@ -595,15 +601,18 @@ typedef struct
 	/* PRU_EPWM_HRCTL register bit field */
 	union {
 		volatile uint16_t HRCTL;
+		volatile uint16_t rsvd4;
 
 		volatile struct{
 			unsigned delmode : 2;
 			unsigned delbussel : 1;
 			unsigned pulsesel : 1;
 			unsigned rsvd1 : 12;
+			
+			unsigned rsvd2 : 16;
 		} HRCTL_bit;
 	} ;	// 0x40
-	
+
 } pruEPwm;
 
 #endif /* PRU_EPWM_REG_TYPES_HP_ */

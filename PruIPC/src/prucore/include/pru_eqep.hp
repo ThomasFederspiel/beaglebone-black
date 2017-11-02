@@ -13,6 +13,8 @@
 #include "pru_pwms.hp"
 #include "pru_macros.hp"
 
+#include "pru_eqep_types.hp"
+
 typedef enum
 {
 	EQEP_UTIME_INTR = BIT(11),
@@ -48,15 +50,17 @@ struct EQepInterruptHandlerSpec
 	uint16_t intrFlags;
 };
 
-void disableEQepInterrupts();
-void enableEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable);
+// void clearEQepInterrupts();
+// uint32_t readEQepStatus(const PwmssDeviceEnum pwmssDevice);
+// void clearEQepIntrFlag(const PwmssDeviceEnum pwmssDevice, const uint16_t flags);
+
+void setEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable);
 void pollEQepInterrupts();
-void enableEQep(const PwmssDeviceEnum pwmssDevice, const EQepCounterModeEnum mode);
+void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimerPeriod utimerPeriod,
+		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor);
 void disableEQep(const PwmssDeviceEnum pwmssDevice);
 uint32_t readEQepCounter(const PwmssDeviceEnum pwmssDevice);
-uint32_t readEQepStatus(const PwmssDeviceEnum pwmssDevice);
 uint32_t readEQepIntrFlag(const PwmssDeviceEnum pwmssDevice);
-void clearEQepIntrFlag(const PwmssDeviceEnum pwmssDevice, const uint16_t flags);
 void readEQepCaptures(const PwmssDeviceEnum pwmssDevice, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
 		uint32_t* const status);
 

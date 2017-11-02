@@ -71,29 +71,37 @@
 // QCAPCTL
 #define QCAP_CAPTURE_EN 	BIT(15)
 
-#define QCAP_CAPCLK_DIV_1_MASK 	~(BIT(4) | BIT(5) | BIT(6))
-#define QCAP_CAPCLK_DIV_1 	0
-#define QCAP_CAPCLK_DIV_2 	BIT(4)
-#define QCAP_CAPCLK_DIV_4 	BIT(5)
-#define QCAP_CAPCLK_DIV_8 	BIT(4) | BIT(5)
-#define QCAP_CAPCLK_DIV_16 	BIT(6)
-#define QCAP_CAPCLK_DIV_32 	BIT(4) | BIT(6)
-#define QCAP_CAPCLK_DIV_64 	BIT(5) | BIT(6)
-#define QCAP_CAPCLK_DIV_128 BIT(4) | BIT(5) | BIT(6)
-
-#define QCAP_UPEVNT_DIV_1_MASK 	~(BIT(0) | BIT(1) | BIT(2) | BIT(3))
-#define QCAP_UPEVNT_DIV_1 		0
-#define QCAP_UPEVNT_DIV_2 		BIT(0)
-#define QCAP_UPEVNT_DIV_4 		BIT(1)
-#define QCAP_UPEVNT_DIV_8 		BIT(0) | BIT(1)
-#define QCAP_UPEVNT_DIV_16 		BIT(2)
-#define QCAP_UPEVNT_DIV_32 		BIT(0) | BIT(2)
-#define QCAP_UPEVNT_DIV_64 		BIT(1) | BIT(2)
-#define QCAP_UPEVNT_DIV_128 	BIT(0) | BIT(1) | BIT(2)
-#define QCAP_UPEVNT_DIV_256		BIT(3)
-#define QCAP_UPEVNT_DIV_512		BIT(0) | BIT(3)
-#define QCAP_UPEVNT_DIV_1024	BIT(1) | BIT(3)
-#define QCAP_UPEVNT_DIV_2048	BIT(0) | BIT(1) | BIT(3)
+//#define QCAP_CAPCLK_DIV_1_MASK 	~(BIT(4) | BIT(5) | BIT(6))
+//#define QCAP_CAPCLK_DIV_1 		0
+//#define QCAP_CAPCLK_DIV_2 		BIT(4)
+//#define QCAP_CAPCLK_DIV_4 		BIT(5)
+//#define QCAP_CAPCLK_DIV_8 		BIT(4) | BIT(5)
+//#define QCAP_CAPCLK_DIV_16 		BIT(6)
+//#define QCAP_CAPCLK_DIV_32 		BIT(4) | BIT(6)
+//#define QCAP_CAPCLK_DIV_64 		BIT(5) | BIT(6)
+//#define QCAP_CAPCLK_DIV_128 	BIT(4) | BIT(5) | BIT(6)
+//
+//#define QCAP_UPEVNT_DIV_1_MASK 	~(BIT(0) | BIT(1) | BIT(2) | BIT(3))
+//#define QCAP_UPEVNT_DIV_1 		0
+//#define QCAP_UPEVNT_DIV_2 		BIT(0)
+//#define QCAP_UPEVNT_DIV_4 		BIT(1)
+//#define QCAP_UPEVNT_DIV_8 		BIT(0) | BIT(1)
+//#define QCAP_UPEVNT_DIV_16 		BIT(2)
+//#define QCAP_UPEVNT_DIV_32 		BIT(0) | BIT(2)
+//#define QCAP_UPEVNT_DIV_64 		BIT(1) | BIT(2)
+//#define QCAP_UPEVNT_DIV_128 	BIT(0) | BIT(1) | BIT(2)
+//#define QCAP_UPEVNT_DIV_256		BIT(3)
+//#define QCAP_UPEVNT_DIV_512		BIT(0) | BIT(3)
+//#define QCAP_UPEVNT_DIV_1024	BIT(1) | BIT(3)
+//#define QCAP_UPEVNT_DIV_2048	BIT(0) | BIT(1) | BIT(3)
+//
+//// Unit period register periods @ 100 MHz
+//#define QUPRD_PERIOD_200ms		0x1312D00
+//#define QUPRD_PERIOD_100ms		0x989680
+//#define QUPRD_PERIOD_20ms		0x1E8480
+//#define QUPRD_PERIOD_10ms		0xF4240
+//#define QUPRD_PERIOD_2ms		0x30D40
+//#define QUPRD_PERIOD_1ms		0x186A0
 
 // QEINT
 // Defined in pru_eqep.hp

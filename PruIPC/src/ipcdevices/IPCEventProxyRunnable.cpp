@@ -176,7 +176,7 @@ uint32_t IPCEventProxyRunnable::processPruEvent(const IPCDeviceIoctl& device, co
 {
 	auto deviceIter = m_eventDefinitionMap.find(static_cast<IPCDeviceEnum>(device.device));
 
-	TB_ASSERT(deviceIter != m_eventDefinitionMap.end())
+	TB_ASSERT(deviceIter != m_eventDefinitionMap.end(), "Device = " << device.device)
 
 	auto ioctlIter = deviceIter->second.find(device.ioctl);
 

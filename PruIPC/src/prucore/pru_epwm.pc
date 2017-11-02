@@ -200,7 +200,7 @@ void setEPwmPin(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, 
 {
 	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
 
-	pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_LOAD_IMMEDIAT;
+	pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC = AQ_LOAD_IMMEDIATE;
 	
 	switch (pwmCh)
 	{
@@ -208,11 +208,11 @@ void setEPwmPin(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, 
 		
 		if (outputHigh)
 		{
-			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFA_HIGH;
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFA_HIGH | (AQC_CSFA_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC);
 		}
 		else
 		{
-			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFA_LOW;
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFA_LOW | (AQC_CSFA_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC);
 		}
 		break;
 		
@@ -220,11 +220,11 @@ void setEPwmPin(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh, 
 		
 		if (outputHigh)
 		{
-			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFB_HIGH;
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFB_HIGH | (AQC_CSFB_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC);
 		}
 		else
 		{
-			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC |= AQC_CSFB_LOW;
+			pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFB_LOW | (AQC_CSFB_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC);
 		}
 		break;
 	}
@@ -237,8 +237,9 @@ void enableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh)
 	switch (pwmCh)
 	{
 	case PWM_CH_A:
-		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC &= AQ_ACTSFA_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK;
-		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC &= AQC_CSFA_NO_ACTION_MASK;
+		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC = AQ_LOAD_IMMEDIATE;
+//		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC = (AQ_ACTSFA_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK) & pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC;
+		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFA_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC;
 			
 		pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_CLEAR | AQ_ZRO_SET;
 		
@@ -246,8 +247,10 @@ void enableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh)
 		break;
 
 	case PWM_CH_B:
-		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC &= AQ_ACTSFB_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK;
-		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC &= AQC_CSFB_NO_ACTION_MASK;
+		
+		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC = AQ_LOAD_IMMEDIATE;
+//		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC = (AQ_ACTSFB_NO_ACTION_MASK & AQ_LOAD_AT_ZERO_MASK) & pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC;
+		pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC = AQC_CSFB_NO_ACTION_MASK & pruPwms->ePwm.AQCSFRC_DBCTL.AQCSFRC;
 			
 		pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_CLEAR | AQ_ZRO_SET;
 		
@@ -266,22 +269,6 @@ void disableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh,
 //		pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_CLEAR | AQ_LOAD_IMMEDIAT | AQ_OTSFA;
 			
 		pruPwms->ePwm.TBCTL_TBSTS.TBCTL |= TB_COUNT_FREEZE;
-
-#if 0
-		if (outputHigh)
-		{
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_SET | AQ_OTSFA;
-			
-//			pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_SET | AQ_ZRO_SET;
-		}
-		else
-		{
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFA_CLEAR | AQ_OTSFA;
-			
-//			pruPwms->ePwm.CMPB_AQCTLA.AQCTLA = AQ_CAU_CLEAR | AQ_ZRO_CLEAR;
-		}
-#endif
-		
 		break;
 
 	case PWM_CH_B:
@@ -289,21 +276,6 @@ void disableEPwm(const PwmssDeviceEnum pwmssDevice, const EPwmChannelEnum pwmCh,
 			
 		pruPwms->ePwm.TBCTL_TBSTS.TBCTL |= TB_COUNT_FREEZE;
 
-#if 0
-		if (outputHigh)
-		{
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFB_SET | AQ_LOAD_IMMEDIAT | AQ_OTSFB;
-			
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_SET | AQ_ZRO_SET;
-		}
-		else
-		{
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQSFRC |= AQ_ACTSFB_CLEAR | AQ_LOAD_IMMEDIAT | AQ_OTSFB;
-			
-//			pruPwms->ePwm.AQCTLB_AQSFRC.AQCTLB = AQ_CBU_CLEAR | AQ_ZRO_CLEAR;
-		}
-#endif
-		
 		break;
 	}
 	

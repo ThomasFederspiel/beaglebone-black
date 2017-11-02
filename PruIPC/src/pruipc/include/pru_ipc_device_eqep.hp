@@ -1,0 +1,15 @@
+/*
+ * pru_ipc_device_eqep.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_EQEP_HP_
+#define PRU_IPC_DEVICE_EQEP_HP_
+
+#include "pru_ipc_types.hp"
+
+uint16_t deviceEQepIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl);
+
+#endif /* PRU_IPC_DEVICE_EQEP_HP_ */
