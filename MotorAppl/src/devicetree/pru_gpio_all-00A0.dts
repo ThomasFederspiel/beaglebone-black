@@ -157,7 +157,7 @@
                 compatible = "bone-pinmux-helper";
                 status = "okay";
                 pinctrl-names = "default";
-                pinctrl-0 = <&bs_pinmode_P9_14_0x31>;
+                pinctrl-0 = <&bs_pinmode_P9_14_0x16>;
             };
             bs_pinmode_P9_16_0x16_pinmux {
                 compatible = "bone-pinmux-helper";

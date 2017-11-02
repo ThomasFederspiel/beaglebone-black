@@ -17,6 +17,7 @@
 #include "pru_ipc_device_core.hp"
 #include "pru_ipc_device_gpio.hp"
 #include "pru_ipc_device_epwm.hp"
+#include "pru_ipc_device_eqep.hp"
 #include "pru_ipc_device_pwms.hp"
 #include "pru_ipc_device_eqep_types.hp"
 #include "pru_shram_layout.hp"
@@ -30,7 +31,8 @@
 
 #define ECAP_PWMSS_DEV	PWMSS_DEV_3
 #define EPWM_PWMSS_DEV	PWMSS_DEV_1
-#define EQEP_PWMSS_DEV	PWMSS_DEV_2
+#define RIGHT_MOTOR_EQEP_PWMSS_DEV	PWMSS_DEV_2
+#define LEFT_MOTOR_EQEP_PWMSS_DEV   PWMSS_DEV_3
 
 static uint32_t m_cnt1 = 0;
 static uint32_t m_cnt2 = 0;
@@ -56,9 +58,14 @@ static const struct EQepInterruptHandlerSpec EQepInterruptTable[] =
 {
 		{
 			eQepInterrupt,
-			EQEP_PWMSS_DEV,
+			LEFT_MOTOR_EQEP_PWMSS_DEV,
 			EQEP_UTIME_INTR,
-		}
+		},
+        {
+            eQepInterrupt,
+            RIGHT_MOTOR_EQEP_PWMSS_DEV,
+            EQEP_UTIME_INTR,
+        }
 };
 
 static const struct InterruptHandlerSpec HostInterruptTable[] =
@@ -132,6 +139,10 @@ static const struct IPCHandlerSpec IPCHandlerTable[] =
 		IPCDeviceGpio,
 		deviceGpioIPCHandler
 	},
+    {
+        IPCDeviceEQep,
+        deviceEQepIPCHandler
+    },
 	{
 		0,
 		NULL
@@ -140,10 +151,6 @@ static const struct IPCHandlerSpec IPCHandlerTable[] =
 
 uint16_t deviceTestIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 {
-//	toggleGpio(GPIO_117_P9_25_OUT);
-//	toggleGpio(GPIO_113_P9_28_OUT);
-//	toggleGpio(GPIO_110_P9_31_OUT);
-	
 	testFunc();
 	
 	return sizeof(struct IPCDeviceTest_Trig);
@@ -192,15 +199,14 @@ static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 		0,
 		0,
 		0,
+		0,
 		0
 	};
 
 	readEQepCaptures(pwmssDevice, &status.capCounter, &status.capTime, &status.capPeriod, &status.capStatus);
 	
 	status.counter = readEQepCounter(pwmssDevice);
-
-// ;+	status.counter = readEQepIntrFlag(pwmssDevice);
-//	clearEQepIntrFlag(pwmssDevice, status.counter);
+	status.intrStatus = readEQepIntrFlag(pwmssDevice);
 	
 	sendIPCToHost((uint8_t*)&status, sizeof(status));
 
@@ -212,8 +218,8 @@ static void iepInterrupt()
 	acknowledgeIepTimer();
 
 // ;+	toggleGpio(GPIO_xx_P8_12_OUT);
-//	toggleGpio(GPIO_113_P9_28_OUT);
-//	toggleGpio(GPIO_110_P9_31_OUT);
+//	toggleGpio(GPIO_xx_P8_28_OUT);
+//	toggleGpio(GPIO_xx_P8_29_OUT);
 }
 
 static void epwmInterrupt()
@@ -227,8 +233,6 @@ static void ecapInterrupt()
 {
 	const uint16_t mask = acknowledgeECapPWMInterrut(ECAP_PWMSS_DEV);
 
-//	toggleGpio(GPIO_117_P9_25_OUT);
-	
 	if (mask & ECAP_PWM_INT_SEL_CMP)
 	{
 		m_cnt3 += 1;
@@ -238,8 +242,6 @@ static void ecapInterrupt()
 static void ecapInternalInterrupt()
 {
 	const uint16_t mask = acknowledgeECapPWMInterrut_internal();
-
-//	toggleGpio(GPIO_117_P9_25_OUT);
 	
 	if (mask & ECAP_PWM_INT_SEL_CMP)
 	{
@@ -250,8 +252,6 @@ static void ecapInternalInterrupt()
 static void ecapCaptureInternalInterrupt()
 {
 	pollOneShotCapturePeriod_internal(&m_cnt4);
-	
-//	toggleGpio(GPIO_117_P9_25_OUT);
 	
 	m_cnt5++;
 }
@@ -348,23 +348,25 @@ static void manageECapPwm(const bool enable)
 	}
 }
 
-static void manageEQep(const bool enable)
+static void manageEQep(const PwmssDeviceEnum pwmssDevice, const bool enable)
 {
 	if (enable)
 	{
-		enablePWMSSModule(EQEP_PWMSS_DEV, true);
+		enablePWMSSModule(pwmssDevice, enable);
 		
-		enableEQepInterrupts(EQepInterruptTable);
-		enableEQep(EQEP_PWMSS_DEV, EQEP_QUADRATURE_MODE);
+		setEQepInterrupts(EQepInterruptTable);
+// ;+        enableEQepQuadrature(pwmssDevice, EQEP_UNIT_TIMER_PERIOD_20ms,
+//            EQEP_CAPCLK_DIV_128, EQEP_UPEVNT_DIV_4);
 	}
 	else
 	{
-		disableEQep(EQEP_PWMSS_DEV);
-		disableEQepInterrupts();
+		disableEQep(pwmssDevice);
+//	;+	clearEQepInterrupts();
 		
-		enablePWMSSModule(EQEP_PWMSS_DEV, false);
+		enablePWMSSModule(pwmssDevice, enable);
 	}
 }
+
 
 static void manageEPwm(const bool enable)
 {
@@ -439,17 +441,23 @@ int main(void)
 	  setGpio(GPIO_xx_P8_12_OUT);
 	  
 	  manageECapPwm(true);
-//	  manageCapPwm_internal(true);
+//	  manageECapPwm_internal(true);
 	  manageECapCapture_internal(true);
+	  
 //	  manageEPwm(true);
-	  manageEQep(true);
+
+	  manageEQep(RIGHT_MOTOR_EQEP_PWMSS_DEV, true);
+      manageEQep(LEFT_MOTOR_EQEP_PWMSS_DEV, true);
 
 	  loopExecute(pollFunctions);
 
-	  manageEQep(false);
+      manageEQep(LEFT_MOTOR_EQEP_PWMSS_DEV, false);
+	  manageEQep(RIGHT_MOTOR_EQEP_PWMSS_DEV, false);
+	  
 //	  manageEPwm(false);
-//	  manageECapPwm_internal(false);
+
 	  manageECapCapture_internal(false);
+//    manageECapPwm_internal(false);
 	  manageECapPwm(false);
 
 //	  setGpio(GPIO_xx_P8_12_OUT);
