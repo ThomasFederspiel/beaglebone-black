@@ -8,12 +8,14 @@
 #include "MotorRegulatorService.h"
 
 // standard
+#include <cstdint>
 
 // project
 #include "exceptionMacros.h"
 #include "CommonMessageTypes.h"
 #include "CUICommands.h"
 #include "IPCDeviceGpioProxy.h"
+#include "IPCDeviceEQepProxy.h"
 #include "IPCDeviceProxyService.h"
 #include "IPCDeviceProxyEventEQEP.h"
 #include "IPCMessageTypes.h"
@@ -30,6 +32,20 @@
 MODULE_LOG(MotorRegulatorService);
 
 using namespace commonservices;
+
+namespace
+{
+static constexpr PwmssDeviceEnum RightMotorEQepDevice = PWMSS_DEV_2;
+static constexpr PwmssDeviceEnum LeftMotorEQepDevice = PWMSS_DEV_3;
+
+static constexpr IPCDeviceGpioProxy::GpioPins SleepPin = IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_41_OUT;
+static constexpr IPCDeviceGpioProxy::GpioPins FaultPin = IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_42_IN;
+
+static constexpr float LeftMotorMaxRPM = 100.f;
+static constexpr float RightMotorMaxRPM = 100.f;
+static constexpr float LeftMotorQuadraturePulses = 341.2f;
+static constexpr float RightMotorQuadraturePulses = 341.2f;
+}
 
 namespace commonservices
 {
@@ -59,7 +75,7 @@ static void applyAction(const MotionMessage::MotorAction action, MotorDriver8833
 };
 
 MotorRegulatorService::MotorRegulatorService(const std::string& name) : AbstractService(name), m_pru0IpcProxyService(),
-		m_motorDriver()
+		m_motorDriver(), m_rightMotorEQepProxy(), m_leftMotorEQepProxy()
 {
 	registerEvents();
 }
@@ -82,8 +98,23 @@ void MotorRegulatorService::onStart(ServiceAllocator& allocator)
 
 	m_pru0IpcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IpcDeviceProxyEventEQEP, *this);
 
-	m_motorDriver = tbox::make_unique<MotorDriver8833>(*m_pru0IpcProxyService, PWMSS_DEV_2, PWMSS_DEV_1,
-			IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_41_OUT, IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_42_IN);
+	m_rightMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_pru0IpcProxyService, RightMotorEQepDevice);
+	m_leftMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_pru0IpcProxyService, LeftMotorEQepDevice);
+
+	m_rightMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_100ms,
+			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4);
+
+//	pulses_per_sec = rpm / 60 * pulses_per_rev
+//	pulse_time_ms = 60000 / (rpm * pulses_per_rev)
+//	upevent_time_ms = pulse_time_ms * upevent_div / 4
+//	max_clk_time_ms = clk_div * 100 * 65535 / 1000000
+//	upevent_time_ms < max_clk_time_ms
+
+	m_leftMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_100ms,
+			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4);
+
+	m_motorDriver = tbox::make_unique<MotorDriver8833>(*m_pru0IpcProxyService, LeftMotorEQepDevice, RightMotorEQepDevice,
+			SleepPin, FaultPin);
 	TB_ASSERT(m_motorDriver);
 
 	m_motorDriver->getLeftMotor().open();
@@ -100,6 +131,12 @@ MotorRegulatorService::StopStatus MotorRegulatorService::onStop(ServiceAllocator
 	m_motorDriver->getLeftMotor().close();
 	m_motorDriver->getRightMotor().close();
 	m_motorDriver.reset();
+
+	m_rightMotorEQepProxy->disableEQep();
+	m_rightMotorEQepProxy.reset();
+
+	m_leftMotorEQepProxy->disableEQep();
+	m_leftMotorEQepProxy.reset();
 
 	m_pru0IpcProxyService->unsubscribeAllEvents(*this);
 
@@ -120,10 +157,8 @@ void MotorRegulatorService::onMessage(const ServiceMessageBase& message)
 		break;
 
 	case pruipcservice::IPCMessageTypes::IpcDeviceProxyEventEQEP:
-	{
 		publishPropulsionOdometer(message.getCasted<IPCDeviceProxyEventEQEP>());
-	}
-	break;
+		break;
 
  	TB_DEFAULT("Unhandled value " << CommonMessageTypes::toString(message.getType()));
 	}
@@ -134,7 +169,7 @@ void MotorRegulatorService::applyMotion(const MotionMessage& message)
 	switch (message.getMotor())
 	{
 	case MotionMessage::Motor::AllMotors:
-		applyAction(message.getAction(), m_motorDriver->getLeftMotor(), message.getLeftSpeed());
+// ;+		applyAction(message.getAction(), m_motorDriver->getLeftMotor(), message.getLeftSpeed());
 		applyAction(message.getAction(), m_motorDriver->getRightMotor(), message.getRightSpeed());
 		break;
 
@@ -168,14 +203,13 @@ void MotorRegulatorService::publishPropulsionOdometer(const IPCDeviceProxyEventE
 
 	switch (eqep.getPwmssDevice())
 	{
-	case PWMSS_DEV_2:
+	case RightMotorEQepDevice:
 		motor = PropulsionOdometerMessage::Motor::RightMotor;
 		break;
 
-	case PWMSS_DEV_3:
+	case LeftMotorEQepDevice:
 		motor = PropulsionOdometerMessage::Motor::LeftMotor;
 		break;
-
 	TB_DEFAULT(eqep.getPwmssDevice());
 	}
 
@@ -185,6 +219,10 @@ void MotorRegulatorService::publishPropulsionOdometer(const IPCDeviceProxyEventE
 			eqep.getCapPeriod(),
 			eqep.getCounter()
 			);
+
+	// ;+
+	//INFO("device = " << eqep.getPwmssDevice());
+	//INFO("Counter = " << eqep.getCounter());
 
 	publishEvent(message);
 }

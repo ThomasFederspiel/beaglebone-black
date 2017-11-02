@@ -20,6 +20,7 @@
 
 class IPCDeviceProxyEventEQEP;
 class IPCDeviceProxyService;
+class IPCDeviceEQepProxy;
 class MotionMessage;
 class MotorDriver8833;
 class ServiceMessageBase;
@@ -46,6 +47,8 @@ private:
 
 	std::shared_ptr<IPCDeviceProxyService> m_pru0IpcProxyService;
 	std::unique_ptr<MotorDriver8833> m_motorDriver;
+	std::unique_ptr<IPCDeviceEQepProxy> m_rightMotorEQepProxy;
+	std::unique_ptr<IPCDeviceEQepProxy> m_leftMotorEQepProxy;
 };
 
 #endif /* MOTORREGULATORSERVICE_H_ */

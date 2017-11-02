@@ -25,6 +25,12 @@
 
 MODULE_LOG(SoundServiceState);
 
+namespace
+{
+static constexpr PwmssDeviceEnum SpeakerEPwmDevice = PWMSS_DEV_3;
+static constexpr EPwmChannelEnum SpeakerEPwmChannel = PWM_CH_A;
+}
+
 FSM_TABLE_BEGIN(SoundServiceState)
 	FSM_STATE(startState),
 	FSM_STATE(activeState),
@@ -143,8 +149,8 @@ void SoundServiceState::stopState(const FSMEvent& event)
 
 void SoundServiceState::startPlayerQueue()
 {
-	m_epwmProxy = tbox::make_unique<PlayerQueueEPwmProxy>(m_messageReceiver, m_ipcProxyService, PWMSS_DEV_3, PWM_CH_A);
-	m_pwmsProxy = tbox::make_unique<PlayerQueuePwmsProxy>(m_messageReceiver, m_ipcProxyService, PWMSS_DEV_3);
+	m_epwmProxy = tbox::make_unique<PlayerQueueEPwmProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice, SpeakerEPwmChannel);
+	m_pwmsProxy = tbox::make_unique<PlayerQueuePwmsProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice);
 
 	m_playerQueue = tbox::make_unique<PlayerQueue>(*m_epwmProxy, *m_pwmsProxy);
 

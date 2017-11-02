@@ -10,6 +10,7 @@
 
 // standard
 #include <cstdint>
+#include <string>
 
 // local
 
@@ -31,24 +32,58 @@ public:
 	{
 	public:
 
+		enum class Decay
+		{
+			Slow = 0,
+			Fast
+		};
+
 		explicit Motor(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice);
 
-		void open();
 		void close();
-		void setSpeed(const float speed);
-		float getSpeed() const;
-		void stop();
 		void coast();
+		void open();
+		void setDecay(const Decay decay);
+		void setSpeed(const float speed);
+		void selectChannels(const bool forward);
+		void stop();
 
 	private:
-		void setDirection(const bool forward);
+		enum class State
+		{
+			Stopped = 0,
+			Coasting,
+			Forward,
+			Reverse
+		};
+
+		static const char* toString(const State state)
+		{
+			#define CASE(v) case v: return #v;
+			switch (state)
+			{
+				CASE(State::Stopped)
+				CASE(State::Coasting)
+				CASE(State::Forward)
+				CASE(State::Reverse)
+			}
+			static std::string tmp = std::to_string(static_cast<int>(state));
+			return tmp.c_str();
+			#undef CASE
+		}
+
+		void apply(const bool forward, const uint16_t duty);
 
 		IPCDeviceEPwmProxy m_epwmProxy;
 		IPCDevicePwmsProxy m_pwmsProxy;
 
+		State m_state;
 		uint16_t m_pwmPeriod;
-		bool m_forward;
+		uint16_t m_pwmDuty;
 		bool m_pwmEnabled;
+		Decay m_decay;
+		EPwmChannelEnum m_directionChannel;
+		EPwmChannelEnum m_pwmChannel;
 	};
 
 	explicit MotorDriver8833(IPCDeviceProxyService& proxy,
