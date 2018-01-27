@@ -18,7 +18,8 @@ uint16_t deviceEQepIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 		{
 			const struct IPCDeviceEQep_EnableQuadrature* const enable = (struct IPCDeviceEQep_EnableQuadrature*) deviceIoctl;
 
-			enableEQepQuadrature(enable->pwmssDevice, enable->utimerPeriod, enable->capClkDivisor, enable->upEventDivisor);
+			enableEQepQuadrature(enable->pwmssDevice, enable->utimerPeriod, enable->capClkDivisor, enable->upEventDivisor,
+					enable->unitTime_ms, enable->ueventPulses, enable->captureTimeTick_ns);
 			
 			return sizeof(struct IPCDeviceEQep_EnableQuadrature);
 		}

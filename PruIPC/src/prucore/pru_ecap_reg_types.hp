@@ -86,6 +86,8 @@
 #define EC_DISABLE_MASK	~BIT(5) 
 #define EC_ENABLE		BIT(5) 
 
+#pragma PACK(push, 1)
+
 /* PRU_ECAP register set */
 typedef struct
 {
@@ -230,6 +232,8 @@ typedef struct
 	} ;	// 0x5C
 	
 } pruECap;
+
+#pragma PACK(pop)
 
 #endif /* PRU_ECAP_REG_TYPES_HP_ */
 

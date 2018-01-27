@@ -6,13 +6,16 @@
  */
 
 #include "pru_eqep.hp"
-
+ 
 #include <limits.h>
 #include <stddef.h>
 
 #include "pru_pwms_core.hp"
 
 static const struct EQepInterruptHandlerSpec* m_eQepInterruptTable = NULL;
+static uint16_t m_unitTime_ms = 0;
+static uint16_t m_ueventPulses = 0;
+static uint16_t m_captureTimeTick_ns = 0;
 
 static void setEQepCounterMode(volatile pruEQep* const eQep, const EQepCounterModeEnum mode)
 {
@@ -73,9 +76,14 @@ void disableEQep(const PwmssDeviceEnum pwmssDevice)
 }
 
 void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimerPeriod utimerPeriod,
-		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor)
+		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor,
+		const uint16_t unitTime_ms, const uint16_t ueventPulses, const uint16_t captureTimeTick_ns)
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
+
+	m_unitTime_ms = unitTime_ms;
+	m_ueventPulses = ueventPulses;
+	m_captureTimeTick_ns = captureTimeTick_ns;
 	
 	setEQepCounterMode(eQep, EQEP_QUADRATURE_MODE);
 	
@@ -93,17 +101,14 @@ void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimer
 	/* Set prescalers for EQEP Capture timer and UPEVNT */
 	/* Note: EQEP Capture unit must be disabled before changing prescalar */
 	
-	// The value used by TI was 0x0073 (QCAP_CAPCLK_DIV_128 | QCAP_UPEVNT_DIV_8).  
-	// This was causing overflows.
-
 	// Setup for Low Speed Calculation
 	//
 	// capClkDivisor - specifies the divisor used for down sampling the sys clock (100 Mhz)
 	//				   as to measure the time (max 65535 ticks) it takes to count
 	//				   number of quadrature flanks as defined by upEventDivisor
 	// upEventDivisor - specifies number of quadrature flanks needed for capture to occur
-	//					DIV_4/16/32... and above specifes number of whole quadrature periods
-	//					between captures
+	//					DIV_4/8/16/32... and above specifes number of whole quadrature periods
+	//					1/2/4/8 between captures
 	eQep->QCAPCTL_QPOSCTL.QCAPCTL = capClkDivisor | upEventDivisor;
 	
 	/* Enable EQEP Capture */
@@ -142,7 +147,7 @@ uint32_t readEQepStatus(const PwmssDeviceEnum pwmssDevice)
 	
 	const uint32_t status = eQep->QEPSTS_QCTMR.QEPSTS;
 	
-	eQep->QEPSTS_QCTMR.QEPSTS = QEP_ALL_STATUS;
+	eQep->QEPSTS_QCTMR.QEPSTS = EQEP_STS_ALL;
 	
 	return status;
 }	
@@ -162,18 +167,32 @@ void clearEQepIntrFlag(const PwmssDeviceEnum pwmssDevice, const uint16_t flags)
 }	
 
 void readEQepCaptures(const PwmssDeviceEnum pwmssDevice, uint32_t* const counter, uint32_t* const time, uint32_t* const period,
+		uint16_t* const unitTime_ms, uint16_t* const ueventPulses, uint16_t* const captureTimeTick_ns, 
 		uint32_t* const status)
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
 
-	// Position counter value latched when unit timer match has occured
+	// Position counter value latched when unit time out has occured
 	*counter = eQep->QPOSLAT;
 
-	// ;+ what is this
+	// Capture timer time when unit time out occured
 	*time = eQep->QCTMRLAT;
+
+	// ;+
+	if (eQep->QEPSTS_QCTMR.QEPSTS & EQEP_STS_UNITEVENT_POSITION_FLAG)
+	{
+		// Time passed during a unit time out period defined by QCAP_UPEVNT_DIV value set in QCAPCTL 
+		*period = eQep->QCPRDLAT;
+	}
+	else
+	{
+		*period = 0;
+	}
 	
-	// Time passed during a unit period defined by QCAP_UPEVNT_DIV value set in QCAPCTL 
-	*period = eQep->QCPRDLAT;
+	// Configuration data
+	*unitTime_ms = m_unitTime_ms;
+	*ueventPulses = m_ueventPulses;
+	*captureTimeTick_ns = m_captureTimeTick_ns;
 	
 	*status = readEQepStatus(pwmssDevice);
 }	

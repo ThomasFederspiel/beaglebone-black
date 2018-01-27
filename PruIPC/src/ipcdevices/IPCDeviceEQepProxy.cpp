@@ -22,6 +22,22 @@ MODULE_LOG(IPCDeviceEQepProxy)
 namespace
 {
 	SinkMessageReceiver m_sink;
+
+	static uint16_t evaluateUTimerPeriod(const EQepUnitTimerPeriod utimerPeriod_ms)
+	{
+		// time in [ms] when 100 MHz system clock
+		return utimerPeriod_ms / 100000;
+	}
+
+	static uint16_t evaluateUEventPulses(const EQepUpEventDivisor upEventDivisor)
+	{
+		return 0x01 << upEventDivisor;
+	}
+
+	static uint16_t evaluateCaptureTimeTick(const EQepCapClkDivisor clkDiv)
+	{
+		return 10 * (0x01 << (clkDiv >> 4));
+	}
 };
 
 IPCDeviceEQepProxy::IPCDeviceEQepProxy(IPCDeviceProxyService& proxy,
@@ -46,7 +62,10 @@ void IPCDeviceEQepProxy::enableEQepQuadrature(const EQepUnitTimerPeriod utimerPe
 		m_pwmssDevice,
 		utimerPeriod,
 		capClkDivisor,
-		upEventDivisor
+		upEventDivisor,
+		evaluateUTimerPeriod(utimerPeriod),
+		evaluateUEventPulses(upEventDivisor),
+		evaluateCaptureTimeTick(capClkDivisor)
 	};
 
 	sendSyncMessage(reinterpret_cast<uint8_t*>(&enable), sizeof(enable));

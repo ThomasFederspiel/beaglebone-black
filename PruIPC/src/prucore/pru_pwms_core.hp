@@ -26,6 +26,8 @@ typedef enum
 	LAST_PWM_MODULE
 }  PwmssModuleEnum;
 
+#pragma pack(1)
+
 /* PRU_PWM subsytem register set */
 typedef struct
 {

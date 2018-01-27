@@ -22,7 +22,9 @@
 #include "pru_ipc_device_eqep_types.hp"
 #include "pru_ipc_devices.hp"
 #include "pru_ipc_types.hp"
+#include "pru_ipc_types.hp"
 #include "pru_pwms_types.hp"
+#include "pru_eqep_types.hp"
 
 using namespace pruipcservice;
 
@@ -35,22 +37,19 @@ public:
 	static constexpr IPCDeviceEnum PruDevice = IPCDeviceEQep;
 	static constexpr ioctl_t PruIoctl = IPCDeviceEQep_Status;
 
+	IPCDeviceProxyEventEQEP() : ServiceMessageBase(IPCMessageTypes::Type::IpcDeviceProxyEventEQEP),
+		m_pruId(PrussDriver::PruProxy::PruIdEnum::PruIdEOE), m_pwmssDevice(PwmssDeviceEnum::LAST_PWM_DEV), m_capCounter(0), m_capTime(0), m_capPeriod(0),
+		m_capStatus(0), m_intrStatus(0), m_counter(0), m_unitTime_ms(0), m_ueventPulses(0),
+		m_captureTimeTick_ns(0)
+	{
+	}
+
 	explicit IPCDeviceProxyEventEQEP(const PrussDriver::PruProxy::PruIdEnum pruId,
 			const pruEvenType_t& eCapStatus) : ServiceMessageBase(IPCMessageTypes::Type::IpcDeviceProxyEventEQEP),
 		m_pruId(pruId), m_pwmssDevice(eCapStatus.pwmssDevice), m_capCounter(eCapStatus.capCounter), m_capTime(eCapStatus.capTime), m_capPeriod(eCapStatus.capPeriod),
-		m_capStatus(eCapStatus.capStatus), m_intrStatus(eCapStatus.intrStatus), m_counter(eCapStatus.counter)
-	{
-	}
-
-	explicit IPCDeviceProxyEventEQEP(const IPCDeviceProxyEventEQEP& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
-			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
-			m_capStatus(idpe.m_capStatus), m_intrStatus(idpe.m_intrStatus), m_counter(idpe.m_counter)
-	{
-	}
-
-	explicit IPCDeviceProxyEventEQEP(IPCDeviceProxyEventEQEP&& idpe) : ServiceMessageBase(idpe), m_pruId(idpe.m_pruId),
-			m_pwmssDevice(idpe.m_pwmssDevice), m_capCounter(idpe.m_capCounter), m_capTime(idpe.m_capTime), m_capPeriod(idpe.m_capPeriod),
-			m_capStatus(idpe.m_capStatus), m_intrStatus(idpe.m_intrStatus), m_counter(idpe.m_counter)
+		m_capStatus(eCapStatus.capStatus), m_intrStatus(eCapStatus.intrStatus), m_counter(eCapStatus.counter),
+		m_unitTime_ms(eCapStatus.unitTime_ms), m_ueventPulses(eCapStatus.ueventPulses),
+		m_captureTimeTick_ns(eCapStatus.captureTimeTick_ns)
 	{
 	}
 
@@ -72,6 +71,9 @@ public:
 		swap(first.m_capStatus, second.m_capStatus);
 		swap(first.m_intrStatus, second.m_intrStatus);
 		swap(first.m_counter, second.m_counter);
+		swap(first.m_unitTime_ms, second.m_unitTime_ms);
+		swap(first.m_ueventPulses, second.m_ueventPulses);
+		swap(first.m_captureTimeTick_ns, second.m_captureTimeTick_ns);
 	}
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
@@ -94,11 +96,13 @@ public:
 		return m_capCounter;
 	}
 
+	//
 	uint32_t getCapTime() const
 	{
 		return m_capTime;
 	}
 
+	// Tick time in [ns], see EQepCapClkDivisor in pru_eqep_types.hp
 	uint32_t getCapPeriod() const
 	{
 		return m_capPeriod;
@@ -119,6 +123,27 @@ public:
 		return m_counter;
 	}
 
+	uint16_t getUnitTime() const
+	{
+		return m_unitTime_ms;
+	}
+
+	uint16_t getUEventPulses() const
+	{
+		return m_ueventPulses;
+	}
+
+	uint16_t getCaptureTimeTick() const
+	{
+		return m_captureTimeTick_ns;
+	}
+
+	bool isLowSpeedValid() const
+	{
+		return (m_capStatus & (EQEP_STS_CAPTURE_DIR_ERROR | EQEP_STS_CAPTURE_OVERFLOW_ERROR
+				| EQEP_STS_UNITEVENT_POSITION_FLAG)) == EQEP_STS_UNITEVENT_POSITION_FLAG;
+	}
+
 private:
 	PrussDriver::PruProxy::PruIdEnum m_pruId;
 	PwmssDeviceEnum m_pwmssDevice;
@@ -128,6 +153,9 @@ private:
 	uint32_t m_capStatus;
 	uint32_t m_intrStatus;
 	uint32_t m_counter;
+	uint16_t m_unitTime_ms;
+	uint16_t m_ueventPulses;
+	uint16_t m_captureTimeTick_ns;
 };
 
 #endif /* PRUIPC_IPCDEVICEPROXYEVENTEQEP_H_ */

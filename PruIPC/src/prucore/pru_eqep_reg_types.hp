@@ -116,14 +116,16 @@
 //#define QEINT_QDC_FLG 			BIT(3)
 //#define QEINT_PHE_FLG 			BIT(2)
 //#define QEINT_PCE_FLG 			BIT(1)
-// #define QEINT_GLOBAL_FLG 		BIT(0)
+//#define QEINT_GLOBAL_FLG 		BIT(0)
 //#define QEINT_ALL_FLG 		 	(QEINT_UTIME_FLG | QEINT_IEL_FLG | QEINT_SEL_FLG | \
 // 	 	 	 	 	 	 	 	 QEINT_PCM_FLG | QEINT_PCR_FLG | QEINT_PCO_FLG | \
 // 	 	 	 	 	 	 	 	 QEINT_PCU_FLG | QEINT_WTO_FLG | QEINT_QDC_FLG | \
 // 	 	 	 	 	 	 	 	 QEINT_PHE_FLG | QEINT_PCE_FLG | QEINT_GLOBAL_FLG) 
 
 // QEPSTS
-#define QEP_ALL_STATUS		BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(4) | BIT(5) | BIT(6) | BIT(7)
+//#define QEP_ALL_STATUS		BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(4) | BIT(5) | BIT(6) | BIT(7)
+
+#pragma PACK(push, 1)
 
 /* PRU_EQEP register set */
 typedef struct
@@ -371,6 +373,8 @@ typedef struct
 	} ;	// 0x5C
 	
 } pruEQep;
+
+#pragma PACK(pop)
 
 #endif /* PRU_EQEP_REG_TYPES_HP_ */
 

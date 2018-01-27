@@ -160,8 +160,8 @@ void IPCEventProxyRunnable::readPruEvents()
 		if (device.device != IPC_EOB)
 		{
 			// ;+
-			// INFO("readPruEvents device = " << device.device);
-			// INFO("readPruEvents device = " << toDeviceString(static_cast<IPCDeviceEnum>(device.device)));
+			//INFO("readPruEvents device = " << device.device);
+			//INFO("readPruEvents device = " << toDeviceString(static_cast<IPCDeviceEnum>(device.device)));
 
 			bufferOffset += processPruEvent(device, bufferOffset);
 		}
@@ -186,6 +186,9 @@ uint32_t IPCEventProxyRunnable::processPruEvent(const IPCDeviceIoctl& device, co
 
 	const auto size = action->size();
 	TB_ASSERT(size != 0);
+
+	// ;+
+	//INFO("size = " << size);
 
 	uint8_t data[size];
 	m_ipcHostDirectionalChannelContext->read(data, offset, size);

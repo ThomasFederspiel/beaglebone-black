@@ -108,7 +108,7 @@ void IPCDeviceProxyService::onMessage(const IPCMessageBase& message)
 		break;
 	}
 
-	TB_DEFAULT("Unhandled value " << IPCMessageTypes::toString(message.getType()));
+	TB_DEFAULT(IPCMessageTypes::toString(message.getType()));
 	}
 }
 

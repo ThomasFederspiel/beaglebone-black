@@ -29,6 +29,8 @@ typedef struct
 	unsigned rvsd2 : 14;
 } PruPerModuleClk;
 
+#pragma pack(1)
+
 /* PRU_ECAP register set */
 typedef struct
 {

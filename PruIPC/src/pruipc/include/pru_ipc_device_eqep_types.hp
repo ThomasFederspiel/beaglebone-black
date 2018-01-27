@@ -28,6 +28,9 @@ struct IPCDeviceEQep_EnableQuadrature
 	EQepUnitTimerPeriod utimerPeriod; 
 	EQepCapClkDivisor capClkDivisor; 
 	EQepUpEventDivisor upEventDivisor;
+	uint16_t unitTime_ms;
+	uint16_t ueventPulses;
+	uint16_t captureTimeTick_ns;
 };
 
 struct IPCDeviceEQep_disable
@@ -36,18 +39,18 @@ struct IPCDeviceEQep_disable
 	PwmssDeviceEnum pwmssDevice;
 };
 
-struct IPCDeviceEQep_Status
+struct __attribute__((__packed__)) IPCDeviceEQep_Status
 {
 	struct IPCDeviceIoctl device;
 	PwmssDeviceEnum pwmssDevice;
 	
-	// Position counter value latched when unit timer match has occured
+	// Position counter value latched when unit time out has occured
 	uint32_t capCounter;
 	
 	// ;+
 	uint32_t capTime;
 	
-	// ;+ Time passed during a unit period defined by QCAP_UPEVNT_DIV 
+	// Tick time in [ns], see EQepCapClkDivisor in pru_eqep_types.hp
 	uint32_t capPeriod;
 	
 	uint32_t capStatus;
@@ -56,35 +59,10 @@ struct IPCDeviceEQep_Status
 	
 	// Count of number of pulses
 	uint32_t counter;
-};
-
-enum IPCDeviceEQep_CapStatusEnum
-{
-	// Indicates (= 1) that counter value not consistent with value exepcted
-	// when index marker detected (expected value is either 0 or QPOSMAX)
-	EQepCapStatus_PositionCounterError = BIT(0),
 	
-	// Indicates (= 1) that index marker has been detected
-	EQepCapStatus_FirstIndexMarker = BIT(1),
-	
-	// Count direction has changed during unit position events. Capture period (CapPeriod) not valid
-	EQepCapStatus_CaptureDirError = BIT(2),
-	
-	// Capture timer has overflown (= 1), indicats too long time has passed between unit position
-	// events. Capture period (CapPeriod) not valid
-	EQepCapStatus_CaptureOverflowError = BIT(3),
-
-	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) on every index marker
-	EQepCapStatus_DirectionLatchFlag = BIT(4),
-	
-	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) on index marker for 
-	EQepCapStatus_QuadratureDirFlag = BIT(5),
-	
-	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) when first index marker has been detected
-	EQepCapStatus_DirectionFirstIndexMarker = BIT(6),
-	
-	// Indicates (= 1) that unit position event has occured. Capture period (CapPeriod) is valid
-	EQepCapStatus_UnitEventPositionFlag = BIT(7)
+	uint16_t unitTime_ms;
+	uint16_t ueventPulses;
+	uint16_t captureTimeTick_ns;
 };
 
 #endif /* PRU_IPC_DEVICE_EQEP_TYPES_HP_ */

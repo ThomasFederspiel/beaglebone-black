@@ -12,14 +12,14 @@
 
 typedef enum
 {
-	EQEP_CAPCLK_DIV_1 = 0,					// @100 MHz, tick = 100 ns, max = 655.35 us
-	EQEP_CAPCLK_DIV_2 = BIT(4),				// @100 MHz, tick = 200 ns, max = 1.31007 ms
-	EQEP_CAPCLK_DIV_4 = BIT(5),				// @100 MHz, tick = 400 ns, max = 2.62140 ms
-	EQEP_CAPCLK_DIV_8 = BIT(4) | BIT(5),	// @100 MHz, tick = 800 ns, max = 5.24280 ms
-	EQEP_CAPCLK_DIV_16 = BIT(6),			// @100 MHz, tick = 1600 ns, max = 10.48560 ms
-	EQEP_CAPCLK_DIV_32 = BIT(4) | BIT(6),	// @100 MHz, tick = 3200 ns, max = 20.9712 ms
-	EQEP_CAPCLK_DIV_64 = BIT(5) | BIT(6),	// @100 MHz, tick = 6400 ns, max = 41.9424 ms
-	EQEP_CAPCLK_DIV_128 = BIT(4) | BIT(5) | BIT(6)	// @100 MHz, tick = 12800 ns, max = 83.8848 ms
+	EQEP_CAPCLK_DIV_1 = 0,					// @100 MHz, tick = 10 ns, max = 65.535 us
+	EQEP_CAPCLK_DIV_2 = BIT(4),				// @100 MHz, tick = 20 ns, max = 0.131007 ms
+	EQEP_CAPCLK_DIV_4 = BIT(5),				// @100 MHz, tick = 40 ns, max = 0.262140 ms
+	EQEP_CAPCLK_DIV_8 = BIT(4) | BIT(5),	// @100 MHz, tick = 80 ns, max = 0.524280 ms
+	EQEP_CAPCLK_DIV_16 = BIT(6),			// @100 MHz, tick = 160 ns, max = 1.048560 ms
+	EQEP_CAPCLK_DIV_32 = BIT(4) | BIT(6),	// @100 MHz, tick = 320 ns, max = 2.09712 ms
+	EQEP_CAPCLK_DIV_64 = BIT(5) | BIT(6),	// @100 MHz, tick = 640 ns, max = 4.19424 ms
+	EQEP_CAPCLK_DIV_128 = BIT(4) | BIT(5) | BIT(6)	// @100 MHz, tick = 1280 ns, max = 8.38848 ms
 } EQepCapClkDivisor;
 
 typedef enum
@@ -42,10 +42,46 @@ typedef enum
 {
 	EQEP_UNIT_TIMER_PERIOD_200ms = 0x1312D00,	// @100 MHz, period 200 ms
 	EQEP_UNIT_TIMER_PERIOD_100ms = 0x989680,	// @100 MHz, period 100 ms
+	EQEP_UNIT_TIMER_PERIOD_50ms = 0x4C4B40,		// @100 MHz, period 50 ms
 	EQEP_UNIT_TIMER_PERIOD_20ms	= 0x1E8480,		// @100 MHz, period 20 ms
 	EQEP_UNIT_TIMER_PERIOD_10ms	= 0xF4240,		// @100 MHz, period 10 ms
+	EQEP_UNIT_TIMER_PERIOD_5ms = 0x7A120,		// @100 MHz, period 5 ms
 	EQEP_UNIT_TIMER_PERIOD_2ms = 0x30D40,		// @100 MHz, period 2 ms
 	EQEP_UNIT_TIMER_PERIOD_1ms = 0x186A0		// @100 MHz, period 1 ms
 } EQepUnitTimerPeriod;
+
+typedef enum 
+{
+	// Indicates (= 1) that counter value not consistent with value expected
+	// when index marker detected (expected value is either 0 or QPOSMAX)
+	EQEP_STS_POSITION_COUNTER_ERROR = BIT(0),
+	
+	// Indicates (= 1) that index marker has been detected
+	EQEP_STS_FIRST_INDEX_MARKER = BIT(1),
+	
+	// Count direction has changed during unit position events. Capture period (CapPeriod) not valid
+	EQEP_STS_CAPTURE_DIR_ERROR = BIT(2),
+	
+	// Capture timer has overflown (= 1), indicats too long time has passed between unit position
+	// events. Capture period (CapPeriod) not valid
+	EQEP_STS_CAPTURE_OVERFLOW_ERROR = BIT(3),
+
+	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) on every index marker
+	EQEP_STS_DIRECTION_LATCH_FLAG = BIT(4),
+	
+	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) on index marker for 
+	EQEP_STS_QUADRATURE_DIR_FLAG = BIT(5),
+	
+	// Indicates direction on count (up/clockwise/forward = 1, down/counter-clockwise/reverse = 0) when first index marker has been detected
+	EQEP_STS_DIR_FIRST_INDEX_MARKER = BIT(6),
+	
+	// Indicates (= 1) that unit position event has occurred. Capture period (CapPeriod) is valid
+	EQEP_STS_UNITEVENT_POSITION_FLAG = BIT(7),
+	
+	EQEP_STS_ALL = (EQEP_STS_POSITION_COUNTER_ERROR | EQEP_STS_FIRST_INDEX_MARKER | EQEP_STS_CAPTURE_DIR_ERROR
+			| EQEP_STS_CAPTURE_OVERFLOW_ERROR | EQEP_STS_DIRECTION_LATCH_FLAG | EQEP_STS_QUADRATURE_DIR_FLAG
+			| EQEP_STS_DIR_FIRST_INDEX_MARKER | EQEP_STS_UNITEVENT_POSITION_FLAG)
+
+} IPCDeviceEQep_CapStatusEnum;
 
 #endif /* PRU_EQEP_TYPES_HP_ */
