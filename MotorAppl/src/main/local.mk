@@ -16,6 +16,6 @@ EXTERNAL_LIBRARIES_PruIPC += pruipcdevices pruipchostpruaccess pruipcservicecore
 
 EXTERNAL_PROJECTS += Toolbox
 EXTERNAL_INCLUDES_Toolbox += common util exception logger service concurrent container console 
-EXTERNAL_LIBRARIES_Toolbox += tboxcommon tboxutil tboxexception prussdrv tboxservice tboxconcurrent boostasio tboxprotocol tboxlogger 
+EXTERNAL_LIBRARIES_Toolbox += tboxcommon tboxutil tboxexception prussdrv tboxservice tboxconcurrent tboxboostasio tboxprotocol tboxlogger 
 
 

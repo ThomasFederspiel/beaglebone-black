@@ -200,24 +200,27 @@ static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 		0,
 		0,
 		0,
+		0,
+		0,
+		0,
 		0
 	};
 
-	readEQepCaptures(pwmssDevice, &status.capCounter, &status.capTime, &status.capPeriod, &status.capStatus);
-	
+	readEQepCaptures(pwmssDevice, &status.capCounter, &status.capTime, &status.capPeriod,
+	   &status.unitTime_ms, &status.ueventPulses,  
+	   &status.captureTimeTick_ns, &status.capStatus);
+
 	status.counter = readEQepCounter(pwmssDevice);
 	status.intrStatus = readEQepIntrFlag(pwmssDevice);
 	
 	sendIPCToHost((uint8_t*)&status, sizeof(status));
-
-	m_cnt1 += 1;
 }
 
 static void iepInterrupt()
 {
 	acknowledgeIepTimer();
 
-// ;+	toggleGpio(GPIO_xx_P8_12_OUT);
+// ;+    toggleGpio(GPIO_xx_P8_12_OUT);
 //	toggleGpio(GPIO_xx_P8_28_OUT);
 //	toggleGpio(GPIO_xx_P8_29_OUT);
 }
@@ -225,6 +228,9 @@ static void iepInterrupt()
 static void epwmInterrupt()
 {
 	acknowledgeEPwmETInterrut(EPWM_PWMSS_DEV);
+
+// ;+     
+//    setGpio(GPIO_xx_P8_12_OUT);
 
 	m_cnt2 += 1;
 }
@@ -361,7 +367,6 @@ static void manageEQep(const PwmssDeviceEnum pwmssDevice, const bool enable)
 	else
 	{
 		disableEQep(pwmssDevice);
-//	;+	clearEQepInterrupts();
 		
 		enablePWMSSModule(pwmssDevice, enable);
 	}
@@ -443,7 +448,7 @@ int main(void)
 	  manageECapPwm(true);
 //	  manageECapPwm_internal(true);
 	  manageECapCapture_internal(true);
-	  
+	       
 //	  manageEPwm(true);
 
 	  manageEQep(RIGHT_MOTOR_EQEP_PWMSS_DEV, true);
@@ -453,6 +458,7 @@ int main(void)
 
       manageEQep(LEFT_MOTOR_EQEP_PWMSS_DEV, false);
 	  manageEQep(RIGHT_MOTOR_EQEP_PWMSS_DEV, false);
+
 	  
 //	  manageEPwm(false);
 

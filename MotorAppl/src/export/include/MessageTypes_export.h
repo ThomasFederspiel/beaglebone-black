@@ -24,7 +24,7 @@ public:
 	{
 		// Message types for CommonServices
 		SoundMessage = 0,
-		MotionMessage,
+		MotorServiceCUIMessage,
 		NetManageMessage,
 		LeftPropulsionOdometerMessage,
 		RightPropulsionOdometerMessage,
@@ -44,7 +44,7 @@ public:
 		switch (static_cast<Type>(type))
 		{
 			CASE(Type::SoundMessage)
-		    CASE(Type::MotionMessage)
+		    CASE(Type::MotorServiceCUIMessage)
 		    CASE(Type::NetManageMessage)
 		    CASE(Type::LeftPropulsionOdometerMessage)
 		    CASE(Type::RightPropulsionOdometerMessage)
