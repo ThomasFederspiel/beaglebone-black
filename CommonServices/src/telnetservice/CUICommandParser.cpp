@@ -12,6 +12,9 @@
 #include <sstream>
 #include <string>
 
+// ;+
+#include <iostream>
+
 // boost
 #include "boost/regex.hpp"
 
@@ -90,7 +93,7 @@ std::string CUICommandParser::CUICommandArg::toString() const
 		oss << "NotSetValue";
 		break;
 
-	TB_DEFAULT("Unknown value " << ICUICommandArg::toString(m_type));
+	TB_DEFAULT(ICUICommandArg::toString(m_type));
 	}
 
 	return oss.str();
@@ -290,13 +293,16 @@ void CUICommandParser::parseValueArray(CUICommandParser::CUICommandArg& arg, con
 
 void CUICommandParser::parseNumber(CUICommandParser::CUICommandArg& arg, std::string str) const
 {
+	// ;+
+	std::cout << str << std::endl;
+
 	str = Utils::trim(str);
 
-	if (Utils::isDigits(str))
+	if (Utils::isFloat(str))
 	{
 		try
 		{
-			arg.setValue(stoi(str));
+			arg.setValue(stof(str));
 
 			return;
 		}
@@ -307,7 +313,7 @@ void CUICommandParser::parseNumber(CUICommandParser::CUICommandArg& arg, std::st
 
 	try
 	{
-		arg.setValue(stof(str));
+		arg.setValue(stoi(str));
 
 		return;
 	}

@@ -65,7 +65,7 @@ void PruManagerService::onMessage(const ServiceMessageBase& message)
 
 	switch (message.getType())
 	{
- 	TB_DEFAULT("Unhandled value " << CommonMessageTypes::toString(message.getType()));
+ 	TB_DEFAULT(CommonMessageTypes::toString(message.getType()));
 	}
 }
 
@@ -91,7 +91,7 @@ void PruManagerService::loadImage(const PruImageConfig& image)
 		prussDrv.getPru1Proxy().loadApplication(image.getTextBin(), image.getDataBin());
 		break;
 
-	TB_DEFAULT("Unhandled value " << PruImageConfig::toString(image.getPru()));
+	TB_DEFAULT(PruImageConfig::toString(image.getPru()));
 	}
 }
 

@@ -17,6 +17,13 @@
 class ICUICommandParser;
 class CUICommandContext;
 
+class CUICommands final
+{
+public:
+	static void registerCUICommands(ServiceAllocator& allocator, SoundService& service);
+	static void unregisterCUICommands(ServiceAllocator& allocator, SoundService& service);
+};
+
 class PlaySoundCommand final : public AbstractCUICommand
 {
 public:

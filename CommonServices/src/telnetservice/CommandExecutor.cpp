@@ -141,8 +141,6 @@ void CommandExecutor::registerBaseCommands()
  	registerCommand(tbox::make_unique<CdCommand>());
 	registerCommand(tbox::make_unique<LsCommand>());
  	registerCommand(tbox::make_unique<QuitCommand>());
-
- 	registerCommand(tbox::make_unique<TstCommand>());
 }
 
 void CommandExecutor::add(TelnetConnection& connection)

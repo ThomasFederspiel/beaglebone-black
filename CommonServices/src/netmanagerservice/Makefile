@@ -5,6 +5,6 @@ MODULE := netmanagerservice
 C_FILES = $(wildcard *.c)
 CPP_FILES = $(wildcard *.cpp)
 
-STATIC_LIBRARY := libnetmanagerservice.a
+STATIC_LIBRARY := lib$(MODULE).a
 
 include ../../mk/top.mk

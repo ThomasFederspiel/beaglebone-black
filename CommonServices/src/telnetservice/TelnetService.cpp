@@ -69,7 +69,7 @@ void TelnetService::onMessage(const ServiceMessageBase& message)
 
 	switch (message.getType())
 	{
-	TB_DEFAULT("Unhandled value " << CommonMessageTypes::toString(message.getType()));
+	TB_DEFAULT(CommonMessageTypes::toString(message.getType()));
 	}
 }
 

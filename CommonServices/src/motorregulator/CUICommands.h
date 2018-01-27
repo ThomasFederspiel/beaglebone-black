@@ -16,6 +16,14 @@
 
 class ICUICommandParser;
 class CUICommandContext;
+class ServiceAllocator;
+
+class CUICommands final
+{
+public:
+	static void registerCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service);
+	static void unregisterCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service);
+};
 
 class SetMotorSpeedCommand final : public AbstractCUICommand
 {
@@ -28,6 +36,56 @@ protected:
 	void genShortDesc(std::ostream& stream) const override;
 
 private:
+	void parse(const ICUICommandParser& commandParser, CUICommandContext& context);
+
+	MotorRegulatorService& m_service;
+};
+
+class SetMotorDistanceCommand final : public AbstractCUICommand
+{
+public:
+	SetMotorDistanceCommand(MotorRegulatorService& service);
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+
+private:
+	void parse(const ICUICommandParser& commandParser, CUICommandContext& context);
+
+	MotorRegulatorService& m_service;
+};
+
+class SetRegulatorModeCommand final : public AbstractCUICommand
+{
+public:
+	SetRegulatorModeCommand(MotorRegulatorService& service);
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+
+private:
+	void parse(const ICUICommandParser& commandParser, CUICommandContext& context);
+
+	MotorRegulatorService& m_service;
+};
+
+class GetMotorStatusCommand final : public AbstractCUICommand
+{
+public:
+	GetMotorStatusCommand(MotorRegulatorService& service);
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+
+private:
+	void parse(const ICUICommandParser& commandParser, CUICommandContext& context);
+
 	MotorRegulatorService& m_service;
 };
 

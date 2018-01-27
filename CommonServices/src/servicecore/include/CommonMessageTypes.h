@@ -27,7 +27,7 @@ public:
 
 	enum Type
 	{
-		MotionMessage = exports::MessageTypes::MotionMessage,
+		MotorServiceCUIMessage = exports::MessageTypes::MotorServiceCUIMessage,
 		SoundMessage = exports::MessageTypes::SoundMessage,
 		NetManageMessage = exports::MessageTypes::NetManageMessage,
 		LeftPropulsionOdometerMessage = exports::MessageTypes::LeftPropulsionOdometerMessage,

@@ -9,7 +9,6 @@
 
 // standard
 #include <algorithm>
-#include <cmath>
 
 // project
 #include "exceptionMacros.h"
@@ -37,11 +36,11 @@ MODULE_LOG(MotorDriver8833);
 namespace
 {
 	static constexpr uint16_t PWMFreq = 25000;
-	static constexpr float StallLevel = 0.62f;
 }
 
 MotorDriver8833::Motor::Motor(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice) :
 		m_epwmProxy(proxy, pwmssDevice), m_pwmsProxy(proxy, pwmssDevice),
+		m_pwmssDevice(pwmssDevice),
 		m_state(Motor::State::Stopped), m_pwmPeriod(0), m_pwmDuty(0), m_pwmEnabled(false),
 		m_decay(Motor::Decay::Fast), m_directionChannel(PWM_CH_B), m_pwmChannel(PWM_CH_A)
 {
@@ -65,21 +64,14 @@ void MotorDriver8833::Motor::close()
 	m_epwmProxy.close();
 }
 
-void MotorDriver8833::Motor::setSpeed(const float speed)
+uint16_t MotorDriver8833::Motor::getControlSignalMax() const
 {
-	const bool forward = speed > 0.f;
-	const float absSpeed = std::min(std::fabs(speed), 100.f);
+	return m_pwmPeriod;
+}
 
-	if (absSpeed < 1e-5f)
-	{
-		stop();
-
-		return;
-	}
-
-	const uint16_t pwmDuty = static_cast<uint16_t>(m_pwmPeriod * ((1.f - StallLevel) * absSpeed / 100.f + StallLevel));
-
-	apply(forward, pwmDuty);
+PwmssDeviceEnum MotorDriver8833::Motor::getPwmssDevice() const
+{
+	return m_pwmssDevice;
 }
 
 void MotorDriver8833::Motor::setDecay(const Motor::Decay decay)
@@ -131,8 +123,10 @@ void MotorDriver8833::Motor::coast()
 	m_state = State::Coasting;
 }
 
-void MotorDriver8833::Motor::apply(const bool forward, const uint16_t duty)
+void MotorDriver8833::Motor::setControlSignal(const bool forward, const uint16_t signal)
 {
+	TB_ASSERT((signal >= 0) && (signal <= getControlSignalMax()));
+
 	switch (m_state)
 	{
 	case State::Forward:
@@ -175,10 +169,8 @@ void MotorDriver8833::Motor::apply(const bool forward, const uint16_t duty)
 	TB_DEFAULT(toString(m_state));
 	}
 
-	m_pwmDuty = duty;
-
 	// ;+
-	INFO("duty = " << m_pwmDuty);
+	INFO("m_pwmDuty = " << signal);
 
 	if (m_decay == Decay::Slow)
 	{
@@ -195,7 +187,7 @@ void MotorDriver8833::Motor::apply(const bool forward, const uint16_t duty)
 		m_pwmEnabled = true;
 	}
 
-	m_epwmProxy.getChannel(m_pwmChannel).setDuty(m_pwmDuty);
+	m_epwmProxy.getChannel(m_pwmChannel).setDuty(signal);
 }
 
 void MotorDriver8833::Motor::selectChannels(const bool forward)
@@ -237,7 +229,8 @@ void MotorDriver8833::Motor::selectChannels(const bool forward)
 MotorDriver8833::MotorDriver8833(IPCDeviceProxyService& proxy,
 		const PwmssDeviceEnum leftMotorPwmDevice, const PwmssDeviceEnum rightMotorPwmDevice,
 		const IPCDeviceGpioProxy::GpioPins nSleep, const IPCDeviceGpioProxy::GpioPins nFault) :
-				m_leftMotor(proxy, leftMotorPwmDevice), m_rightMotor(proxy, rightMotorPwmDevice),
+				m_leftMotor(proxy, leftMotorPwmDevice),
+				m_rightMotor(proxy, rightMotorPwmDevice),
 				m_gpioProxy(proxy), m_nSleep(nSleep), m_nFault(nFault)
 {
 }
@@ -259,5 +252,4 @@ bool MotorDriver8833::isFaulty() const
 	// return !m_gpioProxy.isHigh();
 	return false;
 }
-
 

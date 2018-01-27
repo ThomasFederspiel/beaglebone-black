@@ -50,7 +50,7 @@ void NetManagerService::onMessage(const ServiceMessageBase& message)
 		executeAction(message.getCasted<NetManageMessage>());
 		break;
 
- 	TB_DEFAULT("Unhandled value " << CommonMessageTypes::toString(message.getType()));
+ 	TB_DEFAULT(CommonMessageTypes::toString(message.getType()));
 	}
 }
 

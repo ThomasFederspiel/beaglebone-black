@@ -27,8 +27,9 @@ public:
 	};
 
 	explicit PropulsionOdometerMessage(const Motor motor, const uint32_t capCounter,
-			const uint32_t capTime, const uint32_t capPeriod, const uint32_t counter) : ServiceMessageBase(getMessageType(motor)),
-					m_motor(motor), m_capCounter(capCounter), m_capTime(capTime), m_capPeriod(capPeriod), m_counter(counter)
+			const uint32_t capTime, const uint32_t capPeriod, const uint32_t counter, const float speedRPM) : ServiceMessageBase(getMessageType(motor)),
+					m_motor(motor), m_capCounter(capCounter), m_capTime(capTime), m_capPeriod(capPeriod), m_counter(counter),
+					m_speedRPM(speedRPM)
 	{
 	}
 
@@ -55,6 +56,11 @@ public:
 	uint32_t getCounter() const
 	{
 		return m_counter;
+	}
+
+	float getSpeedRPM() const
+	{
+		return m_speedRPM;
 	}
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
@@ -100,6 +106,7 @@ private:
 	uint32_t m_capTime;
 	uint32_t m_capPeriod;
 	uint32_t m_counter;
+	float m_speedRPM;
 };
 
 #endif /* PROPULSIONODOMETERMESSAGE_H_ */

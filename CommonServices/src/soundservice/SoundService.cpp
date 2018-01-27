@@ -48,8 +48,7 @@ void SoundService::onStart(ServiceAllocator& allocator)
 
 	m_stateMachine = tbox::make_unique<SoundServiceState>(*this, *m_ipcProxyService);
 
-	constexpr bool reg = true;
-	manageCUICommands(allocator, reg);
+	CUICommands::registerCUICommands(allocator, *this);
 }
 
 SoundService::StopStatus SoundService::onStop(ServiceAllocator& allocator)
@@ -58,8 +57,7 @@ SoundService::StopStatus SoundService::onStop(ServiceAllocator& allocator)
 	{
 		allocator.releaseService(m_ipcProxyService, *this);
 
-		constexpr bool reg = false;
-		manageCUICommands(allocator, reg);
+		CUICommands::unregisterCUICommands(allocator, *this);
 
 		return StopStatus::Done;
 	}
@@ -85,18 +83,7 @@ void SoundService::onMessage(const ServiceMessageBase& message)
 		m_stateMachine->emit(ServiceMessageFSMEvent(message));
 		break;
 
-	TB_DEFAULT("Unhandled value " << commonservices::CommonMessageTypes::toString(message.getType()));
+	TB_DEFAULT(commonservices::CommonMessageTypes::toString(message.getType()));
 	}
 }
 
-void SoundService::manageCUICommands(ServiceAllocator& allocator, const bool reg)
-{
-	if (reg)
-	{
-		allocator.registerCommand(tbox::make_unique<PlaySoundCommand>(*this));
-	}
-	else
-	{
-		allocator.unregisterCommand(PlaySoundCommand(*this));
-	}
-}

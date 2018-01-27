@@ -34,6 +34,16 @@ namespace
 	};
 }
 
+void CUICommands::registerCUICommands(ServiceAllocator& allocator, SoundService& service)
+{
+	allocator.registerCommand(tbox::make_unique<PlaySoundCommand>(service));
+}
+
+void CUICommands::unregisterCUICommands(ServiceAllocator& allocator, SoundService& service)
+{
+	allocator.unregisterCommand(PlaySoundCommand(service));
+}
+
 PlaySoundCommand::PlaySoundCommand(SoundService& service) : AbstractCUICommand(PlaySoundCmd, CommandPath),
 	m_service(service)
 {

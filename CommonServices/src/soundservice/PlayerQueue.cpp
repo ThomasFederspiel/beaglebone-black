@@ -103,7 +103,7 @@ void PlayerQueue::playSound(const SoundMessage::Sound sound)
 		Melody::playMarioUnderWorldTheme(m_playNote);
 		break;
 
-	TB_DEFAULT("Unhandled value " << SoundMessage::toString(sound));
+	TB_DEFAULT(SoundMessage::toString(sound));
 	}
 }
 

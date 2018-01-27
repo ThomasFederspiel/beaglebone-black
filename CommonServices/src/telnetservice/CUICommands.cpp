@@ -214,17 +214,3 @@ void QuitCommand::genShortDesc(std::ostream& stream) const
 	stream << "closes connection";
 }
 
-TstCommand::TstCommand() : AbstractSystemCUICommand("tst", "/dir1/dir2")
-{
-}
-
-void TstCommand::invoke(const ICUICommandParser& commandParser, CUICommandContextImpl& context)
-{
-	context.output() << "test command";
-	context.finalize();
-}
-
-void TstCommand::genShortDesc(std::ostream& stream) const
-{
-	stream << "test command";
-}

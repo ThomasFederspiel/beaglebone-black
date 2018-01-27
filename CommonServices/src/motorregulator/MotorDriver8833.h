@@ -13,6 +13,7 @@
 #include <string>
 
 // local
+#include "SpeedEvaluator.h"
 
 // project
 #include "IPCDeviceEPwmProxy.h"
@@ -43,10 +44,11 @@ public:
 		void close();
 		void coast();
 		void open();
-		void setDecay(const Decay decay);
-		void setSpeed(const float speed);
-		void selectChannels(const bool forward);
 		void stop();
+		void setDecay(const Decay decay);
+		void setControlSignal(const bool forward, const uint16_t signal);
+		PwmssDeviceEnum getPwmssDevice() const;
+		uint16_t getControlSignalMax() const;
 
 	private:
 		enum class State
@@ -56,6 +58,8 @@ public:
 			Forward,
 			Reverse
 		};
+
+		void selectChannels(const bool forward);
 
 		static const char* toString(const State state)
 		{
@@ -72,10 +76,9 @@ public:
 			#undef CASE
 		}
 
-		void apply(const bool forward, const uint16_t duty);
-
 		IPCDeviceEPwmProxy m_epwmProxy;
 		IPCDevicePwmsProxy m_pwmsProxy;
+		PwmssDeviceEnum m_pwmssDevice;
 
 		State m_state;
 		uint16_t m_pwmPeriod;
@@ -89,6 +92,18 @@ public:
 	explicit MotorDriver8833(IPCDeviceProxyService& proxy,
 			const PwmssDeviceEnum leftMotorPwmDevice, const PwmssDeviceEnum rightMotorPwmDevice,
 			const IPCDeviceGpioProxy::GpioPins nSleep, const IPCDeviceGpioProxy::GpioPins nFault);
+
+	void close()
+	{
+		m_leftMotor.close();
+		m_rightMotor.close();
+	}
+
+	void open()
+	{
+		m_leftMotor.open();
+		m_rightMotor.open();
+	}
 
 	void setSleepMode(const bool enable);
 	bool isFaulty() const;

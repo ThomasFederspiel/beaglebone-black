@@ -27,6 +27,7 @@ static void serialize(const PropulsionOdometerMessage& message, BinaryComSeriali
 	serializer << message.getCapTime();
 	serializer << message.getCapPeriod();
 	serializer << message.getCounter();
+	serializer << message.getSpeedRPM();
 }
 
 void serializeMessage(const ServiceMessageBase& message, BinaryComSerializer& serializer)
