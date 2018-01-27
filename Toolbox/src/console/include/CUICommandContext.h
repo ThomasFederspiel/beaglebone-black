@@ -26,6 +26,11 @@ public:
 		TB_ASSERT(m_impl);
 	}
 
+	std::shared_ptr<CUICommandContext> createInstance() const
+	{
+		return std::make_shared<CUICommandContext>(m_impl);
+	}
+
 	const std::string& newline() const
 	{
 		return m_impl->newline();

@@ -1,4 +1,4 @@
-MODULE_INCLUDES += logger exception 
+MODULE_INCLUDES += logger exception container
 MODULE_LIBRARIES += 
 
 SYSTEM_LIBRARIES +=

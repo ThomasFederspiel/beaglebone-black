@@ -146,7 +146,7 @@ void AbstractService::onSystemMessage(ServiceMessageBase& message)
 	}
 	break;
 
-	TB_DEFAULT("Unhandled system message type " << SystemMessageTypes::toString(systemMessage->getType()));
+	TB_DEFAULT(SystemMessageTypes::toString(systemMessage->getType()));
 	}
 }
 

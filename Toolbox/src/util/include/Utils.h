@@ -24,6 +24,7 @@ class Utils final
 public:
 
 	static bool isDigits(std::string str);
+	static bool isFloat(std::string str);
 
 	static bool split(std::string& str, std::string& token, const std::string& delimiter);
 	static std::string trim(std::string& str);

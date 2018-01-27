@@ -5,6 +5,6 @@ MODULE := boostasio
 C_FILES = $(wildcard *.c)
 CPP_FILES = $(wildcard *.cpp)
 
-STATIC_LIBRARY := libboostasio.a
+STATIC_LIBRARY := libtbox$(MODULE).a
 
 include ../../mk/top.mk

@@ -152,12 +152,17 @@ public:
 
 		const std::vector<std::string>& getDirectories() const
 		{
-			return m_directories;
+			return m_directories;getDirectories();
 		}
 
 		void appendDirectory(const std::string& dir)
 		{
-			m_directories.push_back(Utils::trim(dir, DirSeparator));
+			const auto path = getPath();
+
+			m_directories.clear();
+
+			const bool pathOnly = true;
+			parsePath(Utils::trim(path + DirSeparator + dir, DirSeparator), pathOnly);
 		}
 
 		void stripLeafDirectory()

@@ -26,6 +26,39 @@ bool Utils::isDigits(std::string str)
 	return trim(str).find_first_not_of("0123456789") == std::string::npos;
 }
 
+bool Utils::isFloat(std::string str)
+{
+	int index = 0;
+
+	trim(str);
+
+	if ((str.at(index) == '-') || (str.at(index) == '+'))
+	{
+		++index;
+	}
+
+	std::string valStr = str.substr(index);
+
+	auto dotIndex = valStr.find_first_of(".");
+
+	if (dotIndex == std::string::npos)
+	{
+		return false;
+	}
+
+	if (valStr.substr(0, dotIndex).find_first_not_of("0123456789") != std::string::npos)
+	{
+		return false;
+	}
+
+	if ((valStr.length() > (dotIndex + 1)) && (valStr.substr(dotIndex + 1, dotIndex).find_first_not_of("0123456789") != std::string::npos))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool Utils::split(std::string& str, std::string& token, const std::string& delimiter)
 {
 	const auto pos = str.find(delimiter);
