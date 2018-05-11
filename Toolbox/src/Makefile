@@ -3,6 +3,7 @@ MAKE_DIRS = $(subst /,,$(sort $(dir $(wildcard */))))
 all: allexternal
 #	@$(call make-clean,$(MAKE_DIRS))
 	$(MAKE) -C util MAKEFLAGS= all
+	$(MAKE) -C algorithms MAKEFLAGS= all
 	$(MAKE) -C common MAKEFLAGS= all
 	$(MAKE) -C concurrent MAKEFLAGS= all
 	$(MAKE) -C container MAKEFLAGS= all
@@ -17,6 +18,7 @@ all: allexternal
 	
 clean: cleanexternal
 	$(MAKE) -C util MAKEFLAGS= clean
+	$(MAKE) -C algorithms MAKEFLAGS= clean
 	$(MAKE) -C common MAKEFLAGS= clean
 	$(MAKE) -C concurrent MAKEFLAGS= clean
 	$(MAKE) -C container MAKEFLAGS= clean
