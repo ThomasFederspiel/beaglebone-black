@@ -28,7 +28,7 @@ public:
 	enum Type
 	{
 		SoundMessageEvent = exports::MessageTypes::SoundMessage,
-		IpcDeviceProxyMessageCompletedEvent = exports::MessageTypes::IpcDeviceProxyMessageCompleted,
+		IpcDeviceProxyMessageCompletedEvent = exports::MessageTypes::IPCDeviceProxyMessageCompleted,
 		EOEEvent = exports::FSMEventTypes::EOEEvent
 	};
 

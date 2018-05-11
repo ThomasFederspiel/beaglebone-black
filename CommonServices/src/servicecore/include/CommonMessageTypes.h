@@ -32,6 +32,8 @@ public:
 		NetManageMessage = exports::MessageTypes::NetManageMessage,
 		LeftPropulsionOdometerMessage = exports::MessageTypes::LeftPropulsionOdometerMessage,
 		RightPropulsionOdometerMessage = exports::MessageTypes::RightPropulsionOdometerMessage,
+		LeftPropulsionPidMessage = exports::MessageTypes::LeftPropulsionPidMessage,
+		RightPropulsionPidMessage = exports::MessageTypes::RightPropulsionPidMessage,
 		EOEMessage = exports::MessageTypes::EOEMessage
 	};
 
