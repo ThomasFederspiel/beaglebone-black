@@ -18,9 +18,7 @@
 
 // project
 #include "IIPCDeviceEPwmProxy.h"
-#include "IIPCDevicePwmsProxy.h"
 #include "IPCDeviceEPwmProxy.h"
-#include "IPCDevicePwmsProxy.h"
 #include "pru_epwm_types.hp"
 #include "pru_pwms_types.hp"
 
@@ -233,84 +231,6 @@ private:
 	PlayerQueueEPwmChannel m_channelB;
 	IEPwmChannel* m_defaultChannel;
 
-	bool m_completed;
-	bool m_terminated;
-	mutable std::mutex m_lock;
-	mutable std::condition_variable m_signal;
-};
-
-class PlayerQueuePwmsProxy final : public IIPCDevicePwmsProxy
-{
-public:
-
-	explicit PlayerQueuePwmsProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy,
-			const PwmssDeviceEnum pwmDevice) : m_proxy(receiver, proxy, pwmDevice),
-			m_completed(false), m_terminated(false), m_lock(), m_signal()
-	{
-	}
-
-	void open() override
-	{
-		std::unique_lock<std::mutex> lock(m_lock);
-
-		wait(lock, [this] { m_proxy.open(); });
-	}
-
-	void close() override
-	{
-		std::unique_lock<std::mutex> lock(m_lock);
-
-		wait(lock, [this] { m_proxy.close(); });
-	}
-
-	void completion()
-	{
-		std::unique_lock<std::mutex> lock(m_lock);
-
-		m_completed = true;
-
-		m_signal.notify_one();
-	}
-
-	void terminate()
-	{
-		std::unique_lock<std::mutex> lock(m_lock);
-
-		m_terminated = true;
-
-		m_signal.notify_one();
-	}
-
-	IPCDevicePwmsProxy& getPwmsProxy()
-	{
-		return m_proxy;
-	}
-
-private:
-
-	void wait(std::unique_lock<std::mutex>& lock, std::function<void()> action)
-	{
-		m_completed = false;
-
-		if (!m_terminated)
-		{
-			action();
-
-			m_signal.wait(lock, [&](){ return m_completed || m_terminated; });
-		}
-
-		const bool terminate = m_terminated;
-
-		m_completed = false;
-		m_terminated = false;
-
-		if (terminate)
-		{
-			throw PlayerQueueTermException();
-		}
-	}
-
-	IPCDevicePwmsProxy m_proxy;
 	bool m_completed;
 	bool m_terminated;
 	mutable std::mutex m_lock;

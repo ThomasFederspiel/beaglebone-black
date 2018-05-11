@@ -30,8 +30,7 @@ class PlayerQueue final : public IRunnable
 {
 public:
 
-	explicit PlayerQueue(IIPCDeviceEPwmProxy& epwmProxy,
-			IIPCDevicePwmsProxy& pwmsProxy);
+	explicit PlayerQueue(IIPCDeviceEPwmProxy& epwmProxy);
 
 	const std::string& name() const override;
 	void operator()() override;

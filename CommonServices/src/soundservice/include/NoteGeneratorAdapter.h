@@ -14,7 +14,6 @@
 // project
 #include "PlayNote.h"
 #include "IIPCDeviceEPwmProxy.h"
-#include "IIPCDevicePwmsProxy.h"
 
 class IMessageReceiver;
 class IPCDeviceProxyService;
@@ -38,10 +37,9 @@ public:
 	};
 
 	explicit NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy,
-			IIPCDevicePwmsProxy& pwmsProxy, INoteGeneratorContext& context);
+			INoteGeneratorContext& context);
 
-	explicit NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy,
-			IIPCDevicePwmsProxy& pwmsProxy);
+	explicit NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy);
 
 	NoteGeneratorAdapter(const NoteGeneratorAdapter&) = delete;
 	NoteGeneratorAdapter& operator=(const NoteGeneratorAdapter&) = delete;
@@ -56,7 +54,6 @@ private:
 	void wait(const uint16_t duration);
 
 	IIPCDeviceEPwmProxy& m_ipcDeviceEPwmProxy;
-	IIPCDevicePwmsProxy& m_ipcDevicePwmsProxy;
 	INoteGeneratorContext& m_context;
 };
 

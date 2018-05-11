@@ -79,7 +79,7 @@ void SoundService::onMessage(const ServiceMessageBase& message)
 		m_stateMachine->emit(ServiceMessageFSMEvent(message));
 	break;
 
-	case pruipcservice::IPCMessageTypes::Type::IpcDeviceProxyMessageCompleted:
+	case pruipcservice::IPCMessageTypes::Type::IPCDeviceProxyMessageCompleted:
 		m_stateMachine->emit(ServiceMessageFSMEvent(message));
 		break;
 

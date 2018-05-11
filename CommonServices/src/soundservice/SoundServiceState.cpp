@@ -39,8 +39,7 @@ FSM_TABLE_BEGIN(SoundServiceState)
 FSM_TABLE_END()
 
 SoundServiceState::SoundServiceState(IMessageReceiver& receiver, IPCDeviceProxyService& m_proxyService) : FSM_CONSTRUCTOR(startState),
-	m_messageReceiver(receiver), m_ipcProxyService(m_proxyService), m_epwmProxy(), m_pwmsProxy(), m_playerQueue(),
-	m_completionCount(0)
+	m_messageReceiver(receiver), m_ipcProxyService(m_proxyService), m_epwmProxy(), m_playerQueue(), m_completionCount(0)
 {
 	init();
 }
@@ -82,7 +81,6 @@ void SoundServiceState::activeState(const FSMEvent& event)
 	{
 		// One of them will react the other will ignore
 		m_epwmProxy->completion();
-		m_pwmsProxy->completion();
 	}
 	break;
 
@@ -90,7 +88,6 @@ void SoundServiceState::activeState(const FSMEvent& event)
 
 		m_playerQueue->shutdown();
 		m_epwmProxy->terminate();
-		m_pwmsProxy->terminate();
 
 		FSM_TRANSITION(waitOnFinishState);
 		break;
@@ -112,7 +109,6 @@ void SoundServiceState::waitOnFinishState(const FSMEvent& event)
 		if (m_playerQueue->isShutdown())
 		{
 			m_epwmProxy->getEPwmProxy().close();
-			m_pwmsProxy->getPwmsProxy().close();
 
 			FSM_TRANSITION(stopState);
 		}
@@ -138,7 +134,7 @@ void SoundServiceState::stopState(const FSMEvent& event)
 	case commonservices::CommonEventTypes::Type::IpcDeviceProxyMessageCompletedEvent:
 		++m_completionCount;
 
-		if (m_completionCount == 2)
+		if (m_completionCount == 1)
 		{
 			terminate();
 		}
@@ -150,9 +146,8 @@ void SoundServiceState::stopState(const FSMEvent& event)
 void SoundServiceState::startPlayerQueue()
 {
 	m_epwmProxy = tbox::make_unique<PlayerQueueEPwmProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice, SpeakerEPwmChannel);
-	m_pwmsProxy = tbox::make_unique<PlayerQueuePwmsProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice);
 
-	m_playerQueue = tbox::make_unique<PlayerQueue>(*m_epwmProxy, *m_pwmsProxy);
+	m_playerQueue = tbox::make_unique<PlayerQueue>(*m_epwmProxy);
 
 	ThreadFactory::thread_t thread = ThreadFactory::instance().createThread(*m_playerQueue);
 	thread->start();

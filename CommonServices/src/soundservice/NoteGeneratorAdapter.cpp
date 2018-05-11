@@ -20,15 +20,13 @@ namespace
 static NoteGeneratorAdapter::DefaultContext s_defaultContext;
 }
 
-NoteGeneratorAdapter::NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy,
-		IIPCDevicePwmsProxy& pwmsProxy)
-	: NoteGeneratorAdapter(epwmProxy, pwmsProxy, s_defaultContext)
+NoteGeneratorAdapter::NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy)
+	: NoteGeneratorAdapter(epwmProxy, s_defaultContext)
 {
 }
 
-NoteGeneratorAdapter::NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy,
-		IIPCDevicePwmsProxy& pwmsProxy, INoteGeneratorContext& context)
-	: m_ipcDeviceEPwmProxy(epwmProxy), m_ipcDevicePwmsProxy(pwmsProxy), m_context(context)
+NoteGeneratorAdapter::NoteGeneratorAdapter(IIPCDeviceEPwmProxy& epwmProxy, INoteGeneratorContext& context)
+	: m_ipcDeviceEPwmProxy(epwmProxy), m_context(context)
 {
 }
 
@@ -39,7 +37,6 @@ void NoteGeneratorAdapter::DefaultContext::wait(const std::chrono::milliseconds&
 
 void NoteGeneratorAdapter::open()
 {
-	m_ipcDevicePwmsProxy.open();
 	m_ipcDeviceEPwmProxy.open();
 
 	const uint16_t pwmPeriod = m_ipcDeviceEPwmProxy.armFreq(PlayNote::MinFreq);
@@ -49,7 +46,6 @@ void NoteGeneratorAdapter::open()
 void NoteGeneratorAdapter::close()
 {
 	m_ipcDeviceEPwmProxy.close();
-	m_ipcDevicePwmsProxy.close();
 }
 
 void NoteGeneratorAdapter::wait(const uint16_t duration)

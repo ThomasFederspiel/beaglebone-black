@@ -22,7 +22,6 @@
 class FSMEvent;
 class PlayerQueue;
 class PlayerQueueEPwmProxy;
-class PlayerQueuePwmsProxy;
 
 class SoundServiceState final : public StateMachine<SoundServiceState>
 {
@@ -53,7 +52,6 @@ private:
 	IPCDeviceProxyService& m_ipcProxyService;
 
 	std::unique_ptr<PlayerQueueEPwmProxy> m_epwmProxy;
-	std::unique_ptr<PlayerQueuePwmsProxy> m_pwmsProxy;
 	std::unique_ptr<PlayerQueue> m_playerQueue;
 
 	std::size_t m_completionCount;
