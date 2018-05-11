@@ -49,6 +49,19 @@ public:
 		RcOk = 0
 	};
 
+    static const char* toString(const RCEnum rc)
+    {
+        #define CASE(v) case v: return #v;
+        switch (rc)
+        {
+            CASE(RCEnum::RcError)
+            CASE(RCEnum::RcOk)
+        }
+        static std::string tmp = std::to_string(static_cast<int>(rc));
+        return tmp.c_str();
+        #undef CASE
+    }
+
 	class HostDirectionPruEventChannel
 	{
 	public:

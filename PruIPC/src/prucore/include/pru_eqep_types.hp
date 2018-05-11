@@ -40,6 +40,7 @@ typedef enum
 
 typedef enum 
 {
+	EQEP_UNIT_TIMER_PERIOD_1000ms = 0x5F5E100,	// @100 MHz, period 1000 ms
 	EQEP_UNIT_TIMER_PERIOD_200ms = 0x1312D00,	// @100 MHz, period 200 ms
 	EQEP_UNIT_TIMER_PERIOD_100ms = 0x989680,	// @100 MHz, period 100 ms
 	EQEP_UNIT_TIMER_PERIOD_50ms = 0x4C4B40,		// @100 MHz, period 50 ms
@@ -49,6 +50,15 @@ typedef enum
 	EQEP_UNIT_TIMER_PERIOD_2ms = 0x30D40,		// @100 MHz, period 2 ms
 	EQEP_UNIT_TIMER_PERIOD_1ms = 0x186A0		// @100 MHz, period 1 ms
 } EQepUnitTimerPeriod;
+
+typedef enum
+{
+	EQEP_QUADRATURE_DEFAULT_MODE = 0,
+	EQEP_QUADRATURE_SWAP_MODE = BIT(10),
+	EQEP_DIRECTION_COUNT_MODE = BIT(14),
+	EQEP_UP_COUNT_MODE = BIT(15),
+	EQEP_DOWN_COUNT_MODE = BIT(14) | BIT(15)
+} EQepCounterModeEnum;
 
 typedef enum 
 {

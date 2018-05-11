@@ -16,7 +16,6 @@
 #include "PrussDriver.h"
 #include "pru_ipc_devices.hp"
 #include "pru_ipc_types.hp"
-#include "pru_shram_layout.hp"
 
 // ;+ Remove no longer needed
 

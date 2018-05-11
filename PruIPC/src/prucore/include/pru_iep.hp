@@ -11,7 +11,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define IEP_MAX_COUNTER 0xffffffff // 32 bit couner 
+
+typedef enum
+{
+	IEP_TIME_SLOT_1_MS = 0,
+	IEP_TIME_SLOT_10_MS,
+	IEP_TIME_SLOT_100_MS,
+	IEP_TIME_SLOT_1_S
+} IEP_TIME_SLOT;
+
+#define IEP_MAX_COUNTER 0xffffffff // 32 bit counter 
 #define IEP_CLOCK_CYCLE 5 // @ 200 MHz => 5 ns
 
 #define IEP_DEFAULT_INC_USEC(usec) ((uint64_t) usec) * 1000 / IEP_MAX_COUNTER / 5 + 1

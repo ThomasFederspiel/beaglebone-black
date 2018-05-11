@@ -9,31 +9,36 @@
 
 #include "pru_reg.hp"
 
-volatile PruPerModuleClk* const perModuleClkTable[] =
+volatile uint32_t* const perModuleClkTable[] =
 {
-	&CM_PER.EPWMSS0_CLKCTLR_bit,
-	&CM_PER.EPWMSS1_CLKCTLR_bit,
-	&CM_PER.EPWMSS2_CLKCTLR_bit
+	&CM_PER.EPWMSS0_CLKCTLR,
+	&CM_PER.EPWMSS1_CLKCTLR,
+	&CM_PER.EPWMSS2_CLKCTLR
 };
+
+uint32_t getModuleClockRegister(const PerModuleClkEnum clk)
+{
+	volatile uint32_t* const modClk = perModuleClkTable[clk];
+
+	return *modClk;
+}
 
 void enableModuleClock(const PerModuleClkEnum clk)
 {
-	volatile PruPerModuleClk* const modClk = perModuleClkTable[clk];
-			
-    /* Enable module clock signal generation */
-    while (modClk->modulemode != PER_MODULE_MODE_EN)
-    {
-    	modClk->modulemode = PER_MODULE_MODE_EN;
-    }
+	volatile uint32_t* const modClk = perModuleClkTable[clk];
+
+	*modClk = PER_MODULE_MODE_EN;
+	
+	/* Enable module clock signal generation */
+	while ((*modClk & PER_MODULE_MODE) != PER_MODULE_MODE_EN);
 }
 
 void disableModuleClock(const PerModuleClkEnum clk)
 {
-	volatile PruPerModuleClk* const modClk = perModuleClkTable[clk];
-			
-    /* Disable module clock signal generation */
-    while (modClk->modulemode != PER_MODULE_MODE_DIS)
-    {
-    	modClk->modulemode = PER_MODULE_MODE_DIS;
-    }
+	volatile uint32_t* const modClk = perModuleClkTable[clk];
+	
+	*modClk = PER_MODULE_MODE_DIS;
+	
+	/* Disable module clock signal generation */
+// ;+ while ((*modClk & PER_MODULE_MODE) != PER_MODULE_MODE_DIS);
 }

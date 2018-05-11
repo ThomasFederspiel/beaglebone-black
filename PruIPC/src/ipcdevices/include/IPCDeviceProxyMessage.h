@@ -34,7 +34,7 @@ public:
 	{
 	public:
 		ProxyMessageCompleted(const IPCDeviceEnum device,
-				const uint32_t ioctl) : IPCResponseBase(IPCMessageTypes::Type::IpcDeviceProxyMessageCompleted),
+				const uint32_t ioctl) : IPCResponseBase(IPCMessageTypes::Type::IPCDeviceProxyMessageCompleted),
 				m_device(device), m_ioctl(ioctl)
 		{
 		}
@@ -59,7 +59,7 @@ public:
 		uint32_t m_ioctl;
 	};
 
-	explicit IPCDeviceProxyMessage(IMessageReceiver& receiver, const uint8_t* const data, const uint8_t size) : IPCMessageBase(receiver, IPCMessageTypes::Type::IpcDeviceProxyMessage),
+	explicit IPCDeviceProxyMessage(IMessageReceiver& receiver, const uint8_t* const data, const uint8_t size) : IPCMessageBase(receiver, IPCMessageTypes::Type::IPCDeviceProxyMessage),
 		m_data(nullptr), m_size(size)
 	{
 		TB_ASSERT(data);

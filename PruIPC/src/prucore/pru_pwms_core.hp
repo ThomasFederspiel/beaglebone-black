@@ -26,8 +26,6 @@ typedef enum
 	LAST_PWM_MODULE
 }  PwmssModuleEnum;
 
-#pragma pack(1)
-
 /* PRU_PWM subsytem register set */
 typedef struct
 {
@@ -49,6 +47,7 @@ typedef struct
 
 extern volatile PruPwmsModule const pwmsRegisterBase[];
 
+void getPWMSSModuleRegisterTrace(const PwmssDeviceEnum pwmssDevice, uint32_t* trace);
 void enablePWMSSClock(const PwmssDeviceEnum pwmssDevice, const PwmssModuleEnum module, const bool enable);
 
 #endif /* PRU_PWMS_CORE_HP_ */

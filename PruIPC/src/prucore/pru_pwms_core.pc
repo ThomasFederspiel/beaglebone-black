@@ -20,6 +20,15 @@ volatile PruPwmsModule const pwmsRegisterBase[] =
 	{ PerEPWMSS2, &CT_HRPWM3 }
 };
 
+void getPWMSSModuleRegisterTrace(const PwmssDeviceEnum pwmssDevice, uint32_t* trace)
+{
+	volatile pruPwms* const pruPwms = pwmsRegisterBase[pwmssDevice].module;
+	
+    trace[0] = getModuleClockRegister(pwmsRegisterBase[pwmssDevice].clk);
+    trace[1] = pruPwms->pwmss.CLKCONFIG;
+    trace[2] = pruPwms->pwmss.CLKSTATUS;
+}
+
 void enablePWMSSModule(const PwmssDeviceEnum pwmssDevice, const bool enable)
 {
 	if (enable)
@@ -38,17 +47,54 @@ void enablePWMSSClock(const PwmssDeviceEnum pwmssDevice, const PwmssModuleEnum m
 	
 	if (enable)
 	{
+		switch (module)
+		{
+		case PWMSS_MODULE_EPWM:
+// ;+	    while ((pruPwms->pwmss.CLKSTATUS & EPWM_CLK_EN_MASK) == 0)
+//	    {
+	    	pruPwms->pwmss.CLKCONFIG |= EPWM_CLK_EN_MASK;
+//	    }
+	    	break;
+		case PWMSS_MODULE_EQEP:
 // ;+	    while ((pruPwms->pwmss.CLKSTATUS & EQEP_CLK_EN_MASK) == 0)
 //	    {
 	    	pruPwms->pwmss.CLKCONFIG |= EQEP_CLK_EN_MASK;
 //	    }
+	    	break;
+		case PWMSS_MODULE_ECAP:
+// ;+	    while ((pruPwms->pwmss.CLKSTATUS & ECAP_CLK_EN_MASK) == 0)
+//	    {
+	    	pruPwms->pwmss.CLKCONFIG |= ECAP_CLK_EN_MASK;
+//	    }
+	    	break;
+		}
 	}
 	else
 	{
+		switch (module)
+		{
+		case PWMSS_MODULE_EPWM:
+//	;+    while ((pruPwms->pwmss.CLKSTATUS & EPWM_CLK_STOP_REQ_MASK) == 0)
+//	    {
+// Currently disabled as failing to turn on clocks again after they have been stopped
+//			pruPwms->pwmss.CLKCONFIG |= EPWM_CLK_STOP_REQ_MASK;
+//	    }
+	    	break;
+		case PWMSS_MODULE_EQEP:
 //	;+    while ((pruPwms->pwmss.CLKSTATUS & EQEP_CLK_STOP_REQ_MASK) == 0)
 //	    {
-	    	pruPwms->pwmss.CLKCONFIG |= EQEP_CLK_STOP_REQ_MASK;
+// Currently disabled as failing to turn on clocks again after they have been stopped
+//			pruPwms->pwmss.CLKCONFIG |= EQEP_CLK_STOP_REQ_MASK;
 //	    }
+	    	break;
+		case PWMSS_MODULE_ECAP:
+//	;+    while ((pruPwms->pwmss.CLKSTATUS & ECAP_CLK_STOP_REQ_MASK) == 0)
+//	    {
+// Currently disabled as failing to turn on clocks again after they have been stopped
+//			pruPwms->pwmss.CLKCONFIG |= ECAP_CLK_STOP_REQ_MASK;
+//	    }
+	    	break;
+		}
 	}
 }
 

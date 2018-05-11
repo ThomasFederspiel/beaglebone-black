@@ -8,6 +8,8 @@
 #ifndef PRU_PER_HP_
 #define PRU_PER_HP_
 
+#include <stdint.h>
+
 typedef enum
 {
 	PerEPWMSS0 = 0,
@@ -15,6 +17,7 @@ typedef enum
 	PerEPWMSS2
 } PerModuleClkEnum;
 
+uint32_t getModuleClockRegister(const PerModuleClkEnum clk);
 void enableModuleClock(const PerModuleClkEnum clk);
 void disableModuleClock(const PerModuleClkEnum clk);
 

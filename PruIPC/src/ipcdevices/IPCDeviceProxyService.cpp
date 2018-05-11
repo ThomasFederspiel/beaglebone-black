@@ -17,7 +17,6 @@
 #include "Logger.h"
 #include "pru_ipc_devices.hp"
 #include "pru_ipc_types.hp"
-#include "pru_shram_layout.hp"
 #include "tboxdefs.h"
 #include "Stringifyer.h"
 
@@ -30,7 +29,7 @@ namespace
 	static const std::string IPCEventRunnableName("IPCEventRunnable");
 };
 
-MODULE_LOG(IPCDeviceProxyService);
+MODULE_LOG_OFF(IPCDeviceProxyService);
 
 IPCDeviceProxyService::IPCDeviceProxyService(const std::string& name, const PrussDriver::PruProxy::PruIdEnum pruId, PrussDriver::BiDirectionPruEventChannelPtr biDirectionEventChannel) :
 		IPCDeviceProxyService(name, pruId, biDirectionEventChannel, PrussDriver::HostDirectionPruEventChannelPtr())
@@ -97,7 +96,7 @@ void IPCDeviceProxyService::onMessage(const IPCMessageBase& message)
 
 	switch (message.getType())
 	{
-	case IPCMessageTypes::Type::IpcDeviceProxyMessage:
+	case IPCMessageTypes::Type::IPCDeviceProxyMessage:
 	{
 		const auto& proxyMessage = message.getCasted<IPCDeviceProxyMessage>();
 
