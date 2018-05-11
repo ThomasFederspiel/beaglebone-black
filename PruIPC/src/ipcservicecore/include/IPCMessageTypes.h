@@ -27,9 +27,10 @@ public:
 
 	enum Type
 	{
-		IpcDeviceProxyMessage = exports::MessageTypes::IpcDeviceProxyMessage,
-		IpcDeviceProxyMessageCompleted = exports::MessageTypes::IpcDeviceProxyMessageCompleted,
-		IpcDeviceProxyEventEQEP = exports::MessageTypes::IpcDeviceProxyEventEQEP
+		IPCDeviceProxyMessage = exports::MessageTypes::IPCDeviceProxyMessage,
+		IPCDeviceProxyMessageCompleted = exports::MessageTypes::IPCDeviceProxyMessageCompleted,
+		IPCDeviceProxyEventEQEP = exports::MessageTypes::IPCDeviceProxyEventEQEP,
+		IPCDeviceProxyEventTrace = exports::MessageTypes::IPCDeviceProxyEventTrace
 	};
 
 	static const char* toString(const MessageType_t id)

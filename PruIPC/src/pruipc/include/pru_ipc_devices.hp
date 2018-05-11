@@ -16,7 +16,8 @@ enum IPCDeviceEnum
 	IPCDevicePwms,
 	IPCDeviceGpio,
 	IPCDeviceECap,
-	IPCDeviceEQep
+	IPCDeviceEQep,
+	IPCDeviceTrace
 };
 
 extern const char* toDeviceString(const enum IPCDeviceEnum device);

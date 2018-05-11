@@ -1,0 +1,26 @@
+/*
+ * pru_ipc_device_trace_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_TRACE_TYPES_HP_
+#define PRU_IPC_DEVICE_TRACE_TYPES_HP_
+
+#include <stdint.h>
+
+#include "pru_ipc_types.hp"
+
+enum IPCDeviceTraceIoctlEnum
+{
+	IPCDeviceTrace_Status = 0
+};
+
+struct __attribute__((__packed__)) IPCDeviceTrace_Status
+{
+	struct IPCDeviceIoctl device;
+	uint32_t traceData[6];
+};
+
+#endif /* PRU_IPC_DEVICE_TRACE_TYPES_HP_ */
