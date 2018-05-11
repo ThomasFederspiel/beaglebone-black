@@ -32,6 +32,9 @@ public:
 	template <typename T>
 	static T fromHexStr(const std::string& str);
 
+	template <typename T>
+	static std::string toBinaryStr(const T value);
+
 	static bool mkdir(const std::string& path, const bool recursive);
 
 	static std::string ensureEnd(std::string str, const std::string& ensureStr);
@@ -53,5 +56,22 @@ T Utils::fromHexStr(const std::string& str)
 
     return x;
 }
+
+template <typename T>
+std::string Utils::toBinaryStr(const T value)
+{
+	std::string str(sizeof(T) * 8, '0');
+
+	T mask = 0x01 << (str.size() - 1);
+
+	for (std::size_t i = 0; i < str.size(); ++i)
+	{
+		str.at(i) = value & mask ? '1' : '0';
+		mask >>= 1;
+	}
+
+	return str;
+}
+
 
 #endif /* TBOX_UTILS_H_ */

@@ -9,10 +9,13 @@
 #define TBOX_TIMETRACKER_H_
 
 // standard
+#include <algorithm>
 #include <chrono>
+#include <limits>
+#include <vector>
 
 // project
-#include "circular.h"
+#include "Circular.h"
 
 template <typename Dur, std::size_t CAPACITY = 100>
 class TimeTracker final
@@ -29,11 +32,16 @@ public:
 	void addPoint()
 	{
 		auto now = std::chrono::steady_clock::now();
-		Dur timeDiff = 0;
+		Dur timeDiff(0);
 
 		if (!m_buffer.empty())
 		{
-			timeDiff = now - m_buffer.back().m_time;
+			timeDiff = std::chrono::duration_cast<Dur>(now - m_buffer.back().m_time);
+
+			if ((m_buffer.size() == 1) && (m_buffer.back().m_duration.count() == 0))
+			{
+				m_buffer.clear();
+			}
 		}
 
 		m_buffer.push_back(TimePoint(now, timeDiff));
@@ -42,6 +50,84 @@ public:
 	void clear()
 	{
 		m_buffer.clear();
+	}
+
+	bool full() const
+	{
+		return m_buffer.size() == m_buffer.capacity();
+	}
+
+	Dur getMedian()
+	{
+		Dur median(0);
+
+		if (m_buffer.size() == 1)
+		{
+			median = m_buffer.back().m_duration;
+		}
+		else if (m_buffer.size() > 1)
+		{
+			std::vector<TimePoint> collection(m_buffer.begin(), m_buffer.end());
+
+			std::sort(collection.begin(), collection.end(), [](TimePoint a, TimePoint b)
+			{
+				return a.m_duration > b.m_duration;
+			});
+
+			if (collection.size() % 2 == 0)
+			{
+				median = (collection.at(collection.size() / 2).m_duration
+						+ collection.at(collection.size() / 2 + 1).m_duration) / 2;
+			}
+			else
+			{
+				median = collection.at(collection.size() / 2 + 1).m_duration;
+			}
+		}
+
+		return median;
+	}
+
+	Dur getMean()
+	{
+		Dur sum(0);
+
+		for (const auto& point : m_buffer)
+		{
+			sum += point.m_duration;
+		}
+
+		return sum / m_buffer.size();
+	}
+
+	Dur getMax()
+	{
+		Dur max(0);
+
+		for (const auto& point : m_buffer)
+		{
+			if (max < point.m_duration)
+			{
+				max = point.m_duration;
+			}
+		}
+
+		return max;
+	}
+
+	Dur getMin()
+	{
+		Dur min(std::numeric_limits<typename Dur::rep>::max());
+
+		for (const auto& point : m_buffer)
+		{
+			if (min > point.m_duration)
+			{
+				min = point.m_duration;
+			}
+		}
+
+		return min;
 	}
 
 private:
@@ -63,3 +149,4 @@ private:
 };
 
 #endif /* TBOX_TIMETRACKER_H_ */
+#include <chrono>

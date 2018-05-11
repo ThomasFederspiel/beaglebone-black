@@ -35,7 +35,7 @@ void AbstractEventMessagePublisher::publishEvent(const ServiceMessageBase& messa
 {
 	const auto item = m_messageSubscriberMap.find(message.getType());
 
-	TB_ASSERT(item != m_messageSubscriberMap.end());
+	TB_ASSERT(item != m_messageSubscriberMap.end(), "Message not registered " << message.getType());
 
 	for (const auto& subscribers : item->second)
 	{

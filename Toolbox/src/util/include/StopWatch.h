@@ -11,6 +11,7 @@
 // standard
 #include <chrono>
 
+template <typename Dur>
 class StopWatch final
 {
 public:
@@ -32,32 +33,12 @@ public:
 		m_mark = std::chrono::steady_clock::now();
 	}
 
-	std::chrono::milliseconds::rep durationAsMs() const
+	typename Dur::rep duration() const
 	{
-		return std::chrono::duration_cast<std::chrono::milliseconds>(duration()).count();
-	}
-
-	std::chrono::microseconds::rep durationAsUs()  const
-	{
-		return duration().count();
-	}
-
-	std::chrono::milliseconds::rep markDurationAsMs()  const
-	{
-		return std::chrono::duration_cast<std::chrono::milliseconds>(m_mark - m_startTime).count();
-	}
-
-	std::chrono::microseconds::rep markDurationAsUs()  const
-	{
-		return std::chrono::duration_cast<std::chrono::microseconds>(m_mark - m_startTime).count();
+		return std::chrono::duration_cast<Dur>(std::chrono::steady_clock::now() - m_startTime).count();
 	}
 
 private:
-
-	std::chrono::microseconds duration() const
-	{
-		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_startTime);
-	}
 
 	std::chrono::steady_clock::time_point m_startTime;
 	std::chrono::steady_clock::time_point m_mark;
