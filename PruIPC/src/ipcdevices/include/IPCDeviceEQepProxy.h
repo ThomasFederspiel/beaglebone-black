@@ -24,8 +24,11 @@ public:
 	explicit IPCDeviceEQepProxy(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice);
 	explicit IPCDeviceEQepProxy(IMessageReceiver& receiver, IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmDevice);
 
+	void open() override;
+	void close() override;
 	void enableEQepQuadrature(const EQepUnitTimerPeriod utimerPeriod,
-			const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor) override;
+			const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor,
+			const EQepCounterModeEnum mode) override;
 	void disableEQep() override;
 
 private:

@@ -12,10 +12,21 @@
 
 #include "pru_pwms_core.hp"
 
+struct EQepContext
+{
+	uint16_t unitTime_ms;
+	uint16_t ueventPulses;
+	uint16_t captureTimeTick_ns;
+};
+
 static const struct EQepInterruptHandlerSpec* m_eQepInterruptTable = NULL;
-static uint16_t m_unitTime_ms = 0;
-static uint16_t m_ueventPulses = 0;
-static uint16_t m_captureTimeTick_ns = 0;
+
+static struct EQepContext m_eQepContexts[LAST_PWM_DEV] =
+{
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 }
+};
 
 static void setEQepCounterMode(volatile pruEQep* const eQep, const EQepCounterModeEnum mode)
 {
@@ -36,7 +47,7 @@ static void disableEQepInterrupts()
  			eQep->QEINT_QFLG.QEINT &= ~interruptTable->intrFlags;
 			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
 			
-			interruptTable++;
+			++interruptTable;
 		}
 	}
 }
@@ -54,9 +65,27 @@ static void enableEQepInterrupts()
 			eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
 			eQep->QEINT_QFLG.QEINT |= interruptTable->intrFlags;
 			
-			interruptTable++;
+			++interruptTable;
 		}
 	}
+}
+
+void getEQepRegisterTrace(const PwmssDeviceEnum pwmssDevice, uint32_t* trace)
+{
+	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
+	
+	volatile struct EQepContext* const eQepContext = &m_eQepContexts[pwmssDevice];
+	
+    trace[0] = eQep->QCAPCTL_QPOSCTL.QCAPCTL;
+	trace[1] = eQep->QUPRD;
+	trace[2] = eQep->QEINT_QFLG.QFLG;
+	trace[3] = eQep->QEINT_QFLG.QEINT;
+	trace[4] = eQep->QDECCTL_QEPCTL.QEPCTL;
+}
+
+void enableEQepClock(const PwmssDeviceEnum pwmssDevice, const bool enable)
+{
+	enablePWMSSClock(pwmssDevice, PWMSS_MODULE_EQEP, enable);
 }
 
 void disableEQep(const PwmssDeviceEnum pwmssDevice)
@@ -77,15 +106,17 @@ void disableEQep(const PwmssDeviceEnum pwmssDevice)
 
 void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimerPeriod utimerPeriod,
 		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor,
+		const EQepCounterModeEnum mode, 
 		const uint16_t unitTime_ms, const uint16_t ueventPulses, const uint16_t captureTimeTick_ns)
 {
 	volatile pruEQep* const eQep = &pwmsRegisterBase[pwmssDevice].module->eQep;
+	volatile struct EQepContext* const eQepContext = &m_eQepContexts[pwmssDevice];
 
-	m_unitTime_ms = unitTime_ms;
-	m_ueventPulses = ueventPulses;
-	m_captureTimeTick_ns = captureTimeTick_ns;
+	eQepContext->unitTime_ms = unitTime_ms;
+	eQepContext->ueventPulses = ueventPulses;
+	eQepContext->captureTimeTick_ns = captureTimeTick_ns;
 	
-	setEQepCounterMode(eQep, EQEP_QUADRATURE_MODE);
+	setEQepCounterMode(eQep, mode);
 	
 	/* Enable unit timer
 	 * Enable capture latch on unit time out
@@ -188,11 +219,13 @@ void readEQepCaptures(const PwmssDeviceEnum pwmssDevice, uint32_t* const counter
 	{
 		*period = 0;
 	}
+
+	volatile struct EQepContext* const eQepContext = &m_eQepContexts[pwmssDevice];
 	
 	// Configuration data
-	*unitTime_ms = m_unitTime_ms;
-	*ueventPulses = m_ueventPulses;
-	*captureTimeTick_ns = m_captureTimeTick_ns;
+	*unitTime_ms = eQepContext->unitTime_ms;
+	*ueventPulses = eQepContext->ueventPulses;
+	*captureTimeTick_ns = eQepContext->captureTimeTick_ns;
 	
 	*status = readEQepStatus(pwmssDevice);
 }	
@@ -219,7 +252,7 @@ void pollEQepInterrupts()
 				eQep->QCLR_QFRC.QCLR = interruptTable->intrFlags | EQEP_GLOBAL_INTR;
 			}
 			
-			interruptTable++;
+			++interruptTable;
 		}
 	}
 }

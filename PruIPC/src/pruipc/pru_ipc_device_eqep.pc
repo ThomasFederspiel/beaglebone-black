@@ -14,12 +14,30 @@ uint16_t deviceEQepIPCHandler(const struct IPCDeviceIoctl* const deviceIoctl)
 {
 	switch (deviceIoctl->ioctl)
 	{
+	case IPCDeviceEQep_Open:
+		{
+			const struct IPCDeviceEQep_Open* const open = (struct IPCDeviceEQep_Open*) deviceIoctl;
+
+			enableEQepClock(open->pwmssDevice, true);
+			
+			return sizeof(struct IPCDeviceEQep_Open);
+		}
+	
+	case IPCDeviceEQep_Close:
+		{
+			const struct IPCDeviceEQep_Close* const close = (struct IPCDeviceEQep_Close*) deviceIoctl;
+			
+			enableEQepClock(close->pwmssDevice, false);
+			
+			return sizeof(struct IPCDeviceEQep_Close);
+		}
+		
 	case IPCDeviceEQep_EnableQuadrature:
 		{
 			const struct IPCDeviceEQep_EnableQuadrature* const enable = (struct IPCDeviceEQep_EnableQuadrature*) deviceIoctl;
 
 			enableEQepQuadrature(enable->pwmssDevice, enable->utimerPeriod, enable->capClkDivisor, enable->upEventDivisor,
-					enable->unitTime_ms, enable->ueventPulses, enable->captureTimeTick_ns);
+					enable->mode, enable->unitTime_ms, enable->ueventPulses, enable->captureTimeTick_ns);
 			
 			return sizeof(struct IPCDeviceEQep_EnableQuadrature);
 		}

@@ -50,8 +50,37 @@ IPCDeviceEQepProxy::IPCDeviceEQepProxy(IMessageReceiver& receiver, IPCDeviceProx
 {
 }
 
+void IPCDeviceEQepProxy::open()
+{
+	const struct IPCDeviceEQep_Open open =
+	{
+		{
+			IPCDeviceEQep,
+			IPCDeviceEQep_Open
+		},
+		m_pwmssDevice
+	};
+
+	sendSyncMessage(reinterpret_cast<const uint8_t*>(&open), sizeof(open));
+}
+
+void IPCDeviceEQepProxy::close()
+{
+	const struct IPCDeviceEQep_Close close =
+	{
+		{
+			IPCDeviceEQep,
+			IPCDeviceEQep_Close
+		},
+		m_pwmssDevice
+	};
+
+	sendSyncMessage(reinterpret_cast<const uint8_t*>(&close), sizeof(close));
+}
+
 void IPCDeviceEQepProxy::enableEQepQuadrature(const EQepUnitTimerPeriod utimerPeriod,
-		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor)
+		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor,
+		const EQepCounterModeEnum mode)
 {
 	struct IPCDeviceEQep_EnableQuadrature enable =
 	{
@@ -60,9 +89,10 @@ void IPCDeviceEQepProxy::enableEQepQuadrature(const EQepUnitTimerPeriod utimerPe
 			IPCDeviceEQep_EnableQuadrature
 		},
 		m_pwmssDevice,
-		utimerPeriod,
+		static_cast<uint32_t>(utimerPeriod),
 		capClkDivisor,
 		upEventDivisor,
+		mode,
 		evaluateUTimerPeriod(utimerPeriod),
 		evaluateUEventPulses(upEventDivisor),
 		evaluateCaptureTimeTick(capClkDivisor)

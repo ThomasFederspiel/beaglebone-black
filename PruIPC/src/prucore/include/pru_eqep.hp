@@ -35,14 +35,6 @@ typedef enum
 					EQEP_PHE_INTR | EQEP_PCE_INTR | EQEP_GLOBAL_INTR) 
 } EQepInterruptEnum;
 
-typedef enum
-{
-	EQEP_QUADRATURE_MODE = 0,
-	EQEP_DIRECTION_COUNT_MODE = BIT(14),
-	EQEP_UP_COUNT_MODE = BIT(15),
-	EQEP_DOWN_COUNT_MODE = BIT(14) | BIT(15)
-} EQepCounterModeEnum;
-
 struct EQepInterruptHandlerSpec
 {
 	void (*intrCallback)(const PwmssDeviceEnum pwmssDevice);
@@ -50,10 +42,12 @@ struct EQepInterruptHandlerSpec
 	uint16_t intrFlags;
 };
 
+void getEQepRegisterTrace(const PwmssDeviceEnum pwmssDevice, uint32_t* trace);
 void setEQepInterrupts(const struct EQepInterruptHandlerSpec* interruptTable);
 void pollEQepInterrupts();
 void enableEQepQuadrature(const PwmssDeviceEnum pwmssDevice, const EQepUnitTimerPeriod utimerPeriod,
-		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor, const uint16_t unitTime_ms,
+		const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor, 
+		const EQepCounterModeEnum mode, const uint16_t unitTime_ms,
 		const uint16_t ueventPulses, const uint16_t captureTimeTick_ns);
 void disableEQep(const PwmssDeviceEnum pwmssDevice);
 uint32_t readEQepCounter(const PwmssDeviceEnum pwmssDevice);

@@ -15,8 +15,11 @@ class IIPCDeviceEQepProxy
 {
 public:
 
+	virtual void open() = 0;
+	virtual void close() = 0;
 	virtual void enableEQepQuadrature(const EQepUnitTimerPeriod utimerPeriod,
-			const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor) = 0;
+			const EQepCapClkDivisor capClkDivisor, const EQepUpEventDivisor upEventDivisor,
+			const EQepCounterModeEnum mode) = 0;
 	virtual void disableEQep() = 0;
 };
 
