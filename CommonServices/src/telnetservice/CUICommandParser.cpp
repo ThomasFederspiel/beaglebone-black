@@ -119,18 +119,14 @@ const std::string& CUICommandParser::getCommandPath() const
 
 bool CUICommandParser::getStringArgument(const std::size_t index, std::string& str) const
 {
-	std::size_t currentIndex = 0;
-
-	for (const auto& arg : m_arguments)
+	if (m_arguments.size() > index)
 	{
+		const auto& arg = m_arguments[index];
+
 		if (arg.isType(CUICommandParser::CUICommandArg::ArgType::String))
 		{
-			if (currentIndex == index)
-			{
-				str = arg.getStr();
-				return true;
-			}
-			++currentIndex;
+			str = arg.getStr();
+			return true;
 		}
 	}
 
@@ -139,19 +135,14 @@ bool CUICommandParser::getStringArgument(const std::size_t index, std::string& s
 
 bool CUICommandParser::getValueArgument(const std::size_t index, int& value) const
 {
-	std::size_t currentIndex = 0;
-
-	for (const auto& arg : m_arguments)
+	if (m_arguments.size() > index)
 	{
+		const auto& arg = m_arguments[index];
+
 		if (arg.isType(CUICommandParser::CUICommandArg::ArgType::Int))
 		{
-			if (currentIndex == index)
-			{
-				value = arg.getInt();
-				return true;
-			}
-
-			++currentIndex;
+			value = arg.getInt();
+			return true;
 		}
 	}
 
@@ -160,29 +151,19 @@ bool CUICommandParser::getValueArgument(const std::size_t index, int& value) con
 
 bool CUICommandParser::getValueArgument(const std::size_t index, float& value) const
 {
-	std::size_t currentIndex = 0;
-
-	for (const auto& arg : m_arguments)
+	if (m_arguments.size() > index)
 	{
+		const auto& arg = m_arguments[index];
+
 		if (arg.isType(CUICommandParser::CUICommandArg::ArgType::Float))
 		{
-			if (currentIndex == index)
-			{
-				value = arg.getFloat();
-				return true;
-			}
-
-			++currentIndex;
+			value = arg.getFloat();
+			return true;
 		}
 		else if (arg.isType(CUICommandParser::CUICommandArg::ArgType::Int))
 		{
-			if (currentIndex == index)
-			{
-				value = arg.getInt();
-				return true;
-			}
-
-			++currentIndex;
+			value = arg.getInt();
+			return true;
 		}
 	}
 
@@ -293,9 +274,6 @@ void CUICommandParser::parseValueArray(CUICommandParser::CUICommandArg& arg, con
 
 void CUICommandParser::parseNumber(CUICommandParser::CUICommandArg& arg, std::string str) const
 {
-	// ;+
-	std::cout << str << std::endl;
-
 	str = Utils::trim(str);
 
 	if (Utils::isFloat(str))
