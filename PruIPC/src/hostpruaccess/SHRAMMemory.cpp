@@ -9,6 +9,7 @@
 
 // standard
 #include <cstring>
+#include <limits>
 
 // system
 #include "prussdrv/prussdrv.h"
@@ -82,3 +83,22 @@ void SHRAMMemory::write(const void* const source, const std::size_t offset, cons
 	memcpy(ptr + offset, source, size);
 }
 
+void SHRAMMemory::fill(const uint8_t value, const std::size_t offset, const std::size_t size)
+{
+	std::size_t realSize = size;
+
+	if (realSize == std::numeric_limits<std::size_t>::max())
+	{
+		realSize = SHRAMMemory::size();
+	}
+
+	TB_ASSERT(offset + realSize <= SHRAMMemory::size());
+
+	uint8_t* ptr = nullptr;
+
+	prussdrv_map_prumem(PRUSS0_SHARED_DATARAM, (void**)&ptr);
+
+	TB_ASSERT(ptr);
+
+	memset(ptr + offset, value, realSize);
+}

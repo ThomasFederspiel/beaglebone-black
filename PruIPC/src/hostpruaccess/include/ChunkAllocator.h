@@ -8,12 +8,16 @@
 #ifndef PRUIPC_CHUNKALLOCATOR_H_
 #define PRUIPC_CHUNKALLOCATOR_H_
 
+// standard
 #include <cstdlib>
-#include <memory>
-
 #include <iostream>
+#include <memory>
+#include <limits>
 
+// project
 #include "exceptionMacros.h"
+
+// local
 #include "IMemory.h"
 
 class ChunkAllocator final
@@ -58,6 +62,20 @@ public:
 			TB_ASSERT(address + size <= m_size);
 
 			m_memory.write(source, m_offset + address, size);
+		}
+
+		void fill(const uint8_t value, const std::size_t address, const std::size_t size)
+		{
+			std::size_t realSize = size;
+
+			if (realSize == std::numeric_limits<std::size_t>::max())
+			{
+				realSize = m_size;
+			}
+
+			TB_ASSERT(address + realSize <= m_size);
+
+			m_memory.fill(value, m_offset + address, realSize);
 		}
 
 	private:

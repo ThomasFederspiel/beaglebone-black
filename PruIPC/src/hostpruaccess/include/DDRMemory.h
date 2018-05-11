@@ -25,6 +25,7 @@ public:
 	std::shared_ptr<IMemory> getReference(const std::size_t offset, const std::size_t size) override;
 	void read(void* const dest, const std::size_t address, const std::size_t size) const override;
 	void write(const void* const source, const std::size_t address, const std::size_t size) override;
+	void fill(const uint8_t value, const std::size_t offset, const std::size_t size) override;
 
 private:
 	void getDDRInfo();

@@ -9,6 +9,7 @@
 
 // standard
 #include <cstring>
+#include <limits>
 
 // project
 #include "exceptionMacros.h"
@@ -90,3 +91,22 @@ void RAMMemory::write(const void* const source, const std::size_t offset, const 
 	memcpy(ptr + offset, source, size);
 }
 
+void RAMMemory::fill(const uint8_t value, const std::size_t offset, const std::size_t size)
+{
+	std::size_t realSize = size;
+
+	if (realSize == std::numeric_limits<std::size_t>::max())
+	{
+		realSize = RAMMemory::size();
+	}
+
+	TB_ASSERT(offset + realSize <= RAMMemory::size());
+
+	uint8_t* ptr = nullptr;
+
+	prussdrv_map_prumem(m_ramId, (void**)&ptr);
+
+	TB_ASSERT(ptr);
+
+	memset(ptr + offset, value, realSize);
+}
