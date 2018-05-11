@@ -13,6 +13,7 @@
 #include "CommonMessageTypes.h"
 #include "Logger.h"
 #include "PropulsionOdometerMessage.h"
+#include "PropulsionPidMessage.h"
 #include "ServiceMessageBase.h"
 #include "tboxdefs.h"
 
@@ -28,6 +29,22 @@ static void serialize(const PropulsionOdometerMessage& message, BinaryComSeriali
 	serializer << message.getCapPeriod();
 	serializer << message.getCounter();
 	serializer << message.getSpeedRPM();
+	serializer << message.getHighSpeedRPM();
+	serializer << message.getLowSpeedRPM();
+	serializer << message.isLowSpeedValid();
+	serializer << message.isLowSpeedActive();
+}
+
+static void serialize(const PropulsionPidMessage& message, BinaryComSerializer& serializer)
+{
+	serializer << message.getMotor();
+	serializer << message.getSetPoint();
+	serializer << message.getKpFactor();
+	serializer << message.getKiFactor();
+	serializer << message.getKdFactor();
+	serializer << message.getInput();
+	serializer << message.getError();
+	serializer << message.getOutput();
 }
 
 void serializeMessage(const ServiceMessageBase& message, BinaryComSerializer& serializer)
@@ -37,6 +54,11 @@ void serializeMessage(const ServiceMessageBase& message, BinaryComSerializer& se
 	case CommonMessageTypes::LeftPropulsionOdometerMessage:
 	case CommonMessageTypes::RightPropulsionOdometerMessage:
 		serialize(message.getCasted<PropulsionOdometerMessage>(), serializer);
+		break;
+
+	case CommonMessageTypes::LeftPropulsionPidMessage:
+	case CommonMessageTypes::RightPropulsionPidMessage:
+		serialize(message.getCasted<PropulsionPidMessage>(), serializer);
 		break;
 
 	TB_DEFAULT(message.getType());

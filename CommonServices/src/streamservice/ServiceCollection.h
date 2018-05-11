@@ -34,7 +34,7 @@ public:
 	std::shared_ptr<AbstractService> allocateEventService(const MessageType_t messageType, ServiceAllocator& allocator)
 	{
 		auto& name = allocator.getEventServiceName(messageType);
-		TB_ASSERT(!name.empty());
+		TB_ASSERT(!name.empty(), "Failed to allocate event " << messageType);
 
 		auto iter = m_services.find(name);
 

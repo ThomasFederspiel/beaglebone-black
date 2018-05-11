@@ -26,7 +26,9 @@ public:
 	enum StreamId : uint8_t
 	{
 		LeftOdometerStream = 1,
-		RightOdometerStream
+		RightOdometerStream,
+		LeftPropulsionPidStream,
+		RightPropulsionPidStream
 	};
 
 	explicit StreamSelectMessage(BinaryComSerializer& serializer)
@@ -46,7 +48,9 @@ public:
 		{
 			CASE(LeftOdometerStream)
 			CASE(RightOdometerStream)
-		}
+			CASE(LeftPropulsionPidStream)
+			CASE(RightPropulsionPidStream)
+	}
 		static std::string tmp = std::to_string(static_cast<int>(id));
 		return tmp.c_str();
 		#undef CASE

@@ -39,7 +39,7 @@ namespace
 		CommonMessageTypes::Type m_messageType;
 	};
 
-	static std::array<StreamVsMessage, 2> StreamTable =
+	static std::array<StreamVsMessage, 4> StreamTable =
 	{{
 		{
 			StreamSelectMessage::LeftOdometerStream,
@@ -48,6 +48,14 @@ namespace
 		{
 			StreamSelectMessage::RightOdometerStream,
 			CommonMessageTypes::Type::RightPropulsionOdometerMessage
+		},
+		{
+			StreamSelectMessage::LeftPropulsionPidStream,
+			CommonMessageTypes::Type::LeftPropulsionPidMessage
+		},
+		{
+			StreamSelectMessage::RightPropulsionPidStream,
+			CommonMessageTypes::Type::RightPropulsionPidMessage
 		}
 	}};
 }
@@ -95,7 +103,11 @@ void StreamManager::process(const ServiceMessageBase& message)
 {
 	auto iter = m_activeStreams.find(static_cast<commonservices::CommonMessageTypes::Type>(message.getType()));
 
-	TB_ASSERT(iter != m_activeStreams.end());
+	// Late incomming message as stream subscribe already disconncted
+	if (iter == m_activeStreams.end())
+	{
+		return;
+	}
 
 	auto& connections = iter->second;
 
