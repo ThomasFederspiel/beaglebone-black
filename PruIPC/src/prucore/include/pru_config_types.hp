@@ -19,13 +19,13 @@
 #include <cstdint>
 #endif
 
-struct DDRMemoryMap
+struct __attribute__((__packed__)) DDRMemoryMap
 {
 	uint8_t* startAddr;
 	uint32_t size;
 };
 
-struct SHRAMMemoryMap
+struct __attribute__((__packed__)) SHRAMMemoryMap
 {
 	uint8_t* startAddr;
 	uint32_t size;
@@ -34,13 +34,13 @@ struct SHRAMMemoryMap
 #define TERMINATE_CTRL_REG_MASK		BIT(0)
 #define PRU_ACTIVE_STATUS_REG_MASK	BIT(0)
 
-struct CoreRegister
+struct __attribute__((__packed__)) CoreRegister
 {
 	uint32_t ctrl;
 	uint32_t status;
 };
 
-struct PruConfigLayout
+struct __attribute__((__packed__)) PruConfigLayout
 {
 	struct DDRMemoryMap ddrMap;
 	struct SHRAMMemoryMap shramMap;

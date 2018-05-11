@@ -16,33 +16,48 @@
 
 enum IPCDeviceEQepIoctlEnum
 {
-	IPCDeviceEQep_Status = 0,
+	IPCDeviceEQep_Open = 0,
+	IPCDeviceEQep_Close,
+	IPCDeviceEQep_Status,
 	IPCDeviceEQep_EnableQuadrature,
 	IPCDeviceEQep_disable
 };
 
-struct IPCDeviceEQep_EnableQuadrature
+struct __attribute__((__packed__)) IPCDeviceEQep_Close
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
-	EQepUnitTimerPeriod utimerPeriod; 
-	EQepCapClkDivisor capClkDivisor; 
-	EQepUpEventDivisor upEventDivisor;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+};
+
+struct __attribute__((__packed__)) IPCDeviceEQep_Open
+{
+	struct IPCDeviceIoctl device;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+};
+
+struct __attribute__((__packed__)) IPCDeviceEQep_EnableQuadrature
+{
+	struct IPCDeviceIoctl device;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+	uint32_t /* EQepUnitTimerPeriod */ utimerPeriod; 
+	uint16_t /* EQepCapClkDivisor */ capClkDivisor; 
+	uint16_t /* EQepUpEventDivisor */ upEventDivisor;
+	uint16_t /* EQepCounterModeEnum */ mode;
 	uint16_t unitTime_ms;
 	uint16_t ueventPulses;
 	uint16_t captureTimeTick_ns;
 };
 
-struct IPCDeviceEQep_disable
+struct __attribute__((__packed__)) IPCDeviceEQep_disable
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
 struct __attribute__((__packed__)) IPCDeviceEQep_Status
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	
 	// Position counter value latched when unit time out has occured
 	uint32_t capCounter;

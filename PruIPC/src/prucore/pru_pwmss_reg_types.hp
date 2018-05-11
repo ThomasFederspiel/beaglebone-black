@@ -19,8 +19,6 @@
 #define ECAP_CLK_STOP_REQ_MASK		BIT(1)
 #define ECAP_CLK_EN_MASK			BIT(0)
 
-#pragma pack(1)
-
 /* PRU_PWMSS register set */
 typedef struct
 {

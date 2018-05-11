@@ -266,8 +266,6 @@
 // INT bits 
 #define ET_INT_CLR 0x1 
 
-#pragma pack(1)
-
 /* PRU_EPWM register set */
 typedef struct
 {

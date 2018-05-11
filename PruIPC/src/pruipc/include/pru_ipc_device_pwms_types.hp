@@ -17,16 +17,16 @@ enum IPCDevicePwmsIoctlEnum
 	IPCDevicePwms_Close
 };
 
-struct IPCDevicePwms_Close
+struct __attribute__((__packed__)) IPCDevicePwms_Close
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct IPCDevicePwms_Open
+struct __attribute__((__packed__)) IPCDevicePwms_Open
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
 #endif /* PRU_IPC_DEVICE_PWMS_TYPES_HP_ */

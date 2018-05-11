@@ -27,63 +27,63 @@ enum IPCDeviceEPwmIoctlEnum
 	IPCDeviceEPwm_SetPin
 };
 
-struct IPCDeviceEPwm_Close
+struct __attribute__((__packed__)) IPCDeviceEPwm_Close
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct IPCDeviceEPwm_Open
+struct __attribute__((__packed__)) IPCDeviceEPwm_Open
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct IPCDeviceEPwm_Enable
+struct __attribute__((__packed__)) IPCDeviceEPwm_Enable
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
-	EPwmChannelEnum pwmCh;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+	uint16_t /* EPwmChannelEnum */ pwmCh;
 };
 
-struct IPCDeviceEPwm_Disable
+struct __attribute__((__packed__)) IPCDeviceEPwm_Disable
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
-	EPwmChannelEnum pwmCh;
-	bool outputHigh;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+	uint16_t /* EPwmChannelEnum */ pwmCh;
+	uint8_t /* bool */ outputHigh;
 };
 
-struct IPCDeviceEPwm_ArmRaw
+struct __attribute__((__packed__)) IPCDeviceEPwm_ArmRaw
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	uint16_t periodCntr;
 	uint8_t clkDiv;
 	uint8_t hspClkDiv;
 };
 
-struct IPCDeviceEPwm_SetFreq
+struct __attribute__((__packed__)) IPCDeviceEPwm_SetFreq
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	uint16_t periodCntr;
 };
 
-struct IPCDeviceEPwm_SetDuty
+struct __attribute__((__packed__)) IPCDeviceEPwm_SetDuty
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
-	EPwmChannelEnum pwmCh;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+	uint16_t /* EPwmChannelEnum */ pwmCh;
 	uint16_t onTime;
 };
 
-struct IPCDeviceEPwm_SetPin
+struct __attribute__((__packed__)) IPCDeviceEPwm_SetPin
 {
 	struct IPCDeviceIoctl device;
-	PwmssDeviceEnum pwmssDevice;
-	EPwmChannelEnum pwmCh;
-	bool high;
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
+	uint16_t /* EPwmChannelEnum */ pwmCh;
+	uint8_t /* bool */ high;
 };
 
 #endif /* PRU_IPC_DEVICE_EPWM_TYPES_HP_ */
