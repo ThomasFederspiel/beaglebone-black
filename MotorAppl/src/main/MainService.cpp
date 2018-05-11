@@ -16,6 +16,7 @@
 #include "CUICommands.h"
 #include "exceptionMacros.h"
 #include "IPCDeviceProxyEventEQEP.h"
+#include "IPCDeviceProxyEventTrace.h"
 #include "IPCDeviceProxyService.h"
 #include "Logger.h"
 #include "MainServiceBase.h"
@@ -225,6 +226,7 @@ void MainService::registerPruEvents()
 	TB_ASSERT(pru0ProxyService);
 
 	pru0ProxyService->addPruEventDefinition<IPCDeviceProxyEventEQEP>();
+	pru0ProxyService->addPruEventDefinition<IPCDeviceProxyEventTrace>();
 }
 
 void MainService::startServices()
