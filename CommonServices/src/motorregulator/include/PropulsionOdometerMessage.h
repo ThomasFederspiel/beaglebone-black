@@ -27,9 +27,12 @@ public:
 	};
 
 	explicit PropulsionOdometerMessage(const Motor motor, const uint32_t capCounter,
-			const uint32_t capTime, const uint32_t capPeriod, const uint32_t counter, const float speedRPM) : ServiceMessageBase(getMessageType(motor)),
+			const uint32_t capTime, const uint32_t capPeriod, const uint32_t counter, const float speedRPM,
+			const float highSpeedRPM, const float lowSpeedRPM, const bool lowSpeedValid,
+			const bool lowSpeedActive) : ServiceMessageBase(getMessageType(motor)),
 					m_motor(motor), m_capCounter(capCounter), m_capTime(capTime), m_capPeriod(capPeriod), m_counter(counter),
-					m_speedRPM(speedRPM)
+					m_speedRPM(speedRPM), m_highSpeedRPM(highSpeedRPM), m_lowSpeedRPM(lowSpeedRPM),
+					m_lowSpeedValid(lowSpeedValid), m_lowSpeedActive(lowSpeedActive)
 	{
 	}
 
@@ -61,6 +64,26 @@ public:
 	float getSpeedRPM() const
 	{
 		return m_speedRPM;
+	}
+
+	float getLowSpeedRPM() const
+	{
+		return m_lowSpeedRPM;
+	}
+
+	float getHighSpeedRPM() const
+	{
+		return m_highSpeedRPM;
+	}
+
+	bool isLowSpeedValid() const
+	{
+		return m_lowSpeedValid;
+	}
+
+	bool isLowSpeedActive() const
+	{
+		return m_lowSpeedActive;
 	}
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
@@ -107,6 +130,10 @@ private:
 	uint32_t m_capPeriod;
 	uint32_t m_counter;
 	float m_speedRPM;
+	float m_highSpeedRPM;
+	float m_lowSpeedRPM;
+	bool m_lowSpeedValid;
+	bool m_lowSpeedActive;
 };
 
 #endif /* PROPULSIONODOMETERMESSAGE_H_ */

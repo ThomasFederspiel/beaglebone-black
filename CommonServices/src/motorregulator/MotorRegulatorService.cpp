@@ -18,6 +18,7 @@
 #include "IPCDeviceEQepProxy.h"
 #include "IPCDeviceProxyService.h"
 #include "IPCDeviceProxyEventEQEP.h"
+#include "IPCDeviceProxyEventTrace.h"
 #include "IPCMessageTypes.h"
 #include "Logger.h"
 #include "MotorServiceCUIMessage.h"
@@ -25,10 +26,13 @@
 #include "MotorPIDRegulator.h"
 #include "MotorRawRegulator.h"
 #include "PropulsionOdometerMessage.h"
+#include "PropulsionPidMessage.h"
 #include "ServiceAllocator.h"
 #include "ServiceMessageBase.h"
 #include "SpeedEvaluator.h"
+#include "Stringifyer.h"
 #include "tboxdefs.h"
+#include "Utils.h"
 
 // local
 #include "MotorSKU415.h"
@@ -41,7 +45,10 @@ using namespace commonservices;
 namespace
 {
 static constexpr PwmssDeviceEnum RightMotorEQepDevice = PWMSS_DEV_2;
+static constexpr PwmssDeviceEnum RightMotorPwmDevice = PWMSS_DEV_2;
+
 static constexpr PwmssDeviceEnum LeftMotorEQepDevice = PWMSS_DEV_3;
+static constexpr PwmssDeviceEnum LeftMotorPwmDevice = PWMSS_DEV_1;
 
 static constexpr IPCDeviceGpioProxy::GpioPins SleepPin = IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_41_OUT;
 static constexpr IPCDeviceGpioProxy::GpioPins FaultPin = IPCDeviceGpioProxy::GpioPins::PRU0_GPIO_xx_P9_42_IN;
@@ -68,6 +75,8 @@ void MotorRegulatorService::registerEvents()
 {
 	registerEvent(commonservices::CommonMessageTypes::Type::LeftPropulsionOdometerMessage);
 	registerEvent(commonservices::CommonMessageTypes::Type::RightPropulsionOdometerMessage);
+	registerEvent(commonservices::CommonMessageTypes::Type::LeftPropulsionPidMessage);
+	registerEvent(commonservices::CommonMessageTypes::Type::RightPropulsionPidMessage);
 }
 
 void MotorRegulatorService::onStart(ServiceAllocator& allocator)
@@ -75,26 +84,32 @@ void MotorRegulatorService::onStart(ServiceAllocator& allocator)
 	m_ipcProxyService = allocator.allocateService<IPCDeviceProxyService>(commonservices::Pru0ProxyService, *this);
 	TB_ASSERT(m_ipcProxyService);
 
-	m_ipcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IpcDeviceProxyEventEQEP, *this);
+	m_ipcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IPCDeviceProxyEventEQEP, *this);
+	m_ipcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IPCDeviceProxyEventTrace, *this);
 
 	m_rightMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, RightMotorEQepDevice);
 	m_leftMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, LeftMotorEQepDevice);
 
-	m_rightMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_100ms,
-			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4);
+	m_rightMotorEQepProxy->open();
+	m_rightMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_10ms,
+			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4, EQEP_QUADRATURE_DEFAULT_MODE);
 
-	m_leftMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_100ms,
-			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4);
+	m_leftMotorEQepProxy->open();
+	m_leftMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_10ms,
+			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4, EQEP_QUADRATURE_SWAP_MODE);
 
-	m_motorDriver = tbox::make_unique<MotorDriver8833>(*m_ipcProxyService, LeftMotorEQepDevice, RightMotorEQepDevice,
+	m_motorDriver = tbox::make_unique<MotorDriver8833>(*m_ipcProxyService, LeftMotorPwmDevice, RightMotorPwmDevice,
 			SleepPin, FaultPin);
 	TB_ASSERT(m_motorDriver);
 
 	m_motorDriver->open();
 	m_motorDriver->setSleepMode(false);
 
-	m_motorLeftDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getLeftMotor());
-	m_motorRightDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getRightMotor());
+	const MotorSKU415::SKU415Config leftMotorConfig(30.8, 178.7, 8.831, 2421.776);
+	m_motorLeftDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getLeftMotor(), leftMotorConfig);
+
+	const MotorSKU415::SKU415Config rightMotorConfig(21.6, 188.7, 9.007, 2299.779);
+	m_motorRightDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getRightMotor(), rightMotorConfig);
 
 	m_motorPidRegulator = tbox::make_unique<MotorPIDRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
 	m_motorRawRegulator = tbox::make_unique<MotorRawRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
@@ -115,9 +130,11 @@ MotorRegulatorService::StopStatus MotorRegulatorService::onStop(ServiceAllocator
 	m_motorDriver.reset();
 
 	m_rightMotorEQepProxy->disableEQep();
+	m_rightMotorEQepProxy->close();
 	m_rightMotorEQepProxy.reset();
 
 	m_leftMotorEQepProxy->disableEQep();
+	m_leftMotorEQepProxy->close();
 	m_leftMotorEQepProxy.reset();
 
 	m_ipcProxyService->unsubscribeAllEvents(*this);
@@ -137,13 +154,46 @@ void MotorRegulatorService::onMessage(const ServiceMessageBase& message)
 		handleCUIMessage(message.getCasted<MotorServiceCUIMessage>());
 		break;
 
-	case pruipcservice::IPCMessageTypes::IpcDeviceProxyEventEQEP:
+	case pruipcservice::IPCMessageTypes::IPCDeviceProxyEventTrace:
+	{
+		auto& trace = message.getCasted<IPCDeviceProxyEventTrace>();
+
+		auto traceData = trace.getTrace();
+		auto size = trace.size();
+
+	    const std::vector<std::string> labels =
+		{
+			"Device",
+			"QCAPCTL",
+			"QUPRD",
+			"QFLG",
+			"QEINT",
+			"QEPCTL"
+		};
+
+		for (std::size_t i = 0; i < size; ++i)
+		{
+			std::string label = TBOX_STRINGIFY(i);
+
+			if (i < labels.size())
+			{
+				label = labels.at(i);
+			}
+
+ 			INFO("trace[" << label << "] = " << traceData[i] << ", 0x" << std::hex << traceData[i]
+			 	 << "("<< Utils::toBinaryStr(traceData[i]) << ")");
+		}
+	}
+	break;
+
+	case pruipcservice::IPCMessageTypes::IPCDeviceProxyEventEQEP:
 	{
 		auto& eqep = message.getCasted<IPCDeviceProxyEventEQEP>();
 
 		update(eqep);
 
 		publishPropulsionOdometer(eqep);
+		publishPropulsionPid();
 	}
 	break;
 
@@ -153,10 +203,27 @@ void MotorRegulatorService::onMessage(const ServiceMessageBase& message)
 
 void MotorRegulatorService::update(const IPCDeviceProxyEventEQEP& eqep)
 {
-	m_motorRightDriver->update(eqep);
-	m_motorLeftDriver->update(eqep);
+	switch (eqep.getPwmssDevice())
+	{
+	case RightMotorEQepDevice:
+		// ;+
+		// INFO("Right eqep");
 
-	m_motorPidRegulator->update();
+		m_motorRightDriver->update(eqep);
+		m_motorPidRegulator->updateRight();
+		break;
+
+	case LeftMotorEQepDevice:
+
+		// ;+
+		// INFO("Left eqep");
+
+		m_motorLeftDriver->update(eqep);
+		m_motorPidRegulator->updateLeft();
+		break;
+
+	TB_DEFAULT(eqep.getPwmssDevice());
+	}
 }
 
 void MotorRegulatorService::handleCUIMessage(const MotorServiceCUIMessage& message)
@@ -175,11 +242,40 @@ void MotorRegulatorService::handleCUIMessage(const MotorServiceCUIMessage& messa
 		handleSetMotorDistance(message);
 		break;
 
+	case MotorServiceCUIMessage::CUIMessageType::SetMotorPidTuning:
+		handleSetMotorPidTuning(message);
+		break;
+
 	case MotorServiceCUIMessage::CUIMessageType::GetMotorStatus:
 		handleGetMotorStatus(message);
 		break;
 
  	TB_DEFAULT(MotorServiceCUIMessage::toString(message.getMessageType()));
+	}
+}
+
+void MotorRegulatorService::handleSetMotorPidTuning(const MotorServiceCUIMessage& message)
+{
+	switch (message.getMotor())
+	{
+	case MotorServiceCUIMessage::Motor::AllMotors:
+		m_motorPidRegulator->setLeftTuning(message.getKpFactor(), message.getKiFactor(),
+				message.getKdFactor());
+		m_motorPidRegulator->setRightTuning(message.getKpFactor(), message.getKiFactor(),
+				message.getKdFactor());
+		break;
+
+	case MotorServiceCUIMessage::Motor::LeftMotor:
+		m_motorPidRegulator->setLeftTuning(message.getKpFactor(), message.getKiFactor(),
+				message.getKdFactor());
+		break;
+
+	case MotorServiceCUIMessage::Motor::RightMotor:
+		m_motorPidRegulator->setRightTuning(message.getKpFactor(), message.getKiFactor(),
+				message.getKdFactor());
+		break;
+
+	TB_DEFAULT(message.toString(message.getMotor()));
 	}
 }
 
@@ -297,21 +393,72 @@ void MotorRegulatorService::applySpeedRawRegulator(const MotorServiceCUIMessage&
 	}
 }
 
+void MotorRegulatorService::publishPropulsionPid()
+{
+	const auto leftState = m_motorPidRegulator->getLeftPidState();
+
+	// ;+
+//	INFO("leftState.m_setPoint = " << leftState.m_setPoint)
+//	INFO("leftState.m_kpFactor = " << leftState.m_kpFactor)
+
+	const PropulsionPidMessage leftMessage(PropulsionPidMessage::Motor::LeftMotor,
+			leftState.m_setPoint,
+			leftState.m_kpFactor,
+			leftState.m_kiFactor,
+			leftState.m_kdFactor,
+			leftState.m_lastInput,
+			leftState.m_lastError,
+			leftState.m_lastOutput
+			);
+
+	publishEvent(leftMessage);
+
+	const auto rightState = m_motorPidRegulator->getRightPidState();
+
+	// ;+
+//	INFO("rightState.m_setPoint = " << rightState.m_setPoint)
+//	INFO("rightState.m_kpFactor = " << rightState.m_kpFactor)
+
+	const PropulsionPidMessage rightMessage(PropulsionPidMessage::Motor::RightMotor,
+			rightState.m_setPoint,
+			rightState.m_kpFactor,
+			rightState.m_kiFactor,
+			rightState.m_kdFactor,
+			rightState.m_lastInput,
+			rightState.m_lastError,
+			rightState.m_lastOutput
+			);
+
+	publishEvent(rightMessage);
+}
+
 void MotorRegulatorService::publishPropulsionOdometer(const IPCDeviceProxyEventEQEP& eqep)
 {
 	PropulsionOdometerMessage::Motor motor = PropulsionOdometerMessage::Motor::RightMotor;
 	float speedRPM = 0.f;
+	float lowSpeedRPM = 0.f;
+	float highSpeedRPM = 0.f;
+	bool lowSpeedValid = false;
+	bool lowSpeedActive = false;
 
 	switch (eqep.getPwmssDevice())
 	{
 	case RightMotorEQepDevice:
 		motor = PropulsionOdometerMessage::Motor::RightMotor;
 		speedRPM = m_motorRightDriver->getSpeedRPM();
+		lowSpeedRPM = m_motorRightDriver->getLowSpeedRPM();
+		lowSpeedValid = m_motorRightDriver->isLowSpeedValid();
+		lowSpeedActive = m_motorRightDriver->isLowSpeedActive();
+		highSpeedRPM = m_motorRightDriver->getHighSpeedRPM();
 		break;
 
 	case LeftMotorEQepDevice:
 		motor = PropulsionOdometerMessage::Motor::LeftMotor;
 		speedRPM = m_motorLeftDriver->getSpeedRPM();
+		lowSpeedRPM = m_motorLeftDriver->getLowSpeedRPM();
+		lowSpeedValid = m_motorLeftDriver->isLowSpeedValid();
+		lowSpeedActive = m_motorLeftDriver->isLowSpeedActive();
+		highSpeedRPM = m_motorLeftDriver->getHighSpeedRPM();
 		break;
 	TB_DEFAULT(eqep.getPwmssDevice());
 	}
@@ -321,14 +468,12 @@ void MotorRegulatorService::publishPropulsionOdometer(const IPCDeviceProxyEventE
 			eqep.getCapTime(),
 			eqep.getCapPeriod(),
 			eqep.getCounter(),
-			speedRPM
+			speedRPM,
+			highSpeedRPM,
+			lowSpeedRPM,
+			lowSpeedValid,
+			lowSpeedActive
 			);
-
-	// ;+
-	//INFO("device = " << eqep.getPwmssDevice());
-//	INFO("Counter = " << eqep.getCounter());
-//	INFO("Rpm = " << speedRPM);
-//	INFO("Unit time = " << eqep.getUnitTime());
 
 	publishEvent(message);
 }

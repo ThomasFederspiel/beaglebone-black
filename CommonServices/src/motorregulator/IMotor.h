@@ -22,12 +22,12 @@ public:
 	virtual void stop() = 0;
 	virtual void setControlSignal(const bool forward, const uint16_t signal) = 0;
 	virtual void setRPMSignal(const float speed) = 0;
-	virtual uint32_t getCounter() const;
+	virtual uint32_t getCounter() const = 0;
 	virtual float getSpeedRPM() const = 0;
 	virtual uint16_t getControlSignalMax() const = 0;
-	virtual uint16_t getRPMSignalMin() const = 0;
-	virtual uint16_t getRPMSignalMax() const = 0;
-	virtual void setDistance(const int distance);
+	virtual float getRPMSignalMin() const = 0;
+	virtual float getRPMSignalMax() const = 0;
+	virtual void setDistance(const int distance) = 0;
 };
 
 #endif /* IMOTOR_H_ */

@@ -18,7 +18,6 @@
 // project
 #include "IPCDeviceEPwmProxy.h"
 #include "IPCDeviceGpioProxy.h"
-#include "IPCDevicePwmsProxy.h"
 #include "pru_epwm_types.hp"
 #include "pru_pwms_types.hp"
 
@@ -77,7 +76,6 @@ public:
 		}
 
 		IPCDeviceEPwmProxy m_epwmProxy;
-		IPCDevicePwmsProxy m_pwmsProxy;
 		PwmssDeviceEnum m_pwmssDevice;
 
 		State m_state;

@@ -13,28 +13,22 @@
 // project
 #include "IPCDeviceProxyEventEQEP.h"
 #include "Logger.h"
+#include "TMath.h"
 
 MODULE_LOG(MotorSKU415);
 
 namespace
 {
-// Calculated
-// static constexpr float MotorQuadraturePulsesPerRev = 341.2f;
-// static constexpr float MinRPM = 155.f;
-// static constexpr float MaxRPM = 805.f;
-// Measured
+// Measured for 1500 rev per revolusion
 static constexpr float MotorQuadraturePulsesPerRev = 1500.f;
-static constexpr float QuadratureLowSpeedPercentage = 5 / 100.f;
-static constexpr float MinControlSignal = 2730;
-static constexpr float MaxControlSignal = 4000;
-static constexpr float MinRPM = 33.f;
-static constexpr float MaxRPM = 171.f;
-static constexpr float StallLevelerPercentage = MinControlSignal / MaxControlSignal;
+
+// 400 * 1500 / 60 / 100 gives 100 pulses per 10 ms, 1 pulse miss per period gives 1 % fault
+static constexpr float LowSpeedRPMLevel = 400;
 }
 
-MotorSKU415::MotorSKU415(MotorDriver8833::Motor& motor) : m_motor(motor),
-	m_speedEvaluator(MotorQuadraturePulsesPerRev, QuadratureLowSpeedPercentage), m_counter(0),
-	m_distanceTracker()
+MotorSKU415::MotorSKU415(MotorDriver8833::Motor& motor, const SKU415Config& config) : m_motor(motor),
+	m_speedEvaluator(MotorQuadraturePulsesPerRev, LowSpeedRPMLevel), m_counter(0),
+	m_config(config), m_distanceTracker()
 {
 }
 
@@ -55,16 +49,16 @@ void MotorSKU415::setControlSignal(const bool forward, const uint16_t signal)
 
 void MotorSKU415::setRPMSignal(const float speed)
 {
-	const bool forward = speed > 0.f;
-	const float absSpeed = std::min(std::fabs(speed), MaxRPM);
-	const uint16_t ctrlSignal = convertRPM(absSpeed);
-
-	if (ctrlSignal == 0)
+	if (tbox::Math::isZero(speed))
 	{
 		m_motor.stop();
 	}
 	else
 	{
+		const bool forward = speed > 0.f;
+		const float absSpeed = std::min(std::fabs(speed), getRPMSignalMax());
+		const uint16_t ctrlSignal = convertRPM(absSpeed);
+
 		m_motor.setControlSignal(forward, ctrlSignal);
 	}
 }
@@ -84,46 +78,86 @@ float MotorSKU415::getSpeedRPM() const
 	return m_speedEvaluator.getSpeedRPM();
 }
 
+float MotorSKU415::getLowSpeedRPM() const
+{
+	return m_speedEvaluator.getLowSpeedRPM();
+}
+
+float MotorSKU415::getHighSpeedRPM() const
+{
+	return m_speedEvaluator.getHighSpeedRPM();
+}
+
+bool MotorSKU415::isLowSpeedValid() const
+{
+	return m_speedEvaluator.isLowSpeedValid();
+}
+
+bool MotorSKU415::isLowSpeedActive() const
+{
+	return m_speedEvaluator.isLowSpeedActive();
+}
+
 uint16_t MotorSKU415::getControlSignalMax() const
 {
 	return m_motor.getControlSignalMax();
 }
 
-uint16_t MotorSKU415::getRPMSignalMin() const
+float MotorSKU415::getRPMSignalMin() const
 {
-	return MinRPM;
+	return m_config.m_minRPM;
 }
 
-uint16_t MotorSKU415::getRPMSignalMax() const
+float MotorSKU415::getRPMSignalMax() const
 {
-	return MaxRPM;
+	return m_config.m_maxRPM;
 }
+
+// ;+
+#include "Utils.h"
 
 void MotorSKU415::update(const IPCDeviceProxyEventEQEP& eqep)
 {
-	if (eqep.getPwmssDevice() == m_motor.getPwmssDevice())
+	m_counter = eqep.getCounter();
+
+	// ;+
+	if (eqep.getPwmssDevice() == PWMSS_DEV_3)
 	{
-		m_counter = eqep.getCounter();
-
-		if (m_distanceTracker.isEnabled())
-		{
-			if (m_distanceTracker.evaluate(m_counter))
-			{
-				m_motor.stop();
-			}
-		}
-
-		m_speedEvaluator.update(eqep);
+//	INFO("----------------- eqep.getPwmssDevice() = " << eqep.getPwmssDevice());
+//	INFO("eqep.getCapCounter() = " << eqep.getCapCounter());
+//	INFO("eqep.getCapTime() = " << eqep.getCapTime());
+//	INFO("eqep.getCapPeriod() = " << eqep.getCapPeriod());
+//	INFO("eqep.getCapStatus() = " << Utils::toBinaryStr(eqep.getCapStatus()));
+//	INFO("eqep.getIntrStatus() = " << Utils::toBinaryStr(eqep.getIntrStatus()));
+//	INFO("eqep.getCounter() = " << eqep.getCounter());
+//	INFO("eqep.getUnitTime() = " << eqep.getUnitTime());
+//	INFO("eqep.getUEventPulses() = " << eqep.getUEventPulses());
+//	INFO("eqep.getCaptureTimeTick() = " << eqep.getCaptureTimeTick());
 	}
+
+	if (m_distanceTracker.isEnabled())
+	{
+		if (m_distanceTracker.evaluate(m_counter))
+		{
+			m_motor.stop();
+		}
+	}
+
+	m_speedEvaluator.update(eqep);
 }
 
 uint16_t MotorSKU415::convertRPM(const float speedRPM) const
 {
-	// for 340
-	// return 1.952422351f * (speedRPM - 154.7479401f) + 2730;
+ // min = 2485, max = 4000
+ // rpmMin = 21.6 rpmMax = 195.2
+ // right [    9.00710803  2299.77917424]
+
+ // min = 2640, max = 4000
+ // rpmMin = 30.8 rpmMax = 185.6
+ // left [    8.83119665  2421.77606027]
 
 	// for 1500
-	return 9.187865565f * (speedRPM - 32.88392875f) + 2730;
+	return m_config.m_rpmVsCtrlSignalSlope * speedRPM + m_config.m_rpmVsCtrlSignalYIntercept;
 }
 
 MotorSKU415::DistanceTracker::DistanceTracker() : m_distance(0), m_startCounter(0)

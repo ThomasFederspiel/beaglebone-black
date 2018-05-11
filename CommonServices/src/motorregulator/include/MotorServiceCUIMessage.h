@@ -27,7 +27,8 @@ public:
 		SetRegulatorMode,
 		setMotorSpeed,
 		setMotorDistance,
-		GetMotorStatus
+		GetMotorStatus,
+		SetMotorPidTuning
 	};
 
 	enum class Motor
@@ -87,6 +88,20 @@ public:
 		return msg;
 	}
 
+	static MotorServiceCUIMessage createSetMotorPidTuning(const Motor motor, const float kp,
+			const float ki, const float kd)
+	{
+		MotorServiceCUIMessage msg;
+
+		msg.m_cuiMessageType = CUIMessageType::SetMotorPidTuning;
+		msg.m_motor = motor;
+		msg.m_kp = kp;
+		msg.m_ki = ki;
+		msg.m_kd = kd;
+
+		return msg;
+	}
+
 	static MotorServiceCUIMessage createGetMotorStatus(std::shared_ptr<CUICommandContext> context)
 	{
 		MotorServiceCUIMessage msg;
@@ -140,6 +155,21 @@ public:
 	int getRightDistance() const
 	{
 		return m_rightDistance;
+	}
+
+	float getKpFactor() const
+	{
+		return m_kp;
+	}
+
+	float getKiFactor() const
+	{
+		return m_ki;
+	}
+
+	float getKdFactor() const
+	{
+		return m_kd;
 	}
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
@@ -201,6 +231,7 @@ public:
 			CASE(CUIMessageType::setMotorDistance)
 			CASE(CUIMessageType::SetRegulatorMode)
 			CASE(CUIMessageType::GetMotorStatus)
+			CASE(CUIMessageType::SetMotorPidTuning)
 		}
 		static std::string tmp = std::to_string(static_cast<int>(type));
 		return tmp.c_str();
@@ -210,7 +241,8 @@ public:
 private:
 	explicit MotorServiceCUIMessage() : ServiceMessageBase(commonservices::CommonMessageTypes::Type::MotorServiceCUIMessage),
 		m_cuiMessageType(CUIMessageType::Undefined), m_regulatorMode(RegulatorMode::PidRegulation), m_motor(Motor::AllMotors), m_action(MotorAction::Run),
-		m_leftSpeed(0.f), m_rightSpeed(0.f), m_context(), m_leftDistance(0), m_rightDistance(0)
+		m_leftSpeed(0.f), m_rightSpeed(0.f), m_context(), m_leftDistance(0), m_rightDistance(0), m_kp(0.f),
+		m_ki(0.f), m_kd(0.f)
 	{
 	}
 
@@ -231,6 +263,12 @@ private:
 	// Used for SetMotorDistance
 	int m_leftDistance;
 	int m_rightDistance;
+
+	// Used for SetMotorPidTuning
+	// m_motor
+	float m_kp;
+	float m_ki;
+	float m_kd;
 };
 
 #endif /* MOTIONMESSAGE_H_ */

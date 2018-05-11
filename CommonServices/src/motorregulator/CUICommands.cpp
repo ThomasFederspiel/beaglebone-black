@@ -29,6 +29,10 @@ namespace
 	static const std::string GetMotorStatusCmd = "stat";
 	static const std::string SetMotorDistanceCmd = "smd";
 
+	static const std::string SetMotorPidTuningCmd = "spt";
+	static const std::string LeftArg = "left";
+	static const std::string RightArg = "right";
+
 	static const std::string SetRegulatorModeCmd = "srm";
 	static const std::string PidModeArg = "pid";
 	static const std::string RPMModeArg = "rpm";
@@ -43,6 +47,7 @@ void CUICommands::registerCUICommands(ServiceAllocator& allocator, MotorRegulato
 	allocator.registerCommand(tbox::make_unique<SetMotorDistanceCommand>(service));
 	allocator.registerCommand(tbox::make_unique<SetRegulatorModeCommand>(service));
 	allocator.registerCommand(tbox::make_unique<GetMotorStatusCommand>(service));
+	allocator.registerCommand(tbox::make_unique<SetMotorPidTuningCommand>(service));
 }
 
 void CUICommands::unregisterCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service)
@@ -51,6 +56,7 @@ void CUICommands::unregisterCUICommands(ServiceAllocator& allocator, MotorRegula
 	allocator.unregisterCommand(SetMotorDistanceCommand(service));
 	allocator.unregisterCommand(SetRegulatorModeCommand(service));
 	allocator.unregisterCommand(GetMotorStatusCommand(service));
+	allocator.unregisterCommand(SetMotorPidTuningCommand(service));
 }
 
 SetMotorSpeedCommand::SetMotorSpeedCommand(MotorRegulatorService& service) : AbstractCUICommand(SetMotorSpeedCmd, CommandPath),
@@ -181,6 +187,85 @@ void SetRegulatorModeCommand::parse(const ICUICommandParser& commandParser, CUIC
 	}
 
 	m_service.post(MotorServiceCUIMessage::createSetRegulatorMode(mode));
+
+	context.output() << "Done" << context.newline();
+	context.finalize();
+}
+
+SetMotorPidTuningCommand::SetMotorPidTuningCommand(MotorRegulatorService& service) : AbstractCUICommand(SetMotorPidTuningCmd, CommandPath),
+	m_service(service)
+{
+}
+
+void SetMotorPidTuningCommand::invoke(const ICUICommandParser& commandParser, CUICommandContext& context)
+{
+	parse(commandParser, context);
+}
+
+void SetMotorPidTuningCommand::genShortDesc(std::ostream& stream) const
+{
+	stream << "set motor pid tuning";
+}
+
+void SetMotorPidTuningCommand::parse(const ICUICommandParser& commandParser, CUICommandContext& context)
+{
+	if ((commandParser.count() != 4) && (commandParser.count() != 3))
+	{
+		context.finalizeError("Bad command");
+		return;
+	}
+
+	MotorServiceCUIMessage::Motor motor = MotorServiceCUIMessage::Motor::AllMotors;
+
+	std::size_t index = 0;
+
+	if (commandParser.count() == 4)
+	{
+		std::string sideArg;
+
+		if (!commandParser.getStringArgument(index++, sideArg))
+		{
+			context.finalizeError("Bad side argument");
+			return;
+		}
+
+		if (sideArg == LeftArg)
+		{
+			motor = MotorServiceCUIMessage::Motor::LeftMotor;
+		}
+		else if (sideArg == RightArg)
+		{
+			motor = MotorServiceCUIMessage::Motor::RightMotor;
+		}
+		else
+		{
+			context.finalizeError("Bad side argument");
+			return;
+		}
+	}
+
+	float kp = 0;
+	if (!commandParser.getValueArgument(index++, kp))
+	{
+		context.finalizeError("Illegal Kp tuning parameter specified");
+		return;
+	}
+
+	float ki = 0;
+	if (!commandParser.getValueArgument(index++, ki))
+	{
+		context.finalizeError("Illegal Ki tuning parameter specified");
+		return;
+	}
+
+	float kd = 0;
+	if (!commandParser.getValueArgument(index++, kd))
+	{
+		context.finalizeError("Illegal Kd tuning parameter specified");
+		return;
+	}
+
+	m_service.post(MotorServiceCUIMessage::createSetMotorPidTuning(motor, kp, ki, kd));
 
 	context.output() << "Done" << context.newline();
 	context.finalize();

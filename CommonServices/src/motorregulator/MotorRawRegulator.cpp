@@ -16,6 +16,7 @@
 // project
 #include "exceptionMacros.h"
 #include "Logger.h"
+#include "TMath.h"
 #include "tboxdefs.h"
 
 MODULE_LOG(MotorRawRegulator);
@@ -74,6 +75,10 @@ void MotorRawRegulator::setSpeed(const float setSpeed, IMotor& motorDriver, floa
 	const bool forward = setSpeed > 0.f;
 	uint16_t ctrlSignal = 0;
 
+	// ;+
+	INFO("mode = " << toString(m_mode));
+	INFO("speed = " << setSpeed);
+
 	switch (m_mode)
 	{
 	case Mode::Raw:
@@ -93,7 +98,7 @@ void MotorRawRegulator::setSpeed(const float setSpeed, IMotor& motorDriver, floa
 	{
 		const float absSpeed = std::min(std::fabs(setSpeed), MaxPercentage);
 
-		if (absSpeed < 1e-5f)
+		if (tbox::Math::isZero(absSpeed))
 		{
 			ctrlSignal = 0;
 		}
@@ -113,6 +118,9 @@ void MotorRawRegulator::setSpeed(const float setSpeed, IMotor& motorDriver, floa
 
 	TB_DEFAULT(toString(m_mode));
 	}
+
+	// ;+
+	INFO("ctrlSignal = " << ctrlSignal);
 
 	if (ctrlSignal == 0)
 	{

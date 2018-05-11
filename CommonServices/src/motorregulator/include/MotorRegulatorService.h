@@ -48,11 +48,13 @@ private:
 	void handleSetMotorSpeed(const MotorServiceCUIMessage& message);
 	void handleSetMotorDistance(const MotorServiceCUIMessage& message);
 	void handleGetMotorStatus(const MotorServiceCUIMessage& message);
+	void handleSetMotorPidTuning(const MotorServiceCUIMessage& message);
 
 	void applySpeedPIDRegulator(const MotorServiceCUIMessage& message);
 	void applySpeedRawRegulator(const MotorServiceCUIMessage& message);
 	void registerEvents();
 	void publishPropulsionOdometer(const IPCDeviceProxyEventEQEP& eqep);
+	void publishPropulsionPid();
 	void updateRegulators(const IPCDeviceProxyEventEQEP& eqep);
 	void update(const IPCDeviceProxyEventEQEP& eqep);
 

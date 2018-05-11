@@ -73,6 +73,22 @@ private:
 	MotorRegulatorService& m_service;
 };
 
+class SetMotorPidTuningCommand final : public AbstractCUICommand
+{
+public:
+	SetMotorPidTuningCommand(MotorRegulatorService& service);
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+
+private:
+	void parse(const ICUICommandParser& commandParser, CUICommandContext& context);
+
+	MotorRegulatorService& m_service;
+};
+
 class GetMotorStatusCommand final : public AbstractCUICommand
 {
 public:

@@ -39,8 +39,7 @@ namespace
 }
 
 MotorDriver8833::Motor::Motor(IPCDeviceProxyService& proxy, const PwmssDeviceEnum pwmssDevice) :
-		m_epwmProxy(proxy, pwmssDevice), m_pwmsProxy(proxy, pwmssDevice),
-		m_pwmssDevice(pwmssDevice),
+		m_epwmProxy(proxy, pwmssDevice), m_pwmssDevice(pwmssDevice),
 		m_state(Motor::State::Stopped), m_pwmPeriod(0), m_pwmDuty(0), m_pwmEnabled(false),
 		m_decay(Motor::Decay::Fast), m_directionChannel(PWM_CH_B), m_pwmChannel(PWM_CH_A)
 {
@@ -50,7 +49,6 @@ void MotorDriver8833::Motor::open()
 {
 	stop();
 
-	m_pwmsProxy.open();
 	m_epwmProxy.open();
 
 	m_pwmPeriod = m_epwmProxy.armFreq(PWMFreq);
@@ -60,7 +58,6 @@ void MotorDriver8833::Motor::close()
 {
 	stop();
 
-	m_pwmsProxy.close();
 	m_epwmProxy.close();
 }
 
@@ -125,7 +122,7 @@ void MotorDriver8833::Motor::coast()
 
 void MotorDriver8833::Motor::setControlSignal(const bool forward, const uint16_t signal)
 {
-	TB_ASSERT((signal >= 0) && (signal <= getControlSignalMax()));
+	TB_ASSERT((signal >= 0) && (signal <= getControlSignalMax()), "signal = " << signal << ", range = 0 - " <<  getControlSignalMax());
 
 	switch (m_state)
 	{
@@ -168,9 +165,6 @@ void MotorDriver8833::Motor::setControlSignal(const bool forward, const uint16_t
 
 	TB_DEFAULT(toString(m_state));
 	}
-
-	// ;+
-	INFO("m_pwmDuty = " << signal);
 
 	if (m_decay == Decay::Slow)
 	{
