@@ -11,31 +11,36 @@
 #include <iomanip>
 #include <sstream>
 
-void LoggerUtil::memDump(Logger::LogWrapper& logger, const uint8_t* mem, std::size_t len)
+void LoggerUtil::memDump(Logger::LogWrapper& logger, const uint8_t* mem, std::size_t len, const uint8_t width,
+		const bool absolute)
 {
 	std::ostringstream hexLine;
 	std::ostringstream asciiLine;
 
 	int i = 0;
+	const uint8_t* p = nullptr;
 
-	hexLine.flags(std::ios::right | std::ios::hex);
-	hexLine.width(2);
-	// Doesnä't work
-// ;+	hexLine.fill('0');
-
-	for (const uint8_t* p = mem; p < (mem + len); ++p)
+	for (p = mem; p < (mem + len); ++p)
 	{
-		i %= 8;
+		i %= width;
+
+		hexLine.flags(std::ios::left | std::ios::hex);
+		hexLine.width(2);
+		hexLine.fill('0');
 
 		hexLine << " " << static_cast<int>(*p);
 		asciiLine << static_cast<char>(std::isprint(*p) ? *p : '.');
 
-		if ((i % 8) == 7)
+		if ((i % width) == (width - 1))
 		{
 			asciiLine << "'";
 
+			const void* startAddr = reinterpret_cast<const void*>(absolute ? p - i : p - reinterpret_cast<intptr_t>(mem) - i);
+			const void* endAddr = reinterpret_cast<const void*>(absolute ? p : p - reinterpret_cast<intptr_t>(mem));
+
 			Logger::SStreamLogger(logger).emit(Logger::LogLevelInfo) << "MEMORY " << logger.getModuleName() << " " << __LINE__ << " - "
-					<< hexLine.str() << " " << asciiLine.str();
+					<< startAddr << ":" << endAddr
+					<< " - " << hexLine.str() << " " << asciiLine.str();
 
 			hexLine.str(std::string());
 			asciiLine.str(std::string("'"));
@@ -48,7 +53,11 @@ void LoggerUtil::memDump(Logger::LogWrapper& logger, const uint8_t* mem, std::si
 	{
 		asciiLine << "'";
 
+		const void* startAddr = reinterpret_cast<const void*>(absolute ? p - i : p - reinterpret_cast<intptr_t>(mem) - i);
+		const void* endAddr = reinterpret_cast<const void*>(absolute ? p : p - reinterpret_cast<intptr_t>(mem));
+
 		Logger::SStreamLogger(logger).emit(Logger::LogLevelInfo) << "MEMORY " << logger.getModuleName() << " " << __LINE__ << " - "
-				<< hexLine.str() << " " << asciiLine.str();
+				<< startAddr << ":" << endAddr
+				<< " - " << hexLine.str() << " " << asciiLine.str();
 	}
 }

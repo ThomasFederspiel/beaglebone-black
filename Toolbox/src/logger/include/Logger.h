@@ -22,6 +22,10 @@
 		s_logger.configure(#appl, static_cast<Logger::LogLevelEnum>(level), static_cast<Logger::LogDestinationEnum>(destination)); \
 }
 
+#define MODULE_LOG_OFF(module) namespace {\
+		Logger::LogWrapper m_logger(s_logger, #module, false);\
+}
+
 #define MODULE_LOG(module) namespace {\
 		Logger::LogWrapper m_logger(s_logger, #module);\
 }
@@ -63,7 +67,7 @@ class Logger final
 		class LogWrapper final
 		{
 		public:
-			LogWrapper(Logger& logger, const std::string& moduleName);
+			LogWrapper(Logger& logger, const std::string& moduleName, bool enable = true);
 
 			void log(LogLevelEnum level, const char *format, ...);
 
@@ -77,6 +81,7 @@ class Logger final
 		private:
 			Logger& m_logger;
 			const std::string m_moduleName;
+			bool m_enabled;
 		};
 
 		class SStreamLogger final

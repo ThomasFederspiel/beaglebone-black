@@ -45,17 +45,20 @@ std::ostringstream& Logger::SStreamLogger::emit(const LogLevelEnum level)
 	return m_ss;
 }
 
-Logger::LogWrapper::LogWrapper(Logger& logger, const std::string& moduleName)
-	: m_logger(logger),  m_moduleName(moduleName)
+Logger::LogWrapper::LogWrapper(Logger& logger, const std::string& moduleName, bool enable)
+	: m_logger(logger),  m_moduleName(moduleName), m_enabled(enable)
 {
 }
 
 void Logger::LogWrapper::log(LogLevelEnum level, const char *format, ...)
 {
-	va_list args;
-	va_start(args, format);
-	m_logger.log(level, format, args);
-	va_end(args);
+	if (m_enabled)
+	{
+		va_list args;
+		va_start(args, format);
+		m_logger.log(level, format, args);
+		va_end(args);
+	}
 }
 
 void Logger::LogWrapper::errorDump(const std::vector<std::string>& strings)
