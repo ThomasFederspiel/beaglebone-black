@@ -54,6 +54,10 @@ private:
 	uint32_t processPruEvent(const IPCDeviceIoctl& device, const uint32_t offset);
 	void acknowledge();
 	bool hasOverflown();
+	void stopBuffer();
+	bool isBufferActive();
+	bool isBufferCorrupted(const uint32_t bufferOffset);
+	void dumpBuffer();
 
 	const std::string m_name;
 	IEventMessagePublisher& m_eventPublisher;

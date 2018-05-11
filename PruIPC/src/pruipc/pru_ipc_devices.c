@@ -19,6 +19,7 @@ const char* toDeviceString(const enum IPCDeviceEnum device)
 		CASE(IPCDeviceGpio)
 		CASE(IPCDeviceECap)
 		CASE(IPCDeviceEQep)
+		CASE(IPCDeviceTrace)
 	}
 	return "Unknown IPC device";
 	#undef CASE

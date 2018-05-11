@@ -12,14 +12,15 @@
 // PRU_PER_EPWMSS1_CLKCTLR  
 // ========================== 
 // MODULEMODE bits 
-#define PER_MODULE_MODE_DIS 0x0
-#define PER_MODULE_MODE_EN 0x2
+#define PER_MODULE_MODE_DIS 0
+#define PER_MODULE_MODE_EN BIT(1)
+#define PER_MODULE_MODE BIT(0) | BIT(1)
 
 // IDLEST bits 
-#define PER_IDLEST_FUNC 0x0
-#define PER_IDLEST_TRANS 0x1
-#define PER_IDLEST_IDLE 0x2
-#define PER_IDLEST_DIS 0x3
+#define PER_IDLEST_FUNC 0
+#define PER_IDLEST_TRANS BIT(16)
+#define PER_IDLEST_IDLE BIT(17)
+#define PER_IDLEST_DIS BIT(16) | BIT(17)
 
 typedef struct
 {
@@ -28,8 +29,6 @@ typedef struct
 	unsigned idlest : 2;
 	unsigned rvsd2 : 14;
 } PruPerModuleClk;
-
-#pragma pack(1)
 
 /* PRU_ECAP register set */
 typedef struct

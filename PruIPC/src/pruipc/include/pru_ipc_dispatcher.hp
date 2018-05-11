@@ -20,7 +20,7 @@ struct IPCHandlerSpec
 
 void initIPCHostDirectionalDispatcher(const uint8_t acknowledgeEvent);
 void initIPCBiDirectionalDispatcher(const struct IPCHandlerSpec* ipcHandlers, const uint8_t acknowledgeEvent);
-void sendIPCToHost(const uint8_t* const data, const uint8_t size);
+void sendIPCToHost(const void* const data, const uint8_t size);
 void IPCBiDirectionalDispatcher();
 void IPCHostDirectionalDispatcher();
 

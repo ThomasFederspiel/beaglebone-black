@@ -37,6 +37,20 @@ static struct IPCBiDirectionalChannelContext* m_ipcBiDirectionalChannelContextPt
 static const struct IPCHandlerSpec* m_ipcHandlerTable = NULL;
 static uint8_t m_biDirectionalAcknowledgeEvent = 0;
 
+static void custom_memcpy(uint8_t* dest, const uint8_t* source, const uint8_t size)
+{
+	uint8_t i = 0;
+			
+	while (i < size)
+	{
+		*dest = *source;
+		
+		++source;
+		++dest;
+		++i;
+	}
+}
+
 void initIPCHostDirectionalDispatcher(const uint8_t acknowledgeEvent)
 {
 	m_ipcHostDirectionalChannelContextPtr = m_pruConfig.ipcHostDirectionalChannelContextPtr;
@@ -75,7 +89,7 @@ void IPCHostDirectionalDispatcher()
 				
 		if (m_fillBufferOverflow)
 		{
-			txReg |= TRANSMIT_BUFFER_OVERFLOW_MASK;
+			txReg |= TRANSMIT_BUFFER_OVERFLOW_REG_MASK;
 		}
 		
 		m_ipcHostDirectionalChannelContextPtr->transmitRegister = txReg;
@@ -90,10 +104,19 @@ void IPCHostDirectionalDispatcher()
 		m_fillBufferEndPtr = m_buffers[m_bufferIndex].end;
 		
 		fireArmInterrupt(m_hostDirectionalAcknowledgeEvent);
+		
+		return;
+	}
+	
+	if (m_ipcHostDirectionalChannelContextPtr->transmitRegister & TRANSMIT_BUFFER_STOP_REG_MASK)
+	{
+		m_ipcHostDirectionalChannelContextPtr->transmitRegister = TRANSMIT_BUFFER_STOPPED_REG_MASK;
+		
+		fireArmInterrupt(m_hostDirectionalAcknowledgeEvent);
 	}
 }
 
-void sendIPCToHost(const uint8_t* const data, const uint8_t size)
+void sendIPCToHost(const void* const data, const uint8_t size)
 {
 	if (!m_fillBufferOverflow)
 	{
@@ -104,8 +127,10 @@ void sendIPCToHost(const uint8_t* const data, const uint8_t size)
 		if (m_fillBufferPtr < m_fillBufferEndPtr)
 		{
 			m_fillBufferActive = true;
-		
-			memcpy(bufferPos, data, size);
+
+			// Using custom memcpy as pru library memcpy copies more bytes than specified and 
+			// overwrites memory.
+			custom_memcpy(bufferPos, (uint8_t*) data, size);
 		}
 		else
 		{
