@@ -28,7 +28,8 @@ public:
 		LeftOdometerStream = 1,
 		RightOdometerStream,
 		LeftPropulsionPidStream,
-		RightPropulsionPidStream
+		RightPropulsionPidStream,
+		DeadReckoningStream
 	};
 
 	explicit StreamSelectMessage(BinaryComSerializer& serializer)
@@ -50,6 +51,7 @@ public:
 			CASE(RightOdometerStream)
 			CASE(LeftPropulsionPidStream)
 			CASE(RightPropulsionPidStream)
+			CASE(DeadReckoningStream)
 	}
 		static std::string tmp = std::to_string(static_cast<int>(id));
 		return tmp.c_str();
