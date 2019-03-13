@@ -20,14 +20,14 @@
 #include "ICUICommand.h"
 #include "Logger.h"
 #include "Stringifyer.h"
-#include "tboxdefs.h"
 #include "TelnetServer.h"
 #include "Utils.h"
 
 MODULE_LOG(CommandExecutor);
 
 CommandExecutor::CommandExecutor(TelnetServer& telnetServer) : m_telnetServer(telnetServer), m_directoryTree(),
-		m_directoryTreeMutex()
+		m_directoryTreeMutex(), m_cuiContexts(), m_hcuiCounter(0), m_cuiCommandMap(),
+		m_cuiBatchCommandMap(), m_history()
 {
 	registerBaseCommands();
 
@@ -39,7 +39,7 @@ CommandExecutor::~CommandExecutor()
 	m_telnetServer.unsubscribe(*this);
 }
 
-void CommandExecutor::registerCommand(std::unique_ptr<ICUICommand> command)
+ICUIManager::hcui_t CommandExecutor::registerCommand(std::unique_ptr<ICUICommand> command)
 {
 	TB_ASSERT(command);
 
@@ -50,24 +50,102 @@ void CommandExecutor::registerCommand(std::unique_ptr<ICUICommand> command)
 	const auto path = command->getPath();
  	m_directoryTree.insertItem(path, std::move(command), error);
 
- 	if (error != DirectoryTree::ErrorCode::Success)
+ 	if (error == DirectoryTree::ErrorCode::Success)
  	{
- 		ERROR("Failed to register CUI command " << path << ", error = " << DirectoryTree::toString(error));
+ 	 	++m_hcuiCounter;
+
+ 		TB_ASSERT(m_cuiCommandMap.find(m_hcuiCounter) == m_cuiCommandMap.end());
+
+ 	 	m_cuiCommandMap[m_hcuiCounter] = path;
  	}
+ 	else
+ 	{
+		ERROR("Failed to register CUI command " << path << ", error = " << DirectoryTree::toString(error));
+
+		return 0;
+ 	}
+
+ 	return m_hcuiCounter;
 }
 
-void CommandExecutor::unregisterCommand(const ICUICommand& command)
+ICUIManager::hcui_t CommandExecutor::registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands)
+{
+	TB_ASSERT(commands.size());
+
+	ICUIManager::hcui_t groupHcui = 0;
+
+	for (auto& command : commands)
+	{
+		TB_ASSERT(command);
+
+		const auto hcui = registerCommand(std::move(command));
+
+		if (hcui != 0)
+		{
+			if (groupHcui == 0)
+			{
+				groupHcui = hcui;
+
+		 		TB_ASSERT(m_cuiBatchCommandMap.find(groupHcui) == m_cuiBatchCommandMap.end());
+			}
+
+	 	 	auto batch = m_cuiBatchCommandMap[groupHcui];
+			batch.push_back(hcui);
+		}
+		else
+		{
+			unregisterCommands(groupHcui);
+
+			return 0;
+		}
+	}
+
+ 	return groupHcui;
+}
+
+bool CommandExecutor::unregisterCommands(const ICUIManager::hcui_t handle)
+{
+	auto batch = m_cuiBatchCommandMap.find(handle);
+
+	if (batch != m_cuiBatchCommandMap.end())
+	{
+		for (auto& handle : batch->second)
+		{
+			unregisterCommand(handle);
+		}
+
+		m_cuiBatchCommandMap.erase(batch);
+
+		return true;
+	}
+
+	return false;
+}
+
+void CommandExecutor::unregisterCommand(const ICUIManager::hcui_t handle)
 {
 	std::lock_guard<std::mutex> guard(m_directoryTreeMutex);
 
-	DirectoryTree::ErrorCode error = DirectoryTree::ErrorCode::Success;
+	if (!unregisterCommands(handle))
+	{
+		DirectoryTree::ErrorCode error = DirectoryTree::ErrorCode::Success;
 
- 	m_directoryTree.deleteItem(command.getPath(), error);
+		auto iter = m_cuiCommandMap.find(handle);
 
- 	if (error != DirectoryTree::ErrorCode::Success)
- 	{
- 		ERROR("Failed to unregister CUI command " << command.getPath() << ", error = " << DirectoryTree::toString(error));
- 	}
+		if (iter == m_cuiCommandMap.end())
+		{
+			ERROR("Failed to unregister CUI command with handle " << handle);
+
+			return;
+		}
+
+		m_directoryTree.deleteItem(iter->second, error);
+
+		if (error != DirectoryTree::ErrorCode::Success)
+		{
+			ERROR("Failed to unregister CUI command " << iter->second << ", error = " << DirectoryTree::toString(error));
+		}
+	}
 }
 
 void CommandExecutor::onConnectionOpen(TelnetConnection& connection)
@@ -88,6 +166,9 @@ void CommandExecutor::onReceivedLine(TelnetConnection& connection, const std::st
 {
 	auto& context = get(connection);
 
+	// TODO: Handle arrow keys, echo history, if line empty and history active run
+	// history command
+
 	if (line.empty())
 	{
 		context.finalize();
@@ -102,6 +183,8 @@ void CommandExecutor::onReceivedLine(TelnetConnection& connection, const std::st
 		DirectoryTree::ErrorCode error = DirectoryTree::ErrorCode::Success;
 
 		std::lock_guard<std::mutex> guard(m_directoryTreeMutex);
+
+		// TODO: Add too history
 
 		// try absolute
 		auto item = m_directoryTree.getItem(cmdLine.getCommandPath(), error);
@@ -137,17 +220,17 @@ void CommandExecutor::onReceivedLine(TelnetConnection& connection, const std::st
 
 void CommandExecutor::registerBaseCommands()
 {
- 	registerCommand(tbox::make_unique<PwdCommand>());
- 	registerCommand(tbox::make_unique<CdCommand>());
-	registerCommand(tbox::make_unique<LsCommand>());
- 	registerCommand(tbox::make_unique<QuitCommand>());
+ 	registerCommand(std::make_unique<PwdCommand>());
+ 	registerCommand(std::make_unique<CdCommand>());
+	registerCommand(std::make_unique<LsCommand>());
+ 	registerCommand(std::make_unique<QuitCommand>());
 }
 
 void CommandExecutor::add(TelnetConnection& connection)
 {
 	TB_ASSERT(!exists(connection));
 
-	m_cuiContexts[connection.getId()] = tbox::make_unique<CUICommandContext>(std::make_shared<CUICommandContextImpl>(m_directoryTree, connection));
+	m_cuiContexts[connection.getId()] = std::make_unique<CUICommandContext>(std::make_shared<CUICommandContextImpl>(m_directoryTree, connection));
 }
 
 void CommandExecutor::remove(TelnetConnection& connection)

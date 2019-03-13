@@ -41,14 +41,19 @@ TelnetService::~TelnetService()
 	// needed for unique_ptr
 }
 
-void TelnetService::registerCommand(std::unique_ptr<ICUICommand> command)
+ICUIManager::hcui_t TelnetService::registerCommand(std::unique_ptr<ICUICommand> command)
 {
-	m_commandExecutor->registerCommand(std::move(command));
+	return m_commandExecutor->registerCommand(std::move(command));
 }
 
-void TelnetService::unregisterCommand(const ICUICommand& command)
+ICUIManager::hcui_t TelnetService::registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands)
 {
-	m_commandExecutor->unregisterCommand(command);
+	return m_commandExecutor->registerCommands(commands);
+}
+
+void TelnetService::unregisterCommand(const ICUIManager::hcui_t handle)
+{
+	m_commandExecutor->unregisterCommand(handle);
 }
 
 void TelnetService::onStart(ServiceAllocator& allocator)

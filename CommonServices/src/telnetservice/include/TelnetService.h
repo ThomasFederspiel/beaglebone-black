@@ -11,6 +11,7 @@
 // standard
 #include <memory>
 #include <string>
+#include <vector>
 
 // project
 #include "AbstractService.h"
@@ -30,8 +31,9 @@ public:
 	~TelnetService();
 
 	/// Implementing ICUIManager
-	void registerCommand(std::unique_ptr<ICUICommand> command) override;
-	void unregisterCommand(const ICUICommand& command) override;
+	ICUIManager::hcui_t registerCommand(std::unique_ptr<ICUICommand> command) override;
+	ICUIManager::hcui_t registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands) override;
+	void unregisterCommand(const ICUIManager::hcui_t handle) override;
 
 protected:
 

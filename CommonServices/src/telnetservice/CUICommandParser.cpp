@@ -28,8 +28,8 @@ MODULE_LOG(CUICommandParser);
 
 namespace
 {
-	static const std::string CmdPathPattern = "([\\w\\d\\/\\.]+)(?:$|\\s)";
-	static const std::string ValuePattern = "([+-]*[\\d]+[\\.,]?[\\d]?)(?:$|\\s)";
+	static const std::string CmdPathPattern = "([\\w\\d\\/\\.-]+)(?:$|\\s)";
+	static const std::string ValuePattern = "([+-]?[\\d]+[\\.,]?[\\d]*)(?:$|\\s)";
 	static const std::string StringPattern = "\"([\\w\\d\\s\\(\\)\\-\\[\\]\\{\\}*?:;,!#+='$%&]*)\"(?:$|\\s)";
 	static const std::string ValueArrayPattern = "\\[([\\d\\.,\\s+-]*)\\](?:$|\\s)";
 	static const std::string OptionPattern = "-([a-zA-Z]+)(?:$|\\s)";
@@ -58,31 +58,31 @@ std::string CUICommandParser::CUICommandArg::toString() const
 	switch (m_type)
 	{
 	case ArgType::Float:
-		oss << m_floatValue;
+		oss << m_floatValue << " (float)";
 		break;
 
 	case ArgType::Int:
-		oss << m_intValue;
+		oss << m_intValue << " (int)";
 		break;
 
 	case ArgType::String:
-		oss << m_str;
+		oss << m_str << " (string)";
 		break;
 
 	case ArgType::CmdPath:
-		oss << m_cmdPath;
+		oss << m_cmdPath << " (cmd)";
 		break;
 
 	case ArgType::FloatArray:
-		oss << "FloatArray";
+		oss << "FloatArray" << " (float array)";
 		break;
 
 	case ArgType::IntArray:
-		oss << "IntArray";
+		oss << "IntArray" << " (int array)";
 		break;
 
 	case ArgType::Options:
-		oss << "Options";
+		oss << "Options" << " (options)";
 		break;
 
 	case ArgType::BadValue:
@@ -154,6 +154,9 @@ bool CUICommandParser::getValueArgument(const std::size_t index, float& value) c
 	if (m_arguments.size() > index)
 	{
 		const auto& arg = m_arguments[index];
+
+		// ;+
+		INFO("arg = " << arg.toString());
 
 		if (arg.isType(CUICommandParser::CUICommandArg::ArgType::Float))
 		{

@@ -9,6 +9,6 @@ EXTERNAL_INCLUDES_PruIPC += ipcservicecore ipcdevices hostpruaccess prucore prui
 EXTERNAL_LIBRARIES_PruIPC +=
 
 EXTERNAL_PROJECTS += Toolbox
-EXTERNAL_INCLUDES_Toolbox += logger container service concurrent exception common boostasio util console
+EXTERNAL_INCLUDES_Toolbox += logger container service concurrent exception common boostasio util console  algorithms
 #EXTERNAL_LIBRARIES_<project> += 
 

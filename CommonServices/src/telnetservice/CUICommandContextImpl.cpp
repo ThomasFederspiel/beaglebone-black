@@ -9,12 +9,13 @@
 
 // project
 #include "ICUICommandContext.h"
-#include "tboxdefs.h"
 #include "Utils.h"
 
 namespace
 {
-static const std::string CRLF("\r\n");
+static const char CR = '\r';
+static const char NL = '\n';
+static const std::string CRLF = { CR, NL };
 static const std::string Root("/");
 }
 
@@ -74,13 +75,48 @@ void CUICommandContextImpl::finalize()
 		str = Utils::ensureEnd(str, CRLF);
 	}
 
+	str = convertNewline(str);
+
 	m_connection.send(str + getCWD() + ">");
 
 	// clear
-	m_output = tbox::make_unique<std::ostringstream>();
+	m_output = std::make_unique<std::ostringstream>();
 }
 
 void CUICommandContextImpl::shutdown()
 {
 	m_connection.close();
+}
+
+std::string CUICommandContextImpl::convertNewline(const std::string& str) const
+{
+	std::stringstream convStr;
+
+	bool crFound = false;
+
+	for (const auto ch : str)
+	{
+		switch (ch)
+		{
+		case CR:
+			crFound = true;
+			break;
+
+		case NL:
+			if (!crFound)
+			{
+				convStr << CR;
+			}
+			crFound = false;
+			break;
+
+		default:
+			crFound = false;
+			break;
+		}
+
+		convStr << ch;
+	}
+
+	return convStr.str();
 }

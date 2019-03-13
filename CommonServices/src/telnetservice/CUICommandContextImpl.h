@@ -51,6 +51,8 @@ public:
 	void shutdown();
 
 private:
+	std::string convertNewline(const std::string& str) const;
+
 	TelnetConnection m_connection;
 	std::unique_ptr<std::ostringstream> m_output;
 };

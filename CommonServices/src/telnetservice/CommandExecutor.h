@@ -20,6 +20,7 @@
 #include "DirectoryTree.h"
 #include "ICUICommand.h"
 #include "ICUIManager.h"
+#include "History.h"
 #include "TelnetServer.h"
 
 class CUICommandContext;
@@ -39,8 +40,9 @@ public:
 	void onReceivedLine(TelnetConnection& connection, const std::string& line) override;
 
 	/// Implementing ICUIManager
-	void registerCommand(std::unique_ptr<ICUICommand> command) override;
-	void unregisterCommand(const ICUICommand& command) override;
+	ICUIManager::hcui_t registerCommand(std::unique_ptr<ICUICommand> command) override;
+	ICUIManager::hcui_t registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands) override;
+	void unregisterCommand(const ICUIManager::hcui_t handle) override;
 
 private:
 
@@ -48,6 +50,8 @@ private:
 	using DirectoryTree = tbox::DirectoryTree<TreeItem>;
 
 	void registerBaseCommands();
+
+	bool unregisterCommands(const ICUIManager::hcui_t handle);
 
 	void add(TelnetConnection& connection);
 	void remove(TelnetConnection& connection);
@@ -58,6 +62,11 @@ private:
 	DirectoryTree m_directoryTree;
 	std::mutex m_directoryTreeMutex;
 	std::map<TelnetConnection::IDType, std::unique_ptr<CUICommandContext>> m_cuiContexts;
+
+	ICUIManager::hcui_t m_hcuiCounter;
+	std::map<ICUIManager::hcui_t, std::string> m_cuiCommandMap;
+	std::map<ICUIManager::hcui_t, std::vector<ICUIManager::hcui_t>> m_cuiBatchCommandMap;
+	tbox::History<std::string, 10> m_history;
 };
 
 #endif /* COMMANDEXECUTOR_H_ */
