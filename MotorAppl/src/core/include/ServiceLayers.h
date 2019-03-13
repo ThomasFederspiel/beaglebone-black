@@ -13,6 +13,7 @@
 	enum ServiceLayers
 	{
 		DriverLayer = 0,
+		PeripheralLayer,
 		PruManagerLayer
 	};
 //} // namespace

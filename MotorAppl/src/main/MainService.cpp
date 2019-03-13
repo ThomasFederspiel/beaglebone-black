@@ -14,8 +14,10 @@
 
 // project
 #include "CUICommands.h"
+#include "DeadReckoningService.h"
 #include "exceptionMacros.h"
 #include "IPCDeviceProxyEventEQEP.h"
+#include "IPCDeviceProxyEventOdo.h"
 #include "IPCDeviceProxyEventTrace.h"
 #include "IPCDeviceProxyService.h"
 #include "Logger.h"
@@ -29,7 +31,7 @@
 #include "ServiceNames.h"
 #include "SoundService.h"
 #include "StreamService.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 #include "TelnetService.h"
 
 
@@ -107,7 +109,8 @@ static const tpruss_intc_initdata PrussINTCInitdata =
 MainService* MainService::s_mainService = nullptr;
 
 MainService::MainService() : m_capeManager(), m_serviceManager(), m_pru0Controller(), m_pru1Controller(),
-		m_biDirectionPru0EventChannel(), m_hostDirectionPru0EventChannel(), m_biDirectionPru1EventChannel()
+		m_biDirectionPru0EventChannel(), m_hostDirectionPru0EventChannel(), m_biDirectionPru1EventChannel(),
+		m_handle(ICUIManager::UndefinedCUIHandle)
 {
 	TB_ASSERT(!s_mainService);
 
@@ -122,7 +125,7 @@ void MainService::onStart()
 
 	setupServices();
 	registerCUICommands();
-	registerPruEvents();
+ 	registerPruEvents();
 
 	m_pru0Controller->setup();
 	m_pru0Controller->start();
@@ -148,11 +151,14 @@ void MainService::onStop()
 
 void MainService::loadFragments()
 {
-	bool loaded = m_capeManager.loadFragment("pru_gpio_all");
-	TB_ASSERT(loaded, "Failed to load fragment");
+	if (m_capeManager.isSupported())
+	{
+		bool loaded = m_capeManager.loadFragment("pru_gpio_all");
+		TB_ASSERT(loaded, "Failed to load fragment");
 
-	loaded = m_capeManager.loadFragment("pru_enable");
-	TB_ASSERT(loaded, "Failed to load fragment");
+		loaded = m_capeManager.loadFragment("pru_enable");
+		TB_ASSERT(loaded, "Failed to load fragment");
+	}
 }
 
 void MainService::unloadFragments()
@@ -194,14 +200,17 @@ void MainService::setupServices()
 //		ERROR("Creation of bi-directional event channel for pru 1 failed");
 //	}
 
-	m_pru0Controller = tbox::make_unique<PruController>(pru0ImageConfig);
-//	m_pru1Controller = tbox::make_unique<PruController>(pru1ImageConfig)
+	m_pru0Controller = std::make_unique<PruController>(pru0ImageConfig);
+//	m_pru1Controller = std::make_unique<PruController>(pru1ImageConfig)
 
 	auto telnetService = std::make_shared<TelnetService>(ServiceNames::TelnetService);
 
-	m_serviceManager.addService<SoundService>(ServiceNames::SoundService);
-	m_serviceManager.addService<MotorRegulatorService>(ServiceNames::MotorRegulatorService);
-	m_serviceManager.addService<StreamService>(ServiceNames::StreamService);
+	m_serviceManager.addService<DeadReckoningService>(ServiceNames::DeadReckoningService);
+
+	m_serviceManager.addService<ServiceLayers::PeripheralLayer, SoundService>(ServiceNames::SoundService);
+	m_serviceManager.addService<ServiceLayers::PeripheralLayer, MotorRegulatorService>(ServiceNames::MotorRegulatorService);
+	m_serviceManager.addService<ServiceLayers::PeripheralLayer, StreamService>(ServiceNames::StreamService);
+
 	m_serviceManager.addService(telnetService);
 
 	INFO("Setting up CUI manager");
@@ -216,6 +225,7 @@ void MainService::setupServices()
 
 	m_serviceManager.addService<ServiceLayers::DriverLayer, IPCDeviceProxyService>(ServiceNames::Pru0ProxyService, PrussDriver::PruProxy::PruId0, m_biDirectionPru0EventChannel,
 			m_hostDirectionPru0EventChannel);
+
 //	m_serviceManager.addService<ServiceLayers::DriverLayer, IPCDeviceProxyService>(ServiceNames::Pru1ProxyService, PrussDriver::PruProxy::PruId1, m_biDirectionPru1EventChannel);
 
 }
@@ -227,6 +237,7 @@ void MainService::registerPruEvents()
 
 	pru0ProxyService->addPruEventDefinition<IPCDeviceProxyEventEQEP>();
 	pru0ProxyService->addPruEventDefinition<IPCDeviceProxyEventTrace>();
+	pru0ProxyService->addPruEventDefinition<IPCDeviceProxyEventOdo>();
 }
 
 void MainService::startServices()
@@ -245,12 +256,17 @@ void MainService::stopServices()
 
 void MainService::registerCUICommands()
 {
-	m_serviceManager.registerCommand(tbox::make_unique<ShutdownCommand>(*this));
+	std::vector<std::unique_ptr<ICUICommand>> commands;
+	commands.push_back(std::make_unique<ShutdownCommand>(*this));
+	commands.push_back(std::make_unique<ThreadInfoCommand>());
+	commands.push_back(std::make_unique<ServiceInfoCommand>(*this));
+
+	m_handle = m_serviceManager.registerCommands(commands);
 }
 
 void MainService::unregisterCUICommands()
 {
-	m_serviceManager.unregisterCommand(ShutdownCommand(*this));
+	m_serviceManager.unregisterCommand(m_handle);
 }
 
 void MainService::registerSignals()

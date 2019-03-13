@@ -14,6 +14,7 @@ const char* ServiceNames::PruManagerService = "PruManagerService";
 const char* ServiceNames::MotorRegulatorService = "MotorRegulatorService";
 const char* ServiceNames::TelnetService = "TelnetService";
 const char* ServiceNames::StreamService = "StreamService";
+const char* ServiceNames::DeadReckoningService = "DeadReckoningService";
 
 namespace commonservices
 {

@@ -1,5 +1,4 @@
-NOTSILENT := 1
-#DEBUG := 1
+CPP_STD := c++17
 
 ifeq ($(OS), Windows_NT)
     WINDOWS := 1
@@ -7,10 +6,15 @@ else
     LINUX := 1
 endif
 
-ifdef NOTSILENT
-xS :=
-else
+ifndef SILENT
 S := @
+else
+xS :=
+endif
+
+ifdef LTTNG
+DYNAMIC_SYSTEM_LIBRARIES += dl lttng-ust
+CXX_DEFS +=-DINSTRUMENTATION_LTTNG
 endif
 
 MODULE_NAME := $(lastword $(subst /, , $(CURDIR)))
@@ -22,7 +26,6 @@ SRC_DIR := src
 ifdef DEBUG
 	OBJ_DIR := $(OBJ_DIR)/debug
 	BIN_DIR := $(BIN_DIR)/debug
-	CXXFLAGS += -g
 else
 	OBJ_DIR := $(OBJ_DIR)/release
 	BIN_DIR := $(BIN_DIR)/release

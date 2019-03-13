@@ -31,4 +31,29 @@ private:
 	MainService& m_service;
 };
 
+class ThreadInfoCommand final : public AbstractCUICommand
+{
+public:
+	ThreadInfoCommand();
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+};
+
+class ServiceInfoCommand final : public AbstractCUICommand
+{
+public:
+	ServiceInfoCommand(MainService& service);
+
+	void invoke(const ICUICommandParser& commandLine, CUICommandContext& context) override;
+
+protected:
+	void genShortDesc(std::ostream& stream) const override;
+
+private:
+	MainService& m_service;
+};
+
 #endif /* CUICOMMANDS_H_ */

@@ -1,7 +1,7 @@
 ifdef WINDOWS 
 	HOST_PATHSEP=\\
 	RM := del /F
-	MKDIR := $(subst /,\,$(BASE_DIR))\mk\winmkdir
+	MKDIR := $(subst /,\,$(MK_DIR))\winmkdir
 	RMDIR := rmdir /s /q
 	DEV_NULL := >nul 2>&1
 else

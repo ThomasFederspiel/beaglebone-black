@@ -22,6 +22,7 @@ public:
 	static const char* MotorRegulatorService;
 	static const char* TelnetService;
 	static const char* StreamService;
+	static const char* DeadReckoningService;
 };
 //} // namespace
 #endif /* SERVICENAMES_H_ */

@@ -78,7 +78,8 @@ static const struct InterruptHandlerSpec HostInterruptTable[] =
 			SYS_EV_REG_OFS(ARM_PRU_INTERRUPT_IPC)
 		},
 		{
-			iepInterrupt,
+//			iepInterrupt,
+			processIepClockInterrupt,
 			PR1_IEP_TIM_CAP_CMP_PEND,
 			INTC_CHANNEL_0,
 			SYS_EV_MASK(PR1_IEP_TIM_CAP_CMP_PEND),
@@ -184,6 +185,10 @@ static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 		},
 
         pwmssDevice,
+        {
+            0,
+            0
+        },
 		0,
 		0,
 		0,
@@ -195,6 +200,8 @@ static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 		0
 	};
 
+    getIepClockTime(&status.pruClock.tick_ms, &status.pruClock.tick_ns);
+
 	readEQepCaptures(pwmssDevice, &status.capCounter, &status.capTime, &status.capPeriod,
 	   &status.unitTime_ms, &status.ueventPulses,  
 	   &status.captureTimeTick_ns, &status.capStatus);
@@ -205,10 +212,8 @@ static void eQepInterrupt(const PwmssDeviceEnum pwmssDevice)
 	sendIPCToHost(&status, sizeof(status));
 }
 
-static void iepInterrupt()
+static void trace()
 {
-	acknowledgeIepTimer();
-
     struct IPCDeviceTrace_Status trace =
     {
         {
@@ -225,19 +230,47 @@ static void iepInterrupt()
     
 //    getPWMSSModuleRegisterTrace(0x01, &trace.traceData[1]);
 
-//    sendIPCToHost(&trace, sizeof(trace));
+    sendIPCToHost(&trace, sizeof(trace));
+}
 
-// ;+ toggleGpio(GPIO_xx_P8_12_OUT);
-//	toggleGpio(GPIO_xx_P8_28_OUT);
-//	toggleGpio(GPIO_xx_P8_29_OUT);
+static void timerSlotCallback_10ms()
+{
+    struct IPCDeviceEQep_Odo odo =
+    {
+        {
+            IPCDeviceEQep,
+            IPCDeviceEQep_Odo
+        },
+        {
+            0,
+            0
+        },
+
+        RIGHT_MOTOR_EQEP_PWMSS_DEV,
+        0,
+        LEFT_MOTOR_EQEP_PWMSS_DEV,
+        0
+    };
+
+    getIepClockTime(&odo.pruClock.tick_ms, &odo.pruClock.tick_ns);
+    
+    odo.counter_1 = readEQepCounter(odo.pwmssDevice_1);
+    odo.counter_2 = readEQepCounter(odo.pwmssDevice_2);
+
+    sendIPCToHost(&odo, sizeof(odo));
+}
+
+static void iepInterrupt()
+{
+	acknowledgeIepTimer();
+
+// ;+	toggleGpio(PRU1_FW_GPIO_xx_P8_28_OUT);
+//	toggleGpio(PRU1_FW_GPIO_xx_P8_29_OUT);
 }
 
 static void epwmInterrupt() 
 {
 	acknowledgeEPwmETInterrut(EPWM_PWMSS_DEV);
-
-// ;+     
-//    setGpio(GPIO_xx_P8_12_OUT);
 
 	m_cnt2 += 1;
 }
@@ -371,11 +404,15 @@ int main(void)
       enablePWMSSModule(PWMSS_DEV_2, true);
       enablePWMSSModule(PWMSS_DEV_3, true);
 
-	  setupIepTimer(IEP_DEFAULT_INC_USEC(1000000), IEP_CMP_COUNT_USEC(1000000));
+//	  setupIepTimer(IEP_DEFAULT_INC_USEC(1000000), IEP_CMP_COUNT_USEC(1000000));
 //      setupIepTimer(IEP_DEFAULT_INC_USEC(1000), IEP_CMP_COUNT_USEC(1000));
-	  enableIepTimer(true);
+//	  enableIepTimer(true);
 
-	  setGpio(GPIO_xx_P8_12_OUT);
+      setTimerSlotCallback(IEP_TIME_SLOT_10_MS, timerSlotCallback_10ms);
+      setupIepClock();
+      startIepClock();
+
+//	  setGpio(PRU0_FW_GPIO_xx_P8_12_OUT);
 	  
 //	  manageECapPwm(true);
 //	  manageECapPwm_internal(true);
@@ -395,9 +432,10 @@ int main(void)
 //    manageECapPwm_internal(false);
 //	  manageECapPwm(false);
 
-//	  setGpio(GPIO_xx_P8_12_OUT);
-
-	  enableIepTimer(false);
+//	  enableIepTimer(false);
+    
+      stopIepClock();
+      setTimerSlotCallback(IEP_TIME_SLOT_10_MS, NULL );
 	  
       enablePWMSSModule(PWMSS_DEV_3, false);
       enablePWMSSModule(PWMSS_DEV_2, false);

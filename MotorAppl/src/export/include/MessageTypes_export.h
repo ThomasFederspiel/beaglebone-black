@@ -30,12 +30,14 @@ public:
 		RightPropulsionOdometerMessage,
 		LeftPropulsionPidMessage,
 		RightPropulsionPidMessage,
+		DeadReckoningMessage,
 
 		// Message types for PruIPC
 		IPCDeviceProxyMessage,
 		IPCDeviceProxyMessageCompleted,
 		IPCDeviceProxyEventEQEP,
 		IPCDeviceProxyEventTrace,
+		IPCDeviceProxyEventOdo,
 
 		// End Of Enum
 		EOEMessage
@@ -53,10 +55,12 @@ public:
 		    CASE(Type::RightPropulsionOdometerMessage)
 		    CASE(Type::LeftPropulsionPidMessage)
 		    CASE(Type::RightPropulsionPidMessage)
+		    CASE(Type::DeadReckoningMessage)
 			CASE(Type::IPCDeviceProxyMessage)
 			CASE(Type::IPCDeviceProxyMessageCompleted)
 			CASE(Type::IPCDeviceProxyEventEQEP)
 			CASE(Type::IPCDeviceProxyEventTrace)
+			CASE(Type::IPCDeviceProxyEventOdo)
 			case EOEMessage:
 				TB_ERROR("Don't use EOEMessage");
 		}

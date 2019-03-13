@@ -11,6 +11,7 @@
 
 // project
 #include "CapeManager.h"
+#include "ICUIManager.h"
 #include "linuxUtils.h"
 #include "MainServiceBase.h"
 #include "PruController.h"
@@ -25,6 +26,11 @@ public:
 	MainService();
 
 	static void signalHandler(int sigNum, siginfo_t* pSigInfo, void* pContext);
+
+	ServiceManager& getServiceManager()
+	{
+		return m_serviceManager;
+	}
 
 protected:
 
@@ -51,6 +57,8 @@ private:
 	PrussDriver::BiDirectionPruEventChannelPtr m_biDirectionPru0EventChannel;
 	PrussDriver::HostDirectionPruEventChannelPtr m_hostDirectionPru0EventChannel;
 	PrussDriver::BiDirectionPruEventChannelPtr m_biDirectionPru1EventChannel;
+
+	ICUIManager::hcui_t m_handle;
 
 	static MainService* s_mainService;
 };

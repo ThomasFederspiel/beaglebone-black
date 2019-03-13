@@ -1,3 +1,12 @@
+MK_DIR := $(PWD)/../mk
+
+#SILENT := 1
+#DEBUG := 1
+LTTNG := 1
+
+export MK_DIR
+export LTTNG
+
 all: allexternal
 	$(MAKE) -C core MAKEFLAGS= all
 	$(MAKE) -C main MAKEFLAGS= all

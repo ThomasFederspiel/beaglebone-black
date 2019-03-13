@@ -1,16 +1,15 @@
-BASE_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-
-BASE_DIR := $(BASE_DIR:%/mk/=%)
-
-include $(BASE_DIR)/mk/defs.mk
-include $(BASE_DIR)/mk/platform.mk
-include $(BASE_DIR)/mk/toolchains.mk
-include $(BASE_DIR)/mk/functions.mk
+BASE_DIR := $(CURDIR)/../..
+ 
+include $(MK_DIR)/defs.mk
+include $(MK_DIR)/platform.mk
+include $(MK_DIR)/toolchains.mk
+include $(MK_DIR)/functions.mk
 
 ARCH := -march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon
 
 CROSS_COMPILE := $(call fixpathsep,$(CROSS_TOOLCHAIN)/$(CROSS_PREFIX))
-CC := $(CROSS_COMPILE)g++
+CC := $(CROSS_COMPILE)gcc
+CPP := $(CROSS_COMPILE)g++
 LD := $(CROSS_COMPILE)g++
 AR := $(CROSS_COMPILE)ar
 STRIP := $(CROSS_COMPILE)strip
@@ -23,7 +22,8 @@ PRU_AR := $(call fixpathsep,$(PRU_TOOLCHAIN)/bin/arpru)
 
 DTC := $(DTC_TOOLCHAIN)dtc
 
-INCLUDE_DIRS += -I$(SYSROOT)/usr/include
+#INCLUDE_DIRS += -I$(SYSROOT)/usr/include
+INCLUDE_DIRS += -idirafter $(SYSROOT)/usr/include
 LIBRARY_DIRS += -L$(SYSROOT)/usr/lib
 
 ifneq ($(DYNAMIC_SYSTEM_LIBRARIES),)
@@ -34,15 +34,31 @@ ifneq ($(STATIC_SYSTEM_LIBRARIES),)
 	LD_STATIC_LIBRARIES += $(addprefix -l, $(STATIC_SYSTEM_LIBRARIES))
 endif
 
-include $(BASE_DIR)/mk/modules.mk
+include $(MK_DIR)/modules.mk
 
 ifneq ($(EXTERN_INCLUDE),)
 	INCLUDE_DIRS += -I$(EXTERN_INCLUDE)
 endif
 
-CFLAGS += -std=c99 -Wall -D ARM_HOST -O2 $(ARCH) $(INCLUDE_DIRS)
-CXXFLAGS += --std=c++11 -Wall -D ARM_HOST -O2 $(ARCH) $(INCLUDE_DIRS)
+CFLAGS += -MMD
+CXXFLAGS += -MMD
+
+ifneq ($(DEBUG),)
+	CXXFLAGS += -ggdb
+	CFLAGS += -ggdb
+endif
+
+ifeq ($(DEBUG),)
+ifneq ($(OPTIMIZATION_LEVEL),)
+	CXXFLAGS += -O$(OPTIMIZATION_LEVEL)
+	CFLAGS += -O$(OPTIMIZATION_LEVEL)
+endif
+endif
+
+CFLAGS += -std=c99 -Wall -D ARM_HOST $(ARCH) $(INCLUDE_DIRS)
+CXXFLAGS += --std=$(CPP_STD) -Wall -D ARM_HOST $(ARCH) $(INCLUDE_DIRS)
 LDFLAGS += --sysroot=$(SYSROOT) $(ARCH) $(LIBRARY_DIRS)
+#LDFLAGS += $(ARCH) $(LIBRARY_DIRS)
 ARFLAGS := rcs
 
 ifneq ($(LD_STATIC_LIBRARIES),)
@@ -63,7 +79,7 @@ D_FILES := $(addprefix $(MODULE_OBJ_DIR)/, $(D_FILES))
 
 PRU_INCLUDE_DIRS += -I$(PRU_TOOLCHAIN)/include -i$(PRU_SSP)/include
 
-include $(BASE_DIR)/mk/pru_modules.mk
+include $(MK_DIR)/pru_modules.mk
 
 PRU_ARCH := --silicon_version=2 --hardware_mac=on
 PRU_CFLAGS += --c99 --c_extension=.pc $(PRU_ARCH) -O3 -D PRU_HOST $(PRU_INCLUDE_DIRS)
@@ -115,7 +131,9 @@ all: createObjRepo createBinRepo createLibRepo $(APPL) $(PRU_APPL_BIN) $(STATIC_
 $(APPL): $(O_FILES) $(STATIC_LIBRARIES)
 	@echo "Linking $(notdir $@)" 
 	$(S)$(LD) $(O_FILES) -o $@ $(LDFLAGS) 
+ifeq ($(DEBUG),)
 	$(S)$(STRIP) $@
+endif
 
 $(STATIC_LIBRARIES) :
 
@@ -137,11 +155,11 @@ $(PRU_APPL_ELF): $(PRU_O_FILES) $(PRU_LD_STATIC_LIBRARIES) $(PRU_LNK_CMD)
 
 $(MODULE_OBJ_DIR)/%.o : %.c
 	@echo "Compiling $<" 
-	$(S)$(CC) -MMD $(CFLAGS) -c -o $@ $<
+	$(S)$(CC) $(CDEFS) $(CFLAGS) -c -o $@ $<
 
 $(MODULE_OBJ_DIR)/%.o : %.cpp
 	@echo "Compiling $<" 
-	$(S)$(CC) -MMD $(CXXFLAGS) -c -o $@ $<
+	$(S)$(CPP) $(CXX_DEFS) $(CXXFLAGS) -c -o $@ $<
 
 $(MODULE_OBJ_DIR)/%.obj : %.pc
 	@echo "PRU Compiling $<" 
