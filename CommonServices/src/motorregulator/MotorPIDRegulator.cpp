@@ -8,6 +8,7 @@
 #include "MotorPIDRegulator.h"
 
 // standard
+#include <chrono>
 
 // local
 #include "IMotor.h"
@@ -101,7 +102,8 @@ void MotorPIDRegulator::updateLeft()
 	if (m_enabled)
 	{
 		bool overrun = false;
-		const float rpm = m_leftPidRegulator.update(m_motorLeftDriver.getSpeedRPM(), overrun);
+		decltype(m_leftPidRegulator)::value_type overrunTime;
+		const float rpm = m_leftPidRegulator.update(m_motorLeftDriver.getSpeedRPM(), overrun, overrunTime);
 
 //		INFO("in rpm [left] = " << m_motorLeftDriver.getSpeedRPM());
 //		INFO("out rpm [left] = " << rpm);
@@ -109,7 +111,8 @@ void MotorPIDRegulator::updateLeft()
 
 		if (overrun)
 		{
-			ERROR("Left pid regulator missed update time");
+			ERROR("Left pid regulator missed update time with " << std::chrono::duration_cast<std::chrono::milliseconds>(overrunTime).count()
+					<< " ms");
 		}
 
 		if (rpm != m_lastLeftRpm)
@@ -137,7 +140,8 @@ void MotorPIDRegulator::updateRight()
 	if (m_enabled)
 	{
 		bool overrun = false;
-		const float rpm = m_rightPidRegulator.update(m_motorRightDriver.getSpeedRPM());
+		decltype(m_leftPidRegulator)::value_type overrunTime;
+		const float rpm = m_rightPidRegulator.update(m_motorRightDriver.getSpeedRPM(), overrun, overrunTime);
 
 //    	INFO("in rpm [right] = " << m_motorRightDriver.getSpeedRPM());
 //		INFO("out rpm [right] = " << rpm);
@@ -145,7 +149,8 @@ void MotorPIDRegulator::updateRight()
 
 		if (overrun)
 		{
-			ERROR("Right pid regulator missed update time");
+			ERROR("Right pid regulator missed update time with " << std::chrono::duration_cast<std::chrono::milliseconds>(overrunTime).count()
+					<< " ms");
 		}
 
 		if (rpm != m_lastRightRpm)

@@ -12,17 +12,24 @@
 
 // project
 #include "AbstractCUICommand.h"
+#include "ICUIManager.h"
 #include "MotorRegulatorService.h"
 
 class ICUICommandParser;
 class CUICommandContext;
 class ServiceAllocator;
 
+namespace motorregulator
+{
+
 class CUICommands final
 {
 public:
 	static void registerCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service);
 	static void unregisterCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service);
+
+private:
+	static ICUIManager::hcui_t m_handle;
 };
 
 class SetMotorSpeedCommand final : public AbstractCUICommand
@@ -104,5 +111,7 @@ private:
 
 	MotorRegulatorService& m_service;
 };
+
+} // namespace
 
 #endif /* CUICOMMANDS_H_ */

@@ -30,8 +30,8 @@
 #include "ServiceAllocator.h"
 #include "ServiceMessageBase.h"
 #include "SpeedEvaluator.h"
+#include "stdExtension.h"
 #include "Stringifyer.h"
-#include "tboxdefs.h"
 #include "Utils.h"
 
 // local
@@ -87,8 +87,8 @@ void MotorRegulatorService::onStart(ServiceAllocator& allocator)
 	m_ipcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IPCDeviceProxyEventEQEP, *this);
 	m_ipcProxyService->subscribeEvent(pruipcservice::IPCMessageTypes::IPCDeviceProxyEventTrace, *this);
 
-	m_rightMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, RightMotorEQepDevice);
-	m_leftMotorEQepProxy = tbox::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, LeftMotorEQepDevice);
+	m_rightMotorEQepProxy = std::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, RightMotorEQepDevice);
+	m_leftMotorEQepProxy = std::make_unique<IPCDeviceEQepProxy>(*m_ipcProxyService, LeftMotorEQepDevice);
 
 	m_rightMotorEQepProxy->open();
 	m_rightMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_10ms,
@@ -98,7 +98,7 @@ void MotorRegulatorService::onStart(ServiceAllocator& allocator)
 	m_leftMotorEQepProxy->enableEQepQuadrature(EQEP_UNIT_TIMER_PERIOD_10ms,
 			EQEP_CAPCLK_DIV_16, EQEP_UPEVNT_DIV_4, EQEP_QUADRATURE_SWAP_MODE);
 
-	m_motorDriver = tbox::make_unique<MotorDriver8833>(*m_ipcProxyService, LeftMotorPwmDevice, RightMotorPwmDevice,
+	m_motorDriver = std::make_unique<MotorDriver8833>(*m_ipcProxyService, LeftMotorPwmDevice, RightMotorPwmDevice,
 			SleepPin, FaultPin);
 	TB_ASSERT(m_motorDriver);
 
@@ -106,18 +106,18 @@ void MotorRegulatorService::onStart(ServiceAllocator& allocator)
 	m_motorDriver->setSleepMode(false);
 
 	const MotorSKU415::SKU415Config leftMotorConfig(30.8, 178.7, 8.831, 2421.776);
-	m_motorLeftDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getLeftMotor(), leftMotorConfig);
+	m_motorLeftDriver = std::make_unique<MotorSKU415>(m_motorDriver->getLeftMotor(), leftMotorConfig);
 
 	const MotorSKU415::SKU415Config rightMotorConfig(21.6, 188.7, 9.007, 2299.779);
-	m_motorRightDriver = tbox::make_unique<MotorSKU415>(m_motorDriver->getRightMotor(), rightMotorConfig);
+	m_motorRightDriver = std::make_unique<MotorSKU415>(m_motorDriver->getRightMotor(), rightMotorConfig);
 
-	m_motorPidRegulator = tbox::make_unique<MotorPIDRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
-	m_motorRawRegulator = tbox::make_unique<MotorRawRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
+	m_motorPidRegulator = std::make_unique<MotorPIDRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
+	m_motorRawRegulator = std::make_unique<MotorRawRegulator>(*m_motorLeftDriver, *m_motorRightDriver);
 
 	// ;+
 	m_motorRawRegulator->setMode(MotorRawRegulator::Mode::RPM);
 
-	CUICommands::registerCUICommands(allocator, *this);
+	motorregulator::CUICommands::registerCUICommands(allocator, *this);
 }
 
 MotorRegulatorService::StopStatus MotorRegulatorService::onStop(ServiceAllocator& allocator)
@@ -141,7 +141,7 @@ MotorRegulatorService::StopStatus MotorRegulatorService::onStop(ServiceAllocator
 
 	allocator.releaseService(m_ipcProxyService, *this);
 
-	CUICommands::unregisterCUICommands(allocator, *this);
+	motorregulator::CUICommands::unregisterCUICommands(allocator, *this);
 
 	return StopStatus::Done;
 }
@@ -206,18 +206,11 @@ void MotorRegulatorService::update(const IPCDeviceProxyEventEQEP& eqep)
 	switch (eqep.getPwmssDevice())
 	{
 	case RightMotorEQepDevice:
-		// ;+
-		// INFO("Right eqep");
-
 		m_motorRightDriver->update(eqep);
 		m_motorPidRegulator->updateRight();
 		break;
 
 	case LeftMotorEQepDevice:
-
-		// ;+
-		// INFO("Left eqep");
-
 		m_motorLeftDriver->update(eqep);
 		m_motorPidRegulator->updateLeft();
 		break;

@@ -14,7 +14,7 @@
 // project
 #include "CommonMessageTypes.h"
 #include "ServiceMessageBase.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 class PropulsionOdometerMessage final : public ServiceMessageBase
 {
@@ -88,7 +88,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<PropulsionOdometerMessage>(*this);
+		return std::make_unique<PropulsionOdometerMessage>(*this);
 	}
 
 	static const char* toString(const Motor motor)

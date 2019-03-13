@@ -19,7 +19,7 @@ MODULE_LOG(MotorSKU415);
 
 namespace
 {
-// Measured for 1500 rev per revolusion
+// Measured to be 1500 rev per revolusion
 static constexpr float MotorQuadraturePulsesPerRev = 1500.f;
 
 // 400 * 1500 / 60 / 100 gives 100 pulses per 10 ms, 1 pulse miss per period gives 1 % fault

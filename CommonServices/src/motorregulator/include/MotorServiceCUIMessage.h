@@ -174,7 +174,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<MotorServiceCUIMessage>(*this);
+		return std::make_unique<MotorServiceCUIMessage>(*this);
 	}
 
 	static const char* toString(const Motor motor)

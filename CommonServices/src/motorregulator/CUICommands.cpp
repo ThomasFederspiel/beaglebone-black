@@ -41,22 +41,26 @@ namespace
 	static const std::string PercentageAdjustedModeArg = "peradj";
 }
 
+namespace motorregulator
+{
+
+ICUIManager::hcui_t CUICommands::m_handle = ICUIManager::UndefinedCUIHandle;
+
 void CUICommands::registerCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service)
 {
-	allocator.registerCommand(tbox::make_unique<SetMotorSpeedCommand>(service));
-	allocator.registerCommand(tbox::make_unique<SetMotorDistanceCommand>(service));
-	allocator.registerCommand(tbox::make_unique<SetRegulatorModeCommand>(service));
-	allocator.registerCommand(tbox::make_unique<GetMotorStatusCommand>(service));
-	allocator.registerCommand(tbox::make_unique<SetMotorPidTuningCommand>(service));
+	std::vector<std::unique_ptr<ICUICommand>> commands;
+	commands.push_back(std::make_unique<SetMotorSpeedCommand>(service));
+	commands.push_back(std::make_unique<SetMotorDistanceCommand>(service));
+	commands.push_back(std::make_unique<SetRegulatorModeCommand>(service));
+	commands.push_back(std::make_unique<GetMotorStatusCommand>(service));
+	commands.push_back(std::make_unique<SetMotorPidTuningCommand>(service));
+
+	m_handle = allocator.registerCommands(commands);
 }
 
 void CUICommands::unregisterCUICommands(ServiceAllocator& allocator, MotorRegulatorService& service)
 {
-	allocator.unregisterCommand(SetMotorSpeedCommand(service));
-	allocator.unregisterCommand(SetMotorDistanceCommand(service));
-	allocator.unregisterCommand(SetRegulatorModeCommand(service));
-	allocator.unregisterCommand(GetMotorStatusCommand(service));
-	allocator.unregisterCommand(SetMotorPidTuningCommand(service));
+	allocator.unregisterCommand(m_handle);
 }
 
 SetMotorSpeedCommand::SetMotorSpeedCommand(MotorRegulatorService& service) : AbstractCUICommand(SetMotorSpeedCmd, CommandPath),
@@ -334,3 +338,4 @@ void SetMotorDistanceCommand::parse(const ICUICommandParser& commandParser, CUIC
 	context.finalize();
 }
 
+} // namespace

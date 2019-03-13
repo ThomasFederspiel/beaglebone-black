@@ -21,10 +21,7 @@
 class IMotor;
 class IPCDeviceProxyEventEQEP;
 
-// typedef PIDRegulator<std::chrono::milliseconds> PidRegulator_t;
-//template <typename T = std::chrono::milliseconds>
-//using PidRegulator_t = PIDRegulator<T>;
-#define PidRegulator_t PIDRegulator<std::chrono::milliseconds>
+using PidRegulator_t = PIDRegulator<std::chrono::milliseconds>;
 
 class MotorPIDRegulator final
 {
