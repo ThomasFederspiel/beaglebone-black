@@ -22,7 +22,6 @@
 #include "Logger.h"
 #include "ServiceMessageBase.h"
 #include "ServiceMessageFSMEvent.h"
-#include "tboxdefs.h"
 
 MODULE_LOG(SoundService);
 
@@ -46,9 +45,9 @@ void SoundService::onStart(ServiceAllocator& allocator)
 	m_ipcProxyService = allocator.allocateService<IPCDeviceProxyService>(commonservices::Pru0ProxyService, *this);
 	TB_ASSERT(m_ipcProxyService);
 
-	m_stateMachine = tbox::make_unique<SoundServiceState>(*this, *m_ipcProxyService);
+	m_stateMachine = std::make_unique<SoundServiceState>(*this, *m_ipcProxyService);
 
-	CUICommands::registerCUICommands(allocator, *this);
+	soundservice::CUICommands::registerCUICommands(allocator, *this);
 }
 
 SoundService::StopStatus SoundService::onStop(ServiceAllocator& allocator)
@@ -57,7 +56,7 @@ SoundService::StopStatus SoundService::onStop(ServiceAllocator& allocator)
 	{
 		allocator.releaseService(m_ipcProxyService, *this);
 
-		CUICommands::unregisterCUICommands(allocator, *this);
+		soundservice::CUICommands::unregisterCUICommands(allocator, *this);
 
 		return StopStatus::Done;
 	}

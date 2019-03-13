@@ -19,14 +19,14 @@
 
 // project
 #include "AtomicQueue.h"
-#include "IRunnable.h"
+#include "AbstractRunnable.h"
 #include "NoteGeneratorAdapter.h"
 #include "PlayNote.h"
 
 class IIPCDeviceEPwmProxy;
 class IIPCDevicePwmsProxy;
 
-class PlayerQueue final : public IRunnable
+class PlayerQueue final : public AbstractRunnable
 {
 public:
 

@@ -19,7 +19,6 @@
 #include "PlayerQueueProxies.h"
 #include "ServiceMessageFSMEvent.h"
 #include "SoundMessage.h"
-#include "tboxdefs.h"
 #include "ThreadFactory.h"
 #include "ThreadWrapper.h"
 
@@ -145,9 +144,9 @@ void SoundServiceState::stopState(const FSMEvent& event)
 
 void SoundServiceState::startPlayerQueue()
 {
-	m_epwmProxy = tbox::make_unique<PlayerQueueEPwmProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice, SpeakerEPwmChannel);
+	m_epwmProxy = std::make_unique<PlayerQueueEPwmProxy>(m_messageReceiver, m_ipcProxyService, SpeakerEPwmDevice, SpeakerEPwmChannel);
 
-	m_playerQueue = tbox::make_unique<PlayerQueue>(*m_epwmProxy);
+	m_playerQueue = std::make_unique<PlayerQueue>(*m_epwmProxy);
 
 	ThreadFactory::thread_t thread = ThreadFactory::instance().createThread(*m_playerQueue);
 	thread->start();

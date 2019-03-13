@@ -12,16 +12,23 @@
 
 // project
 #include "AbstractCUICommand.h"
+#include "ICUIManager.h"
 #include "SoundService.h"
 
 class ICUICommandParser;
 class CUICommandContext;
+
+namespace soundservice
+{
 
 class CUICommands final
 {
 public:
 	static void registerCUICommands(ServiceAllocator& allocator, SoundService& service);
 	static void unregisterCUICommands(ServiceAllocator& allocator, SoundService& service);
+
+private:
+	static ICUIManager::hcui_t m_handle;
 };
 
 class PlaySoundCommand final : public AbstractCUICommand
@@ -37,5 +44,7 @@ protected:
 private:
 	SoundService& m_service;
 };
+
+} // namespace
 
 #endif /* CUICOMMANDS_H_ */

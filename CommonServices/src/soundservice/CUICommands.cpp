@@ -34,14 +34,19 @@ namespace
 	};
 }
 
+namespace soundservice
+{
+
+ICUIManager::hcui_t CUICommands::m_handle = ICUIManager::UndefinedCUIHandle;
+
 void CUICommands::registerCUICommands(ServiceAllocator& allocator, SoundService& service)
 {
-	allocator.registerCommand(tbox::make_unique<PlaySoundCommand>(service));
+	m_handle = allocator.registerCommand(std::make_unique<PlaySoundCommand>(service));
 }
 
 void CUICommands::unregisterCUICommands(ServiceAllocator& allocator, SoundService& service)
 {
-	allocator.unregisterCommand(PlaySoundCommand(service));
+	allocator.unregisterCommand(m_handle);
 }
 
 PlaySoundCommand::PlaySoundCommand(SoundService& service) : AbstractCUICommand(PlaySoundCmd, CommandPath),
@@ -89,3 +94,5 @@ void PlaySoundCommand::genShortDesc(std::ostream& stream) const
 {
 	stream << "play sound";
 }
+
+} // namespace

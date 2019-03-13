@@ -26,7 +26,7 @@
 
 MODULE_LOG(PlayerQueue);
 
-PlayerQueue::PlayerQueue(IIPCDeviceEPwmProxy& epwmProxy) : m_noteGenerator(epwmProxy), m_playNote(m_noteGenerator),
+PlayerQueue::PlayerQueue(IIPCDeviceEPwmProxy& epwmProxy) : AbstractRunnable(), m_noteGenerator(epwmProxy), m_playNote(m_noteGenerator),
 		m_queue(), m_state(State::Created)
 {
 }

@@ -11,7 +11,7 @@
 // project
 #include "CommonMessageTypes.h"
 #include "ServiceMessageBase.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 class SoundMessage final : public ServiceMessageBase
 {
@@ -34,7 +34,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<SoundMessage>(*this);
+		return std::make_unique<SoundMessage>(*this);
 	}
 
 	static const char* toString(const Sound sound)

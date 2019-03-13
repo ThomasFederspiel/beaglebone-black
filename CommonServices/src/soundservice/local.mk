@@ -9,6 +9,6 @@ EXTERNAL_INCLUDES_PruIPC += ipcdevices hostpruaccess prucore ipcservicecore prui
 EXTERNAL_LIBRARIES_PruIPC += 
 
 EXTERNAL_PROJECTS += Toolbox
-EXTERNAL_INCLUDES_Toolbox += service concurrent container exception logger common util fsm console
+EXTERNAL_INCLUDES_Toolbox += service concurrent container exception logger common util fsm console algorithms
 EXTERNAL_LIBRARIES_Toolbox += 
 
