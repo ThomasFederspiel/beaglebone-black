@@ -11,6 +11,7 @@
 #include "exceptionMacros.h"
 #include "BinaryComSerializer.h"
 #include "CommonMessageTypes.h"
+#include "DeadReckoningMessage.h"
 #include "Logger.h"
 #include "PropulsionOdometerMessage.h"
 #include "PropulsionPidMessage.h"
@@ -47,6 +48,15 @@ static void serialize(const PropulsionPidMessage& message, BinaryComSerializer& 
 	serializer << message.getOutput();
 }
 
+static void serialize(const DeadReckoningMessage& message, BinaryComSerializer& serializer)
+{
+	const auto& pose = message.getPose();
+
+	serializer << pose.getX();
+	serializer << pose.getY();
+	serializer << pose.getTheta();
+}
+
 void serializeMessage(const ServiceMessageBase& message, BinaryComSerializer& serializer)
 {
 	switch (message.getType())
@@ -59,6 +69,10 @@ void serializeMessage(const ServiceMessageBase& message, BinaryComSerializer& se
 	case CommonMessageTypes::LeftPropulsionPidMessage:
 	case CommonMessageTypes::RightPropulsionPidMessage:
 		serialize(message.getCasted<PropulsionPidMessage>(), serializer);
+		break;
+
+	case CommonMessageTypes::DeadReckoningMessage:
+		serialize(message.getCasted<DeadReckoningMessage>(), serializer);
 		break;
 
 	TB_DEFAULT(message.getType());

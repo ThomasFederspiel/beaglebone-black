@@ -39,7 +39,7 @@ namespace
 		CommonMessageTypes::Type m_messageType;
 	};
 
-	static std::array<StreamVsMessage, 4> StreamTable =
+	static std::array<StreamVsMessage, 5> StreamTable =
 	{{
 		{
 			StreamSelectMessage::LeftOdometerStream,
@@ -56,6 +56,10 @@ namespace
 		{
 			StreamSelectMessage::RightPropulsionPidStream,
 			CommonMessageTypes::Type::RightPropulsionPidMessage
+		},
+		{
+			StreamSelectMessage::DeadReckoningStream,
+			CommonMessageTypes::Type::DeadReckoningMessage
 		}
 	}};
 }
@@ -103,7 +107,7 @@ void StreamManager::process(const ServiceMessageBase& message)
 {
 	auto iter = m_activeStreams.find(static_cast<commonservices::CommonMessageTypes::Type>(message.getType()));
 
-	// Late incomming message as stream subscribe already disconncted
+	// Late incomming message as stream subscribe already disconnected
 	if (iter == m_activeStreams.end())
 	{
 		return;

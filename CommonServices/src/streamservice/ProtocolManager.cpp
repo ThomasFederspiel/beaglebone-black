@@ -14,7 +14,6 @@
 #include "ProtocolServer.h"
 #include "ServiceAllocator.h"
 #include "ServiceMessageBase.h"
-#include "tboxdefs.h"
 #include "TCPServer.h"
 
 // local
@@ -29,7 +28,7 @@ namespace
 }
 
 ProtocolManager::ProtocolManager(AbstractService& service) :
-		m_protocolServer(new ProtocolServer<TCPServer>(StreamServerName, tbox::make_unique<FrameProtocol>())),
+		m_protocolServer(new ProtocolServer<TCPServer>(StreamServerName, std::make_unique<FrameProtocol>())),
 		m_switchboard(), m_streamManager(service)
 {
 }
