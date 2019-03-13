@@ -549,7 +549,8 @@ public:
 		if (!path.hasItem())
 		{
 			code = ErrorCode::ItemNameMissing;
-			return nullptr;
+
+			return false;
 		}
 
 		auto node = getDirectoryNode(path, code);
@@ -570,7 +571,7 @@ public:
 			}
 		}
 
-		return code != ErrorCode::Success;
+		return code == ErrorCode::Success;
 	}
 
 	const T* getItem(const std::string& path, ErrorCode& code) const

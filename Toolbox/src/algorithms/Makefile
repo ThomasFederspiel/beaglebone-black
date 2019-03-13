@@ -7,4 +7,5 @@ CPP_FILES = $(wildcard *.cpp)
 
 STATIC_LIBRARY := libalgorithms(MODULE).a
 
-include ../../mk/top.mk
+#include ../../mk/top.mk
+include $(MK_DIR)/top.mk

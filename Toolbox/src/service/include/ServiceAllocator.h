@@ -13,6 +13,8 @@
 #include <string>
 
 // local
+#include "ICUICommand.h"
+#include "ICUIManager.h"
 #include "ServiceManager.h"
 #include "ServiceTypes.h"
 
@@ -33,8 +35,9 @@ public:
 	template <typename T>
 	void releaseService(std::shared_ptr<T>& allocatedService, const IService& service);
 
-	void registerCommand(std::unique_ptr<ICUICommand> command);
-	void unregisterCommand(const ICUICommand& command);
+	ICUIManager::hcui_t registerCommand(std::unique_ptr<ICUICommand> command);
+	ICUIManager::hcui_t registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands);
+	void unregisterCommand(const ICUIManager::hcui_t handle);
 
 private:
 	ServiceManager& m_manager;

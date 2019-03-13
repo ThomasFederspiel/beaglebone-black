@@ -9,9 +9,14 @@
 #define TBOX_UTILS_H_
 
 // standard
+#include <chrono>
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <type_traits>
+
+// system
+#include <unistd.h>
 
 template <typename T, std::size_t N>
 constexpr std::size_t countof(T const (&)[N]) noexcept
@@ -43,6 +48,9 @@ public:
 	static std::string trimFront(std::string str, const char trimChar);
 	static std::string concatPath(std::string str1, std::string str2, const char separator = '/');
 	static bool systemExec(const std::string& cmd, std::string& output);
+
+	static uint16_t endian_swap(uint16_t value);
+	static uint32_t endian_swap(uint32_t value);
 };
 
 template <typename T>

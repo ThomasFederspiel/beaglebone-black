@@ -11,7 +11,7 @@
 // project
 #include "SystemMessage.h"
 #include "SystemMessageTypes.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 class ShutdownMessage final : public SystemMessage
 {
@@ -23,7 +23,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<ShutdownMessage>(*this);
+		return std::make_unique<ShutdownMessage>(*this);
 	}
 };
 

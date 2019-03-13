@@ -9,18 +9,24 @@
 
 // standard
 #include <chrono>
+#include <iomanip>
+#include <mutex>
 
 // project
 #include "exceptionMacros.h"
 #include "Logger.h"
 #include "ThreadWrapper.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
+#include "ProcTaskStat.h"
 
 MODULE_LOG(ThreadFactory);
 
 namespace
 {
 static constexpr std::chrono::milliseconds THREAD_TERMINATION_WAIT_TIME_MS = std::chrono::milliseconds(100);
+
+static std::once_flag m_onceFlag;
+
 } // end namespace
 
 std::unique_ptr<ThreadFactory> ThreadFactory::s_instance;
@@ -35,7 +41,7 @@ ThreadFactory::~ThreadFactory()
 
 	if (!m_threads.empty())
 	{
-		logThreads();
+		logActiveThreads();
 	}
 
 	TB_ASSERT(m_threads.empty());
@@ -43,10 +49,10 @@ ThreadFactory::~ThreadFactory()
 
 ThreadFactory& ThreadFactory::instance()
 {
-	if (!s_instance)
+	std::call_once(m_onceFlag, []()
 	{
-		s_instance = tbox::make_unique<ThreadFactory>();
-	}
+		s_instance = std::make_unique<ThreadFactory>();
+	});
 
 	return *s_instance;
 }
@@ -95,12 +101,43 @@ void ThreadFactory::onThreadDied(const ThreadWrapper& thread)
 		}
 	}
 
-	TB_ERROR("Unkown thread died");
+	TB_ERROR("Unknown thread died");
 }
 
-void ThreadFactory::logThreads() const
+void ThreadFactory::streamThreadInformation(std::ostream& stream) const
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+
+	std::size_t nameSize = 0;
+
+	for (const auto& thread : m_threads)
+	{
+		if (nameSize < thread->name().size())
+		{
+			nameSize = thread->name().size();
+		}
+	}
+
+	stream << std::left << std::setw(nameSize + 3) << "Name" << std::setw(10) << "Tid" << std::setw(18) << "Scheduler" << std::setw(10)
+		<< "Priority" << std::setw(10) << "CPU Usage [%]" << std::endl;
+
+	for (const auto& thread : m_threads)
+	{
+		const auto policy = thread->getPolicy();
+		const auto priority = thread->getPriority();
+		const auto tid = thread->getTid();
+		const auto usage = thread->getCpuUsage();
+
+		stream << std::left << std::setw(nameSize + 3) << thread->name() << std::setw(10) << tid << std::setw(18) << IRunnable::IScheduler::toString(policy)
+			<< std::setw(10) << priority << std::setw(10) << usage << std::endl;
+	}
+}
+
+void ThreadFactory::logActiveThreads() const
 {
 	INFO("Active threads");
+
+	std::unique_lock<std::mutex> lock(m_mutex);
 
 	for (const auto& thread : m_threads)
 	{

@@ -29,6 +29,13 @@ static const char* const BoneSysFile = "/sys/devices/bone_capemgr.9/slots";
 static const char* const FragmentLibDir = "/lib/firmware";
 }
 
+bool CapeManager::isSupported()
+{
+	std::ifstream file(BoneSysFile);
+
+	return file.good();
+}
+
 bool CapeManager::loadFragment(const std::string& name)
 {
 	bool loaded = false;

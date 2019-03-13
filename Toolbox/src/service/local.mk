@@ -1,4 +1,4 @@
-MODULE_INCLUDES += exception concurrent container logger common console
+MODULE_INCLUDES += exception concurrent container logger common console util algorithms
 MODULE_LIBRARIES += 
 
 DYNAMIC_SYSTEM_LIBRARIES +=

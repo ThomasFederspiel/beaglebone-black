@@ -33,9 +33,24 @@ public:
 		m_mark = std::chrono::steady_clock::now();
 	}
 
-	typename Dur::rep duration() const
+	typename Dur::rep duration(const bool repeat = false)
 	{
-		return std::chrono::duration_cast<Dur>(std::chrono::steady_clock::now() - m_startTime).count();
+		if (repeat)
+		{
+			const auto now = std::chrono::steady_clock::now();
+
+			const auto diff = std::chrono::duration_cast<Dur>(now - m_startTime).count();
+
+			m_startTime = now;
+
+			return diff;
+		}
+		else
+		{
+			return std::chrono::duration_cast<Dur>(std::chrono::steady_clock::now() - m_startTime).count();
+		}
+
+		return Dur().count();
 	}
 
 private:

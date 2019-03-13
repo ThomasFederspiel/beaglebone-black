@@ -46,7 +46,7 @@ void WorkerThreadManager::onTerminated(ThreadWrapper& thread)
 	TB_ASSERT(found);
 }
 
-void WorkerThreadManager::createWorker(IWorkerRunnable& runnable)
+void WorkerThreadManager::createWorker(AbstractWorkerRunnable& runnable)
 {
 	auto thread = ThreadFactory::instance().createThread(runnable);
 
@@ -57,8 +57,6 @@ void WorkerThreadManager::createWorker(IWorkerRunnable& runnable)
 
 		m_workerThreads.push_back(std::make_pair(&runnable, thread));
 	}
-
-	thread->start();
 }
 
 void WorkerThreadManager::stopWorkers()
@@ -73,7 +71,38 @@ void WorkerThreadManager::stopWorkers()
 	}
 }
 
-void WorkerThreadManager::stopWorker(IWorkerRunnable& runnable)
+void WorkerThreadManager::startWorkers()
+{
+	std::unique_lock<std::mutex> lock(m_lock);
+
+	for (const auto& item : m_workerThreads)
+	{
+		TB_ASSERT(item.second);
+
+		item.second->start();
+	}
+}
+
+void WorkerThreadManager::startWorker(AbstractWorkerRunnable& runnable)
+{
+	std::unique_lock<std::mutex> lock(m_lock);
+
+	for (const auto& item : m_workerThreads)
+	{
+		TB_ASSERT(item.first);
+
+		if (item.first == &runnable)
+		{
+			TB_ASSERT(item.second);
+
+			item.second->start();
+
+			break;
+		}
+	}
+}
+
+void WorkerThreadManager::stopWorker(AbstractWorkerRunnable& runnable)
 {
 	std::unique_lock<std::mutex> lock(m_lock);
 
@@ -90,7 +119,7 @@ void WorkerThreadManager::stopWorker(IWorkerRunnable& runnable)
 	}
 }
 
-bool WorkerThreadManager::isWorkerActive(IWorkerRunnable& runnable) const
+bool WorkerThreadManager::isWorkerActive(AbstractWorkerRunnable& runnable) const
 {
 	std::unique_lock<std::mutex> lock(m_lock);
 

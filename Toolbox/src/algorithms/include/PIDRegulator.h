@@ -31,6 +31,7 @@ template <typename Dur>
 class PIDRegulator final
 {
 public:
+	typedef Dur value_type;
 
 	enum TuningModes
 	{
@@ -101,18 +102,26 @@ public:
 	float update(const float input)
 	{
 		bool overrun = false;
+		Dur overrunTime;
 
-		return update(input, overrun);
+		return update(input, overrun, overrunTime);
 	}
 
 	float update(const float input, bool& overrun)
+	{
+		Dur overrunTime;
+
+		return update(input, overrun, overrunTime);
+	}
+
+	float update(const float input, bool& overrun, Dur& overrunTime)
 	{
 		if (!m_enabled)
 		{
 			return m_pidState.m_lastOutput;
 		}
 
-		if (m_timer.hasTriggered(overrun))
+		if (m_timer.hasTriggered(overrun, overrunTime))
 		{
 			if (m_initialize)
 			{
@@ -216,6 +225,11 @@ public:
 	void setReversActingProcess(const bool enable)
 	{
 		m_reverseActingProcess = enable;
+	}
+
+	void setMode(const TuningModes mode)
+	{
+		m_mode = mode;
 	}
 
 private:

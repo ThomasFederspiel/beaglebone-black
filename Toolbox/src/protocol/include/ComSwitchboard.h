@@ -15,7 +15,7 @@
 
 // project
 #include "exceptionMacros.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 namespace tbox
 {
@@ -33,7 +33,7 @@ public:
 	{
 		TB_ASSERT(m_actions.find(key) == m_actions.end());
 
-		m_actions[key] = tbox::make_unique<Wrapper<TConstructorClass, TAction>>(action);
+		m_actions[key] = std::make_unique<Wrapper<TConstructorClass, TAction>>(action);
 	}
 
 	void invoke(const TProductKey key, TConnection connection, TArgs... params)

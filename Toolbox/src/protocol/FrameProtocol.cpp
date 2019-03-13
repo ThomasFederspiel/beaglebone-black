@@ -14,6 +14,7 @@
 #include "exceptionMacros.h"
 #include "Logger.h"
 #include "LoggerUtil.h"
+#include "Utils.h"
 
 MODULE_LOG(FrameProtocol)
 
@@ -58,6 +59,8 @@ std::size_t FrameProtocol::onReadProgress(IComConnection::ConnectionPtr connecti
 		if (bytes_transferred < sizeof(struct FrameHeader))
 		{
 			count = sizeof(struct FrameHeader) - bytes_transferred;
+
+			// TODO: Add some timeout mechanism if client doesn't send a whole frame in time
 		}
 		else
 		{
@@ -65,6 +68,11 @@ std::size_t FrameProtocol::onReadProgress(IComConnection::ConnectionPtr connecti
 
 			if (header->signature != FrameSignature)
 			{
+ 				if (Utils::endian_swap(header->signature) ==  FrameSignature)
+				{
+					TB_ERROR("Expected little endian protocol format seems to have big endian");
+				}
+
 				TB_ERROR("Resync not implemented");
 			}
 

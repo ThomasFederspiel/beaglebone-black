@@ -21,26 +21,24 @@
 // local
 #include "IMessageReceiver.h"
 #include "IMessageService.h"
+#include "ServiceStatistics.h"
 
 // project
 #include "AtomicQueue.h"
-#include "IRunnable.h"
+#include "AbstractRunnable.h"
 #include "ThreadFactory.h"
 #include "ThreadWrapper.h"
 #include "WorkerThreadManager.h"
 
-class IRunnable;
 class ServiceAllocator;
 class ServiceMessageBase;
 
-class AbstractService : public IMessageService, public IRunnable
+class AbstractService : public IMessageService, public AbstractRunnable
 {
 private:
 
 	static constexpr uint8_t StopTries = 5;
 	static constexpr std::chrono::milliseconds StopWaitDelay = std::chrono::milliseconds(50);
-
-	static constexpr std::chrono::milliseconds SStopWaitDelay = std::chrono::milliseconds(50);
 
 public:
 	friend class ServiceManager;
@@ -59,6 +57,9 @@ public:
 	const std::string& name() const override;
 
 	// Thread safe
+	ServiceStatistics getStatistics();
+
+	// Thread safe
 	template<class Rep, class Period>
 	bool waitFor(const ServiceState state,
 			const std::chrono::duration<Rep, Period>& time) const;
@@ -72,6 +73,7 @@ public:
 	// Not thread safe
 	void start(ServiceAllocator& allocator) override;
 	void stop(ServiceAllocator& allocator) override;
+	void signalServicesReady() override;
 
 	static const char* toString(const ServiceState state)
 	{
@@ -107,15 +109,22 @@ protected:
 	// Called on service thread
 	virtual StopStatus onStop(ServiceAllocator& allocator) = 0;
 
+	// Called when all services has begun to process messages
+	// Called on service thread
+	virtual void onServicesReadyMessage(ServiceMessageBase& message)
+	{
+	}
+
 	virtual void onStopStarted()
 	{
 	}
 
 	bool isStopRequested() const;
 
-	void createWorker(WorkerThreadManager::IWorkerRunnable& runnable);
-	void stopWorker(WorkerThreadManager::IWorkerRunnable& runnable);
-	bool isWorkerActive(WorkerThreadManager::IWorkerRunnable& runnable);
+	void createWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable);
+	void stopWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable);
+	void startWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable);
+	bool isWorkerActive(WorkerThreadManager::AbstractWorkerRunnable& runnable);
 
 private:
 
@@ -140,8 +149,9 @@ private:
 	mutable std::condition_variable m_signal;
 
 	WorkerThreadManager m_workerThreadManager;
-};
 
+	ServiceStatisticsWrapper m_statistics;
+};
 
 template<class Rep, class Period>
 bool AbstractService::waitFor(const AbstractService::ServiceState state,

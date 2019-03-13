@@ -15,6 +15,14 @@ class Math final
 public:
 	static bool isZero(const float value);
 	static bool isWithinEps(const float value);
+
+	static constexpr float pi()
+	{
+		return PI;
+	}
+
+private:
+	static constexpr float PI = 3.14159265358979f;
 };
 } // namespace tbox
 

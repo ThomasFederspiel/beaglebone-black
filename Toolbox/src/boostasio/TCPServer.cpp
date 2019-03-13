@@ -15,14 +15,14 @@
 // project
 #include "exceptionMacros.h"
 #include "Logger.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 #include "TCPConnection.h"
 #include "ThreadFactory.h"
 #include "ThreadWrapper.h"
 
 MODULE_LOG(TCPServer);
 
-TCPServer::TCPServer(const std::string& name) : m_name(name), m_ioService(), m_started(false),
+TCPServer::TCPServer(const std::string& name) : AbstractRunnable(), m_name(name), m_ioService(), m_started(false),
 		m_acceptor()
 {
 }
@@ -37,11 +37,11 @@ void TCPServer::start(const int port)
 	TB_ASSERT(!m_started);
 
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
-	m_acceptor = tbox::make_unique<boost::asio::ip::tcp::acceptor>(m_ioService, endpoint);
+	m_acceptor = std::make_unique<boost::asio::ip::tcp::acceptor>(m_ioService, endpoint);
 
 	doAccept();
 
-	// io service need to be prepped be fore stating else io service will exit
+	// io service need to be prepared be fore stating else io service will exit
 	ThreadFactory::thread_t thread = ThreadFactory::instance().createThread(*this);
 	thread->start();
 

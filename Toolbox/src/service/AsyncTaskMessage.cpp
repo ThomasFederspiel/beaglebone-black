@@ -13,13 +13,13 @@
 // project
 #include "Logger.h"
 #include "ServiceMessageBase.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 MODULE_LOG(AsyncTaskMessage);
 
 std::unique_ptr<ServiceMessageBase> AsyncTaskMessage::clone() const
 {
-	return tbox::make_unique<AsyncTaskMessage>(*this);
+	return std::make_unique<AsyncTaskMessage>(*this);
 }
 
 void AsyncTaskMessage::operator()()

@@ -13,13 +13,19 @@
 #include <memory>
 #include <string>
 
-// system
-#include <sys/stat.h>
-#include <unistd.h>
-
 // boost
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+
+uint16_t Utils::endian_swap(uint16_t value)
+{
+	return value << 8 | value >> 8;
+}
+
+uint32_t Utils::endian_swap(uint32_t value)
+{
+	return value << 24 | ((value << 8) & 0x00ff0000) | ((value >> 8) & 0x0000ff00) | value >> 24;
+}
 
 bool Utils::isDigits(std::string str)
 {

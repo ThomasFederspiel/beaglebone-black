@@ -16,7 +16,7 @@
 #include "boost/asio.hpp"
 
 // project
-#include "IRunnable.h"
+#include "AbstractRunnable.h"
 #include "TCPConnectionManager.h"
 
 // local
@@ -25,7 +25,7 @@
 
 class TCPConnection;
 
-class TCPServer : public IRunnable, public IComServer
+class TCPServer : public AbstractRunnable, public IComServer
 {
 public:
 	friend class TCPConnection;

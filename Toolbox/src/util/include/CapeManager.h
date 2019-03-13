@@ -8,8 +8,8 @@
 #ifndef TBOX_CAPEMANAGER_H_
 #define TBOX_CAPEMANAGER_H_
 
-#include <stdint.h>
 #include <string>
+#include <stdint.h>
 #include <map>
 
 class CapeManager final
@@ -35,6 +35,8 @@ public:
 		std::string m_manufacturer;
 		fragmentName_t m_name;
 	};
+
+	static bool isSupported();
 
 	bool loadFragment(const std::string& name);
 	bool unloadFragment(const std::string& name);

@@ -13,7 +13,7 @@
 #include <utility>
 
 // project
-#include "IRunnable.h"
+#include "AbstractRunnable.h"
 #include "ThreadFactory.h"
 #include "ThreadWrapper.h"
 
@@ -23,7 +23,7 @@ class WorkerThreadManager final : public IThreadWrapperSubscriber
 {
 public:
 
-	class IWorkerRunnable : public IRunnable
+	class AbstractWorkerRunnable : public AbstractRunnable
 	{
 	public:
 
@@ -31,21 +31,25 @@ public:
 		virtual void stop() = 0;
 	};
 
-	using WorkerThreads = std::vector<std::pair<IWorkerRunnable*, ThreadFactory::thread_t>>;
+	using WorkerThreads = std::vector<std::pair<AbstractWorkerRunnable*, ThreadFactory::thread_t>>;
 
 	WorkerThreadManager();
 
 	bool hasActiveWorkers() const;
 
-	bool isWorkerActive(IWorkerRunnable& runnable) const;
+	bool isWorkerActive(AbstractWorkerRunnable& runnable) const;
 
 	const WorkerThreads& getWorkers() const;
 
-	void createWorker(IWorkerRunnable& runnable);
+	void createWorker(AbstractWorkerRunnable& runnable);
 
 	void stopWorkers();
 
-	void stopWorker(IWorkerRunnable& runnable);
+	void startWorkers();
+
+	void stopWorker(AbstractWorkerRunnable& runnable);
+
+	void startWorker(AbstractWorkerRunnable& runnable);
 
 private:
 	void onTerminated(ThreadWrapper& thread) override;

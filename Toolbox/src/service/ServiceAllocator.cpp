@@ -23,14 +23,19 @@ ServiceAllocator::ServiceAllocator(ServiceManager& manager) : m_manager(manager)
 {
 }
 
-void ServiceAllocator::registerCommand(std::unique_ptr<ICUICommand> command)
+ICUIManager::hcui_t ServiceAllocator::registerCommand(std::unique_ptr<ICUICommand> command)
 {
-	m_manager.registerCommand(std::move(command));
+	return m_manager.registerCommand(std::move(command));
 }
 
-void ServiceAllocator::unregisterCommand(const ICUICommand& command)
+ICUIManager::hcui_t ServiceAllocator::registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands)
 {
-	m_manager.unregisterCommand(command);
+	return m_manager.registerCommands(commands);
+}
+
+void ServiceAllocator::unregisterCommand(const ICUIManager::hcui_t handle)
+{
+	m_manager.unregisterCommand(handle);
 }
 
 const std::string& ServiceAllocator::getEventServiceName(const MessageType_t messageType) const

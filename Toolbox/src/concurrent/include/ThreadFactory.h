@@ -12,6 +12,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <ostream>
 #include <vector>
 
 // local
@@ -35,11 +36,13 @@ public:
 
 	void waitOnThreadTerminations();
 
+	void streamThreadInformation(std::ostream& stream) const;
+
 private:
 
 	void onThreadDied(const ThreadWrapper& thread);
 
-	void logThreads() const;
+	void logActiveThreads() const;
 
 	static std::unique_ptr<ThreadFactory> s_instance;
 

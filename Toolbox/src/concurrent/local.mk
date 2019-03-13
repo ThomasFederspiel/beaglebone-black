@@ -1,4 +1,4 @@
-MODULE_INCLUDES += common logger exception
+MODULE_INCLUDES += common logger exception util
 MODULE_LIBRARIES += common
 
 DYNAMIC_SYSTEM_LIBRARIES +=

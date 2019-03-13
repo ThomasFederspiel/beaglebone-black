@@ -12,7 +12,7 @@
 #include "ServiceAllocator.h"
 #include "SystemMessage.h"
 #include "SystemMessageTypes.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 class StopServiceMessage final : public SystemMessage
 {
@@ -29,7 +29,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<StopServiceMessage>(*this);
+		return std::make_unique<StopServiceMessage>(*this);
 	}
 
 private:

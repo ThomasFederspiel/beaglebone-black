@@ -46,6 +46,13 @@ public:
 
 	bool hasTriggered(bool& overrun)
 	{
+		Dur overrunTime;
+
+		return hasTriggered(overrun, overrunTime);
+	}
+
+	bool hasTriggered(bool& overrun, Dur& overrunTime)
+	{
 		bool triggered = false;
 
 		overrun = false;
@@ -64,7 +71,9 @@ public:
 		{
 			m_lastTriggerTime = now;
 			triggered = true;
+
 			overrun = true;
+			overrunTime = timePassed - m_intervall;
 		}
 
 		return triggered;

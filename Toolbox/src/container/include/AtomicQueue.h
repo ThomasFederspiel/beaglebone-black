@@ -22,6 +22,10 @@ namespace tbox
 template <typename T>
 class AtomicQueue final
 {
+private:
+
+	using queue_t = std::queue<T>;
+
 public:
 
 	class GetStatus
@@ -71,6 +75,7 @@ public:
 	void put(const T& item);
 	void put(T&& item);
 	T get();
+	typename queue_t::size_type size() const;
 
 	template <typename Rep, typename Period>
 	GetStatus get(const std::chrono::duration<Rep, Period>& duration);
@@ -78,7 +83,7 @@ public:
 	void clear();
 
 private:
-	std::queue<T> m_queue;
+	queue_t m_queue;
 	mutable std::mutex m_lock;
 	std::condition_variable m_signal;
 };
@@ -114,7 +119,7 @@ void AtomicQueue<T>::clear()
 	std::unique_lock<std::mutex> lock(m_lock);
 
 	// clear
-	m_queue = {};
+	m_queue = std::queue<T>();
 }
 
 template <typename T>
@@ -129,6 +134,12 @@ T AtomicQueue<T>::get()
 	m_queue.pop();
 
 	return std::move(item);
+}
+
+template <typename T>
+typename AtomicQueue<T>::queue_t::size_type AtomicQueue<T>::size() const
+{
+	return m_queue.size();
 }
 
 template <typename T>

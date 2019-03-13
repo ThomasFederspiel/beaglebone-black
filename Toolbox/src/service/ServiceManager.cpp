@@ -8,25 +8,28 @@
 #include "ServiceManager.h"
 
 // standard
+#include <iomanip>
 #include <sstream>
 #include <thread>
 
 // project
 #include "AbstractService.h"
 #include "ICUICommand.h"
-#include "ICUIManager.h"
 #include "Logger.h"
 #include "ThreadFactory.h"
 #include "ThreadWrapper.h"
 #include "ServiceAllocator.h"
+#include "Stringifyer.h"
 #include "tboxutility.h"
+
+// local
+#include "ServiceStatistics.h"
 
 MODULE_LOG(ServiceManager);
 
 namespace
 {
 static constexpr std::chrono::milliseconds SERVICE_STATE_WAIT_MARGIN_TIME_MS = std::chrono::milliseconds(100);
-
 static constexpr std::chrono::milliseconds SERVICE_STATE_RUNNING_TIMEOUT_MS = std::chrono::milliseconds(100);
 } // end namespace
 
@@ -44,20 +47,22 @@ ServiceManager::~ServiceManager()
 	TB_ASSERT(m_allocatedServices.empty());
 }
 
-void ServiceManager::registerCommand(std::unique_ptr<ICUICommand> command)
+ICUIManager::hcui_t ServiceManager::registerCommand(std::unique_ptr<ICUICommand> command)
 {
-	if (m_cuiManager)
-	{
-		m_cuiManager->registerCommand(std::move(command));
-	}
+	TB_ASSERT(m_cuiManager);
+	return m_cuiManager->registerCommand(std::move(command));
 }
 
-void ServiceManager::unregisterCommand(const ICUICommand& command)
+ICUIManager::hcui_t ServiceManager::registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands)
 {
-	if (m_cuiManager)
-	{
-		m_cuiManager->unregisterCommand(command);
-	}
+	TB_ASSERT(m_cuiManager);
+	return m_cuiManager->registerCommands(commands);
+}
+
+void ServiceManager::unregisterCommand(const ICUIManager::hcui_t handle)
+{
+	TB_ASSERT(m_cuiManager);
+	m_cuiManager->unregisterCommand(handle);
 }
 
 void ServiceManager::setCUIManager(std::shared_ptr<ICUIManager> manager)
@@ -74,6 +79,8 @@ void ServiceManager::startServices()
 
 	initServices();
 	runServices();
+
+	signalServicesReady();
 
 	setState(State::Active);
 }
@@ -94,7 +101,9 @@ void ServiceManager::stopServices()
 
 				service.second.m_service->stop(*m_allocator);
 
-				if (!service.second.m_service->waitFor(AbstractService::ServiceState::Stopped, AbstractService::StopWaitDelay + SERVICE_STATE_WAIT_MARGIN_TIME_MS))
+				// Needed to solve constexpr compilation error
+				const auto delay = AbstractService::StopWaitDelay;
+				if (!service.second.m_service->waitFor(AbstractService::ServiceState::Stopped, delay + SERVICE_STATE_WAIT_MARGIN_TIME_MS))
 				{
 					ERROR("Failed to stop service " << service.second.m_service->name() << " in time");
 				}
@@ -138,6 +147,14 @@ void ServiceManager::runServices()
 				}
 			}
 		}
+	}
+}
+
+void ServiceManager::signalServicesReady()
+{
+	for (auto& service : m_services)
+	{
+		service.second.m_service->signalServicesReady();
 	}
 }
 
@@ -269,6 +286,66 @@ void ServiceManager::addServiceLayerId(const ServiceLayerExtendedId id)
 	else if (iter != m_serviceLayerIds.end())
 	{
 		m_serviceLayerIds.insert(iter, id);
+	}
+}
+
+void ServiceManager::streamServiceInformation(std::ostream& stream) const
+{
+	for (const auto& item : m_services)
+	{
+		const auto& aggregate = item.second;
+		const auto serviceStat = aggregate.m_service->getStatistics();
+		const auto& messageStat = serviceStat.getMessageStatistics();
+
+		stream << "---------------------------------------------------------------" << std::endl;
+		stream << "Service: " << serviceStat.name() << std::endl;
+
+		for (const auto& msg : messageStat)
+		{
+			stream << std::left <<
+					"Message: " << std::setw(4) << msg.second.id() <<
+					std::setw(12) << TBOX_STRINGIFY(" (#" << serviceStat.getMessageCount() << ")") <<
+					std::setw(11) << "Last [us]" <<
+					std::setw(10) << "Min [us]" <<
+					std::setw(14) << "Average [us]" <<
+					std::setw(10) << "Max [us]" <<
+					std::setw(14) << "Std dev [us]" << std::endl;
+
+			stream << std::left <<
+					std::setw(25) << "Latency" <<
+					std::setw(11) << msg.second.lastLatency().count() <<
+					std::setw(10) << msg.second.minLatency().count() <<
+					std::setw(14) << msg.second.averageLatency().count() <<
+					std::setw(10) << msg.second.maxLatency().count() <<
+					std::setw(14) << msg.second.stdDeviationLatency().count() << std::endl;
+
+			stream << std::left <<
+					std::setw(25) << "Duration" <<
+					std::setw(11) << msg.second.lastDuration().count() <<
+					std::setw(10) << msg.second.minDuration().count() <<
+					std::setw(14) << msg.second.averageDuration().count() <<
+					std::setw(10) << msg.second.maxDuration().count() <<
+					std::setw(14) << msg.second.stdDeviationDuration().count() << std::endl;
+
+			if (msg.second.isPeriodic())
+			{
+				stream << std::left <<
+						std::setw(25) << "Period" <<
+						std::setw(11) << msg.second.lastPeriod().count() <<
+						std::setw(10) << msg.second.minPeriod().count() <<
+						std::setw(14) << msg.second.averagePeriod().count() <<
+						std::setw(10) << msg.second.maxPeriod().count() <<
+						std::setw(14) << msg.second.stdDeviationPeriod().count() << std::endl;
+			}
+
+			stream << std::left <<
+					std::setw(25) << "Queue Depth" <<
+					std::setw(11) << msg.second.lastQueueDepth() <<
+					std::setw(10) << msg.second.minQueueDepth() <<
+					std::setw(14) << msg.second.averageQueueDepth() <<
+					std::setw(10) << msg.second.maxQueueDepth() <<
+					std::setw(14) << msg.second.stdDeviationQueueDepth() << std::endl;
+		}
 	}
 }
 

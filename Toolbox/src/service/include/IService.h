@@ -26,6 +26,7 @@ public:
 	virtual const std::string& name() const = 0;
 	virtual void start(ServiceAllocator& allocator) = 0;
 	virtual void stop(ServiceAllocator& allocator) = 0;
+	virtual void signalServicesReady() = 0;
 };
 
 #endif /* TBOX_ISERVICE_H_ */

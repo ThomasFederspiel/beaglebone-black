@@ -16,15 +16,16 @@
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 // project
 #include "exceptionMacros.h"
+#include "ICUIManager.h"
 
 // local
 #include "AbstractService.h"
 
 class ICUICommand;
-class ICUIManager;
 class IService;
 class ServiceAllocator;
 
@@ -107,13 +108,16 @@ public:
 		return std::dynamic_pointer_cast<T>(getService(name));
 	}
 
-	void registerCommand(std::unique_ptr<ICUICommand> command);
-	void unregisterCommand(const ICUICommand& command);
+	ICUIManager::hcui_t registerCommand(std::unique_ptr<ICUICommand> command);
+	ICUIManager::hcui_t registerCommands(std::vector<std::unique_ptr<ICUICommand>>& commands);
+	void unregisterCommand(const ICUIManager::hcui_t handle);
 
 	void setCUIManager(std::shared_ptr<ICUIManager> manager);
 
 	void startServices();
 	void stopServices();
+
+	void streamServiceInformation(std::ostream& stream) const;
 
 private:
 
@@ -151,6 +155,7 @@ private:
 
 	void initServices();
 	void runServices();
+	void signalServicesReady();
 
 	void setState(const State state) const
 	{

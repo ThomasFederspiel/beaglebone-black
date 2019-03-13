@@ -9,15 +9,20 @@
 #define TBOX_THREADWRAPPER_H_
 
 // standard
+#include <atomic>
 #include <memory>
 #include <string>
 #include <thread>
+
+// linux
+#include <sys/types.h>
 
 // local
 #include "IRunnable.h"
 #include "Publisher.h"
 #include "Subscriber.h"
 
+class ProcTaskStat;
 class ThreadFactory;
 class ThreadWrapper;
 
@@ -30,7 +35,7 @@ public:
 	virtual void onTerminated(ThreadWrapper& thread) = 0;
 };
 
-class ThreadWrapper final : public tbox::Publisher<IThreadWrapperSubscriber>
+class ThreadWrapper final : public tbox::Publisher<IThreadWrapperSubscriber>, IRunnable::IScheduler
 {
 public:
 
@@ -55,7 +60,21 @@ public:
 
 	void operator()();
 
+	// Interface IRunner::IScheduler
+	void setPolicy(IRunnable::IScheduler::SchedulerPolicy policy, int priority) override;
+	void setPriority(int priority) override;
+	SchedulerPolicy getPolicy() const override;
+	int getPriority() const override;
+
+	pid_t getTid() const
+	{
+		return m_tid;
+	}
+
+	float getCpuUsage();
+
 private:
+	void setScheduler();
 	void onTerminated();
 	void notifyTerminated();
 
@@ -64,6 +83,8 @@ private:
 	ThreadFactory& m_threadFactory;
 
 	std::unique_ptr<std::thread> m_thread;
+	std::atomic<pid_t> m_tid;
+	mutable std::unique_ptr<ProcTaskStat> m_taskStat;
 };
 
 #endif /* TBOX_THREADWRAPPER_H_ */

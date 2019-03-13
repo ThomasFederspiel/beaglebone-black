@@ -26,7 +26,8 @@ public:
 		StartMessage = -10,
 		StopMessage,
 		ShutdownMessage,
-		AsyncTaskMessage
+		AsyncTaskMessage,
+		ServicesReadyMessage
 	};
 
 	static const char* toString(const MessageType_t type)
@@ -38,6 +39,7 @@ public:
 			CASE(Type::StopMessage)
 			CASE(Type::ShutdownMessage)
 			CASE(Type::AsyncTaskMessage)
+			CASE(Type::ServicesReadyMessage)
 		}
 		static std::string tmp = std::to_string(static_cast<int>(type));
 		return tmp.c_str();

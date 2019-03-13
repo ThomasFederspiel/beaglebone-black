@@ -9,6 +9,7 @@
 
 // standard
 #include <exception>
+#include <chrono>
 #include <string>
 #include <thread>
 
@@ -18,6 +19,7 @@
 #include "ServiceMessageBase.h"
 #include "StartServiceMessage.h"
 #include "StopServiceMessage.h"
+#include "ServicesReadyMessage.h"
 #include "SystemMessage.h"
 #include "SystemMessageTypes.h"
 
@@ -28,14 +30,25 @@
 
 MODULE_LOG(AbstractService);
 
-AbstractService::AbstractService(const std::string& name) : m_name(name), m_state(ServiceState::Created), m_threadId(), m_queue(),
-		m_terminate(false), m_lock(), m_signal(), m_workerThreadManager()
+namespace
+{
+	static const std::chrono::milliseconds HolfOffDuration(1000);
+	static constexpr bool HoldOff = true;
+}
+
+AbstractService::AbstractService(const std::string& name) : AbstractRunnable(), m_name(name), m_state(ServiceState::Created), m_threadId(), m_queue(),
+		m_terminate(false), m_lock(), m_signal(), m_workerThreadManager(), m_statistics(name, HoldOff)
 {
 }
 
 const std::string& AbstractService::name() const
 {
 	return m_name;
+}
+
+ServiceStatistics AbstractService::getStatistics()
+{
+	return m_statistics.clone();
 }
 
 bool AbstractService::isStopRequested() const
@@ -79,17 +92,30 @@ void AbstractService::stop(ServiceAllocator& allocator)
 	postInternal(StopServiceMessage(allocator));
 }
 
-void AbstractService::createWorker(WorkerThreadManager::IWorkerRunnable& runnable)
+void AbstractService::signalServicesReady()
+{
+	TB_ASSERT(state() == ServiceState::Running,
+		"Service " << name() << ", state = " << toString(state()));
+
+	postInternal(ServicesReadyMessage());
+}
+
+void AbstractService::createWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable)
 {
 	m_workerThreadManager.createWorker(runnable);
 }
 
-void AbstractService::stopWorker(WorkerThreadManager::IWorkerRunnable& runnable)
+void AbstractService::stopWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable)
 {
 	m_workerThreadManager.stopWorker(runnable);
 }
 
-bool AbstractService::isWorkerActive(WorkerThreadManager::IWorkerRunnable& runnable)
+void AbstractService::startWorker(WorkerThreadManager::AbstractWorkerRunnable& runnable)
+{
+	m_workerThreadManager.startWorker(runnable);
+}
+
+bool AbstractService::isWorkerActive(WorkerThreadManager::AbstractWorkerRunnable& runnable)
 {
 	return m_workerThreadManager.isWorkerActive(runnable);
 }
@@ -104,15 +130,18 @@ void AbstractService::post(const ServiceMessageBase& message)
 
 void AbstractService::postInternal(const ServiceMessageBase& message)
 {
-	m_queue.put(message.clone());
+	auto msgClone = message.clone();
+
+	msgClone->setPostTimePoint();
+
+	m_queue.put(std::move(msgClone));
 }
 
 void AbstractService::waitOnStart()
 {
 	std::unique_ptr<ServiceMessageBase> message = m_queue.get();
 
-	TB_ASSERT(message->isSystemMessage(),
-			"Service " << name());
+	TB_ASSERT(message->isSystemMessage(), "Service " << name());
 
 	const StartServiceMessage* startMessage = nullptr;
 	// TODO: Create instanceof that takes smart pointers
@@ -137,6 +166,14 @@ void AbstractService::onSystemMessage(ServiceMessageBase& message)
 	case SystemMessageTypes::Type::StopMessage:
 	{
 		onStopMessage(message);
+	}
+	break;
+
+	case SystemMessageTypes::Type::ServicesReadyMessage:
+	{
+		m_statistics.clearHoldoff();
+
+		onServicesReadyMessage(message);
 	}
 	break;
 
@@ -172,7 +209,7 @@ void AbstractService::onStopMessage(ServiceMessageBase& message)
 			&& (tries > 0))
 	{
 		// Needed as to avoid link problem as get() needs reference to argument
-		const auto time = SStopWaitDelay;
+		const auto time = StopWaitDelay;
 
 		auto getStatus = m_queue.get(time);
 
@@ -233,7 +270,16 @@ void AbstractService::operator()()
 			}
 			else
 			{
+				const auto start = std::chrono::steady_clock::now();
+				const auto latency = start - message->getPostTimePoint();
+
 				onMessage(*message);
+
+				const auto end = std::chrono::steady_clock::now();
+
+				const auto duration = end - start;
+
+				m_statistics.update(*message, duration, latency, m_queue.size() + 1);
 			}
 		}
 

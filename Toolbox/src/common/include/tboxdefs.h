@@ -14,12 +14,6 @@
 
 namespace tbox
 {
-	template<typename T, typename... Ts>
-	inline std::unique_ptr<T> make_unique(Ts&&... params)
-	{
-		return std::unique_ptr<T>(new T(std::forward<Ts>(params)...));
-	}
-
 	template<typename T>
 	inline std::unique_ptr<T[]> make_unique_array(const std::size_t size)
 	{

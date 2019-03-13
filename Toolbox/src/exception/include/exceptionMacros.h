@@ -54,7 +54,7 @@ extern void tbAssertHook();
 			if (BOOST_UNLIKELY(!(expr)))	\
 			{								\
 				tbAssertHook();				\
-				TB_ERROR(fmt, msg);			\
+				TB_ERRORF(fmt, msg);			\
 			}								\
 		} while (0);
 #else
@@ -81,7 +81,7 @@ extern void tbAssertHook();
 		{									\
 			if (BOOST_UNLIKELY(!(expr)))	\
 			{								\
-				TB_ERROR(fmt, msg);			\
+				TB_ERRORF(fmt, msg);			\
 			}								\
 		} while (0);
 #endif
