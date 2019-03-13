@@ -5,8 +5,9 @@
  *      Author: Thomas
  */
 
-#include "pru_iep.hp"
+#include <stddef.h>
 
+#include "pru_iep.hp"
 #include "pru_reg.hp"
 
 #define IEP_COMPEN_ZERO	0x00
@@ -32,13 +33,93 @@
 #define IEP_CMP6_ENABLE 0x40
 #define IEP_CMP7_ENABLE 0x80
 
-
 #define IEP_SEL_IEP_CLK	0x00
 #define IEP_SEL_OCP_CLK	BIT(1)
+
+#define IEP_CLOCK_INC_CNT 1
+#define IEP_CLOCK_PERIOD_US 1000
+
+#define SLOT_COUNT_10_MS 10 / (IEP_CLOCK_PERIOD_US / 1000)
+
+struct TimerSlot
+{
+	uint8_t m_slotCounter;
+	uint8_t m_defaultCount;
+	timeSlotCallback_t m_callback;
+};
+
+struct TimerSlot m_timerSlots[] =
+{
+	{ SLOT_COUNT_10_MS, SLOT_COUNT_10_MS, NULL },
+	{ 0, 0, NULL }
+};
+
+static uint32_t m_counter_ms = 0;
 
 static void setIepClock(const uint8_t clk)
 {
 	CT_CFG.IEPCLK = clk;
+}
+
+static void processTimerSlots()
+{
+	struct TimerSlot* slot = m_timerSlots;
+	
+	while (slot->m_callback)
+	{
+		--slot->m_slotCounter;
+		
+		if (slot->m_slotCounter == 0)
+		{
+			slot->m_slotCounter = slot->m_defaultCount;
+			
+			slot->m_callback();
+		}
+		
+		++slot;
+	}
+}
+
+bool setupIepClock()
+{
+	return setupIepTimer(IEP_CLOCK_INC_CNT, IEP_CMP_COUNT_USEC_ARG2(IEP_CLOCK_PERIOD_US, IEP_CLOCK_INC_CNT));
+}
+
+void startIepClock()
+{
+	m_counter_ms = 0;
+	
+	enableIepTimer(true);
+}
+
+void stopIepClock()
+{
+	enableIepTimer(false);
+}
+
+void processIepClockInterrupt()
+{
+	if (CT_IEP.TMR_CMP_STS_bit.CMP_HIT)
+	{
+		++m_counter_ms;
+		
+		acknowledgeIepTimer();
+		
+		processTimerSlots();
+	}
+}
+
+void getIepClockTime(uint32_t* const time_ms, uint32_t* const time_ns)
+{
+	processIepClockInterrupt();
+	
+	*time_ms = m_counter_ms;
+	*time_ns = CT_IEP.TMR_CNT;
+}
+
+void setTimerSlotCallback(const IEPTimeSlot timeSlot, timeSlotCallback_t callback)
+{
+	m_timerSlots[timeSlot].m_callback = callback;
 }
 
 bool setupIepTimer(const uint8_t inc, const uint32_t cnt)
@@ -54,11 +135,11 @@ bool setupIepTimer(const uint8_t inc, const uint32_t cnt)
  	/* Clear overflow status register */
  	CT_IEP.TMR_GLB_STS_bit.CNT_OVF = IEP_GLOBAL_STATUS_OVF;
  
- 	// Counter ranges 
- 	// 0 - 21 474 836 475 ns, def_cnt = 1
- 	//   - 42 949 672 950 ns, def_cnt = 2
+ 	// Counter ranges (200 MHz)
+ 	// 0 - 21 474 836 475 ns, res = 5 ns, def_cnt = 1
+ 	//   - 10 737 418 238 ns, res = 2.5 ns, def_cnt = 2
  	// ...
- 	//   - 343 597 383 600 ns, def cnt = 16
+ 	//   -  1 342 177 280 ns, res = 0.3125 ns, def cnt = 16
  	if (inc > 16)
  	{
  		return false;

@@ -22,7 +22,7 @@
 #include "IPCResponseBase.h"
 #include "pru_ipc_devices.hp"
 #include "pru_ipc_types.hp"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 using namespace pruipcservice;
 
@@ -41,7 +41,7 @@ public:
 
 		std::unique_ptr<ServiceMessageBase> clone() const override
 		{
-			return tbox::make_unique<ProxyMessageCompleted>(*this);
+			return std::make_unique<ProxyMessageCompleted>(*this);
 		}
 
 		IPCDeviceEnum device() const
@@ -103,7 +103,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<IPCDeviceProxyMessage>(*this);
+		return std::make_unique<IPCDeviceProxyMessage>(*this);
 	}
 
 	uint8_t size() const

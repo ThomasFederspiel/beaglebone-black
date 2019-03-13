@@ -9,6 +9,7 @@
 
 // standard
 #include <cstring>
+#include <cstdint>
 #include <limits>
 
 // system
@@ -16,7 +17,7 @@
 
 // project
 #include "exceptionMacros.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 // local
 #include "ChunkAllocator.h"
@@ -25,7 +26,7 @@ DDRMemory::DDRMemory() : m_base(0), m_size(0), m_allocator()
 {
 	getDDRInfo();
 
-	m_allocator = tbox::make_unique<ChunkAllocator>(*this, baseAddress(), size());
+	m_allocator = std::make_unique<ChunkAllocator>(*this, baseAddress(), size());
 }
 
 std::shared_ptr<IMemory> DDRMemory::allocateMemoryChunk(const std::size_t size)
@@ -63,8 +64,9 @@ void DDRMemory::read(void* const dest, const std::size_t offset, const std::size
 	prussdrv_map_extmem((void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(dest, ptr + offset, size);
+	std::memcpy(dest, ptr + offset, size);
 }
 
 void DDRMemory::write(const void* const source, const std::size_t offset, const std::size_t size)
@@ -78,8 +80,9 @@ void DDRMemory::write(const void* const source, const std::size_t offset, const 
 	prussdrv_map_extmem((void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(ptr + offset, source, size);
+	std::memcpy(ptr + offset, source, size);
 }
 
 void DDRMemory::fill(const uint8_t value, const std::size_t offset, const std::size_t size)
@@ -98,8 +101,9 @@ void DDRMemory::fill(const uint8_t value, const std::size_t offset, const std::s
 	prussdrv_map_extmem((void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memset(ptr + offset, value, realSize);
+	std::memset(ptr + offset, value, realSize);
 }
 
 void DDRMemory::getDDRInfo()

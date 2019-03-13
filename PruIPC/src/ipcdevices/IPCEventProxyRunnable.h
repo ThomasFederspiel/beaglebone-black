@@ -23,7 +23,7 @@
 class AbstractEventDefinition;
 class AbstractService;
 
-class IPCEventProxyRunnable : public WorkerThreadManager::IWorkerRunnable
+class IPCEventProxyRunnable : public WorkerThreadManager::AbstractWorkerRunnable
 {
 public:
 
@@ -53,6 +53,7 @@ private:
 	void readPruEvents();
 	uint32_t processPruEvent(const IPCDeviceIoctl& device, const uint32_t offset);
 	void acknowledge();
+	void enableBuffer();
 	bool hasOverflown();
 	void stopBuffer();
 	bool isBufferActive();

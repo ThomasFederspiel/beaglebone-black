@@ -30,7 +30,8 @@ public:
 		IPCDeviceProxyMessage = exports::MessageTypes::IPCDeviceProxyMessage,
 		IPCDeviceProxyMessageCompleted = exports::MessageTypes::IPCDeviceProxyMessageCompleted,
 		IPCDeviceProxyEventEQEP = exports::MessageTypes::IPCDeviceProxyEventEQEP,
-		IPCDeviceProxyEventTrace = exports::MessageTypes::IPCDeviceProxyEventTrace
+		IPCDeviceProxyEventTrace = exports::MessageTypes::IPCDeviceProxyEventTrace,
+		IPCDeviceProxyEventOdo = exports::MessageTypes::IPCDeviceProxyEventOdo
 	};
 
 	static const char* toString(const MessageType_t id)

@@ -67,7 +67,7 @@ void initIPCHostDirectionalDispatcher(const uint8_t acknowledgeEvent)
 	m_fillBufferPtr = m_buffers[m_bufferIndex].start;
 	m_fillBufferEndPtr = m_buffers[m_bufferIndex].end;
 	m_ipcHostDirectionalChannelContextPtr->transmitBufferIndex = UNDEFINED_INDEX;
-	m_ipcHostDirectionalChannelContextPtr->transmitRegister = 0x0000;
+	m_ipcHostDirectionalChannelContextPtr->transmitRegister = TRANSMIT_BUFFER_DISABLED_REG_MASK;
 }
 
 void IPCHostDirectionalDispatcher()
@@ -108,35 +108,44 @@ void IPCHostDirectionalDispatcher()
 		return;
 	}
 	
-	if (m_ipcHostDirectionalChannelContextPtr->transmitRegister & TRANSMIT_BUFFER_STOP_REG_MASK)
+	if (m_ipcHostDirectionalChannelContextPtr->transmitRegister & TRANSMIT_BUFFER_TERMINATE_REG_MASK)
 	{
-		m_ipcHostDirectionalChannelContextPtr->transmitRegister = TRANSMIT_BUFFER_STOPPED_REG_MASK;
+		m_ipcHostDirectionalChannelContextPtr->transmitRegister = TRANSMIT_BUFFER_TERMINATED_REG_MASK;
 		
 		fireArmInterrupt(m_hostDirectionalAcknowledgeEvent);
+		
+		return;
 	}
 }
 
 void sendIPCToHost(const void* const data, const uint8_t size)
 {
-	if (!m_fillBufferOverflow)
+	if (m_ipcHostDirectionalChannelContextPtr->transmitRegister & TRANSMIT_BUFFER_DISABLED_REG_MASK)
 	{
-		const IPCBufferPtr bufferPos = m_fillBufferPtr;
-				
-		m_fillBufferPtr += size;
-		
-		if (m_fillBufferPtr < m_fillBufferEndPtr)
-		{
-			m_fillBufferActive = true;
+		return;
+	}
+	
+	if (m_fillBufferOverflow)
+	{
+		return;
+	}
 
-			// Using custom memcpy as pru library memcpy copies more bytes than specified and 
-			// overwrites memory.
-			custom_memcpy(bufferPos, (uint8_t*) data, size);
-		}
-		else
-		{
-			m_fillBufferOverflow = true;
-			m_fillBufferPtr = bufferPos;
-		}
+	const IPCBufferPtr bufferPos = m_fillBufferPtr;
+			
+	m_fillBufferPtr += size;
+	
+	if (m_fillBufferPtr < m_fillBufferEndPtr)
+	{
+		m_fillBufferActive = true;
+
+		// Using custom memcpy as pru library memcpy copies more bytes than specified and 
+		// overwrites memory.
+		custom_memcpy(bufferPos, (uint8_t*) data, size);
+	}
+	else
+	{
+		m_fillBufferOverflow = true;
+		m_fillBufferPtr = bufferPos;
 	}
 }
 

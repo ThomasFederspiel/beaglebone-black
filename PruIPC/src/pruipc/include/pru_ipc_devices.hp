@@ -20,6 +20,14 @@ enum IPCDeviceEnum
 	IPCDeviceTrace
 };
 
-extern const char* toDeviceString(const enum IPCDeviceEnum device);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const char* toDeviceString(const enum IPCDeviceEnum device);
+	
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PRU_IPC_DEVICES_HP_ */

@@ -27,26 +27,26 @@ enum IPCDeviceEPwmIoctlEnum
 	IPCDeviceEPwm_SetPin
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_Close
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_Close
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_Open
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_Open
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_Enable
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_Enable
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	uint16_t /* EPwmChannelEnum */ pwmCh;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_Disable
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_Disable
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
@@ -54,7 +54,7 @@ struct __attribute__((__packed__)) IPCDeviceEPwm_Disable
 	uint8_t /* bool */ outputHigh;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_ArmRaw
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_ArmRaw
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
@@ -63,14 +63,14 @@ struct __attribute__((__packed__)) IPCDeviceEPwm_ArmRaw
 	uint8_t hspClkDiv;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_SetFreq
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_SetFreq
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	uint16_t periodCntr;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_SetDuty
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_SetDuty
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
@@ -78,7 +78,7 @@ struct __attribute__((__packed__)) IPCDeviceEPwm_SetDuty
 	uint16_t onTime;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEPwm_SetPin
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEPwm_SetPin
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;

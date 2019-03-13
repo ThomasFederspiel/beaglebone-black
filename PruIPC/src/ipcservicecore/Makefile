@@ -8,4 +8,5 @@ CPP_FILES = $(wildcard *.cpp)
 
 STATIC_LIBRARY := libpruipcservicecore.a
 
-include ../../mk/top.mk
+#include ../../mk/top.mk
+include $(MK_DIR)/top.mk

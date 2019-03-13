@@ -53,7 +53,7 @@ IPCDeviceProxyService::IPCDeviceProxyService(const std::string& name, const Prus
 
 	if (hostDirectionEventChannel)
 	{
-		m_ipcEventProxyRunnable = tbox::make_unique<IPCEventProxyRunnable>(TBOX_STRINGIFY(name << " - "<< IPCEventRunnableName), *this, pruId,
+		m_ipcEventProxyRunnable = std::make_unique<IPCEventProxyRunnable>(TBOX_STRINGIFY(name << " - "<< IPCEventRunnableName), *this, pruId,
 				hostDirectionEventChannel);
 	}
 }
@@ -90,6 +90,11 @@ IPCDeviceProxyService::StopStatus IPCDeviceProxyService::onStop(ServiceAllocator
 	return StopStatus::Done;
 }
 
+void IPCDeviceProxyService::onServicesReadyMessage(ServiceMessageBase& message)
+{
+	startWorker(*m_ipcEventProxyRunnable);
+}
+
 void IPCDeviceProxyService::onMessage(const IPCMessageBase& message)
 {
 	INFO("Got message " << IPCMessageTypes::toString(message.getType()));
@@ -113,15 +118,14 @@ void IPCDeviceProxyService::onMessage(const IPCMessageBase& message)
 
 void IPCDeviceProxyService::sendSyncIPCMessage(const uint8_t* const message, const uint8_t size)
 {
-	INFO("Sending IPC message to device " << toDeviceString(static_cast<enum IPCDeviceEnum>(reinterpret_cast<const struct IPCDeviceIoctl*>(message)->device)));
+	// Message need to be byte aligned as to avoid alignment trap
+	TB_ASSERT(size % 2 == 0);
 
 	m_ipcBiDirectionalChannelContext->write(message, offsetof(struct IPCBiDirectionalChannelContext, rxBuffer), size);
 
 	writeEOB(size);
 
 	m_eventChannel->sendWaitEvent();
-
-	INFO("Send completed");
 }
 
 void IPCDeviceProxyService::writeEOB(const std::size_t address)

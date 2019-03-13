@@ -16,7 +16,8 @@
 typedef uint32_t device_t;
 typedef uint32_t ioctl_t;
 
-struct  __attribute__((__packed__)) IPCDeviceIoctl
+// struct  __attribute__((__packed__)) IPCDeviceIoctl
+struct IPCDeviceIoctl
 {
 	device_t device;
 	ioctl_t ioctl;
@@ -28,19 +29,20 @@ typedef uint8_t* IPCBufferPtr;
 #define PRU_IPC_RX_BUFFER_SIZE		128
 #define PRU_IPC_TX_BUFFER_SIZE		128
 
-#define OVERFLOW_CTRL_BYTES			1
+#define OVERFLOW_CTRL_BYTES			4
 #define PRU_IPC_RX_BUFFER_EXTENDED_SIZE		PRU_IPC_RX_BUFFER_SIZE + sizeof(IPC_EOB) + OVERFLOW_CTRL_BYTES
 #define PRU_IPC_TX_BUFFER_EXTENDED_SIZE		PRU_IPC_TX_BUFFER_SIZE + sizeof(IPC_EOB) + OVERFLOW_CTRL_BYTES
 
 #define TRANSMIT_BUFFER_ACTIVE_REG_MASK				BIT(0)
 #define TRANSMIT_BUFFER_ACKNOWLEDGE_REG_MASK		BIT(1)
 #define TRANSMIT_BUFFER_OVERFLOW_REG_MASK			BIT(2)
-#define TRANSMIT_BUFFER_STOP_REG_MASK				BIT(3)
-#define TRANSMIT_BUFFER_STOPPED_REG_MASK			BIT(4)
+#define TRANSMIT_BUFFER_TERMINATE_REG_MASK			BIT(3)
+#define TRANSMIT_BUFFER_TERMINATED_REG_MASK			BIT(4)
+#define TRANSMIT_BUFFER_DISABLED_REG_MASK			BIT(5)
 
 typedef uint32_t TransmitRegister;
 
-struct __attribute__((__packed__)) IPCBiDirectionalChannelContext
+struct __attribute__((__packed__, aligned(4))) IPCBiDirectionalChannelContext
 {
 	TransmitRegister transmitRegister;
 	uint8_t rxBuffer[PRU_IPC_RX_BUFFER_SIZE];
@@ -49,7 +51,7 @@ struct __attribute__((__packed__)) IPCBiDirectionalChannelContext
 
 #define UNDEFINED_INDEX				0xFF
 
-struct __attribute__((__packed__)) IPCHostDirectionalChannelContext
+struct __attribute__((__packed__, aligned(4))) IPCHostDirectionalChannelContext
 {
 	TransmitRegister transmitRegister;
 	uint32_t transmitBufferIndex;

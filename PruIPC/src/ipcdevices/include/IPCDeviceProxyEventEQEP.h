@@ -1,5 +1,5 @@
 /*
- * IPCDeviceProxyEventECQEP.h
+ * IPCDeviceProxyEventEQEP.h
  *
  *  Created on: 25 mar 2016
  *      Author: Thomas
@@ -18,14 +18,13 @@
 // project
 #include "ServiceMessageBase.h"
 #include "IPCMessageTypes.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 // local
 #include "IPCDeviceProxyEventBase.h"
 
 #include "pru_ipc_device_eqep_types.hp"
 #include "pru_ipc_devices.hp"
-#include "pru_ipc_types.hp"
 #include "pru_ipc_types.hp"
 #include "pru_pwms_types.hp"
 #include "pru_eqep_types.hp"
@@ -41,19 +40,21 @@ public:
 	static constexpr IPCDeviceEnum PruDevice = IPCDeviceEQep;
 	static constexpr ioctl_t PruIoctl = IPCDeviceEQep_Status;
 
-	IPCDeviceProxyEventEQEP() : IPCDeviceProxyEventBase(EventMessageType),
-		m_pwmssDevice(PwmssDeviceEnum::LAST_PWM_DEV), m_capCounter(0), m_capTime(0), m_capPeriod(0),
-		m_capStatus(0), m_intrStatus(0), m_counter(0), m_unitTime_ms(0), m_ueventPulses(0),
+	IPCDeviceProxyEventEQEP() : IPCDeviceProxyEventBase(EventMessageType, IPCDeviceProxyEventBase::PeriodicMessage),
+	    m_pruTime_ns(0), m_pwmssDevice(PwmssDeviceEnum::LAST_PWM_DEV), m_capCounter(0), m_capTime(0),
+	    m_capPeriod(0), m_capStatus(0), m_intrStatus(0), m_counter(0), m_unitTime_ms(0), m_ueventPulses(0),
 		m_captureTimeTick_ns(0)
 	{
 	}
 
 	explicit IPCDeviceProxyEventEQEP(const PrussDriver::PruProxy::PruIdEnum pruId,
-			const pruEvenType_t& eCapStatus) : IPCDeviceProxyEventBase(EventMessageType, pruId),
-		m_pwmssDevice(static_cast<decltype(m_pwmssDevice)>(eCapStatus.pwmssDevice)), m_capCounter(eCapStatus.capCounter), m_capTime(eCapStatus.capTime), m_capPeriod(eCapStatus.capPeriod),
-		m_capStatus(eCapStatus.capStatus), m_intrStatus(eCapStatus.intrStatus), m_counter(eCapStatus.counter),
-		m_unitTime_ms(eCapStatus.unitTime_ms), m_ueventPulses(eCapStatus.ueventPulses),
-		m_captureTimeTick_ns(eCapStatus.captureTimeTick_ns)
+			const pruEvenType_t& eQepStatus) : IPCDeviceProxyEventBase(EventMessageType, IPCDeviceProxyEventBase::PeriodicMessage, pruId),
+		m_pruTime_ns(evalPruClock(eQepStatus.pruClock)),
+		m_pwmssDevice(static_cast<decltype(m_pwmssDevice)>(eQepStatus.pwmssDevice)),
+		m_capCounter(eQepStatus.capCounter), m_capTime(eQepStatus.capTime), m_capPeriod(eQepStatus.capPeriod),
+		m_capStatus(eQepStatus.capStatus), m_intrStatus(eQepStatus.intrStatus), m_counter(eQepStatus.counter),
+		m_unitTime_ms(eQepStatus.unitTime_ms), m_ueventPulses(eQepStatus.ueventPulses),
+		m_captureTimeTick_ns(eQepStatus.captureTimeTick_ns)
 	{
 	}
 
@@ -69,6 +70,7 @@ public:
 		using std::swap;
 		swap(static_cast<IPCDeviceProxyEventBase&>(first), static_cast<IPCDeviceProxyEventBase&>(second));
 
+		swap(first.m_pruTime_ns, second.m_pruTime_ns);
 		swap(first.m_pwmssDevice, second.m_pwmssDevice);
 		swap(first.m_capCounter, second.m_capCounter);
 		swap(first.m_capTime, second.m_capTime);
@@ -83,12 +85,17 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<IPCDeviceProxyEventEQEP>(*this);
+		return std::make_unique<IPCDeviceProxyEventEQEP>(*this);
 	}
 
 	PwmssDeviceEnum getPwmssDevice() const
 	{
 		return m_pwmssDevice;
+	}
+
+	uint64_t getPruTime() const
+	{
+		return m_pruTime_ns;
 	}
 
 	uint32_t getCapCounter() const
@@ -145,6 +152,7 @@ public:
 	}
 
 private:
+	uint64_t m_pruTime_ns;
 	PwmssDeviceEnum m_pwmssDevice;
 	uint32_t m_capCounter;
 	uint32_t m_capTime;

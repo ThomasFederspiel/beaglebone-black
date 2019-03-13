@@ -16,7 +16,7 @@
 
 // project
 #include "exceptionMacros.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 namespace
 {
@@ -26,7 +26,7 @@ static constexpr std::size_t SHRAMSize = 12 * 1024;
 
 SHRAMMemory::SHRAMMemory() : m_allocator()
 {
-	m_allocator = tbox::make_unique<ChunkAllocator>(*this, baseAddress(), size());
+	m_allocator = std::make_unique<ChunkAllocator>(*this, baseAddress(), size());
 }
 
 std::shared_ptr<IMemory> SHRAMMemory::allocateMemoryChunk(const std::size_t size)
@@ -64,8 +64,9 @@ void SHRAMMemory::read(void* const dest, const std::size_t offset, const std::si
 	prussdrv_map_prumem(PRUSS0_SHARED_DATARAM, (void**) &ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(dest, ptr + offset, size);
+	std::memcpy(dest, ptr + offset, size);
 }
 
 void SHRAMMemory::write(const void* const source, const std::size_t offset, const std::size_t size)
@@ -79,8 +80,9 @@ void SHRAMMemory::write(const void* const source, const std::size_t offset, cons
 	prussdrv_map_prumem(PRUSS0_SHARED_DATARAM, (void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(ptr + offset, source, size);
+	std::memcpy(ptr + offset, source, size);
 }
 
 void SHRAMMemory::fill(const uint8_t value, const std::size_t offset, const std::size_t size)
@@ -99,6 +101,7 @@ void SHRAMMemory::fill(const uint8_t value, const std::size_t offset, const std:
 	prussdrv_map_prumem(PRUSS0_SHARED_DATARAM, (void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memset(ptr + offset, value, realSize);
+	std::memset(ptr + offset, value, realSize);
 }

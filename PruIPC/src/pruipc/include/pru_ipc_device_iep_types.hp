@@ -1,0 +1,19 @@
+/*
+ * pru_ipc_device_iep_types.hp
+ *
+ *  Created on: 4 jan 2016
+ *      Author: Thomas
+ */
+
+#ifndef PRU_IPC_DEVICE_IEP_TYPES_HP_
+#define PRU_IPC_DEVICE_IEP_TYPES_HP_
+
+#include <stdint.h>
+
+struct __attribute__((__packed__, aligned(4))) IPCDeviceIep_Clock
+{
+    uint32_t tick_ms;
+    uint32_t tick_ns;
+};
+
+#endif /* PRU_IPC_DEVICE_IEP_TYPES_HP_ */

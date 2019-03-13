@@ -14,9 +14,9 @@
 // project
 #include "PrussDriver.h"
 #include "pru_ipc_devices.hp"
-#include "tboxdefs.h"
 #include "ServiceMessageBase.h"
 #include "ServiceTypes.h"
+#include "stdExtension.h"
 
 class AbstractEventDefinition
 {
@@ -58,12 +58,14 @@ public:
 
 	uint32_t size() const override
 	{
+		static_assert(sizeof(typename M::pruEvenType_t) % 2 == 0, "Size of PRU event must be an even number of bytes");
+
 		return sizeof(typename M::pruEvenType_t);
 	}
 
 	std::unique_ptr<ServiceMessageBase> processEvent(const PrussDriver::PruProxy::PruIdEnum pruId, const uint8_t* data) const override
 	{
-		return tbox::make_unique<M>(pruId, *reinterpret_cast<const typename M::pruEvenType_t*>(data));
+		return std::make_unique<M>(pruId, *reinterpret_cast<const typename M::pruEvenType_t*>(data));
 	}
 };
 

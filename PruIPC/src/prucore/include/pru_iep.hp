@@ -11,20 +11,31 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+typedef void (*timeSlotCallback_t)();
 
 typedef enum
 {
-	IEP_TIME_SLOT_1_MS = 0,
-	IEP_TIME_SLOT_10_MS,
-	IEP_TIME_SLOT_100_MS,
-	IEP_TIME_SLOT_1_S
-} IEP_TIME_SLOT;
+	IEP_TIME_SLOT_10_MS = 0
+} IEPTimeSlot;
+
+#define MIN(a,b) \
+       ({ typeof (a) _a = (a); \
+           typeof (b) _b = (b); \
+         _a < _b ? _a : _b; })
 
 #define IEP_MAX_COUNTER 0xffffffff // 32 bit counter 
 #define IEP_CLOCK_CYCLE 5 // @ 200 MHz => 5 ns
 
-#define IEP_DEFAULT_INC_USEC(usec) ((uint64_t) usec) * 1000 / IEP_MAX_COUNTER / 5 + 1
-#define IEP_CMP_COUNT_USEC(usec) ((uint64_t) usec) * 1000 / IEP_CLOCK_CYCLE / (IEP_DEFAULT_INC_USEC(usec))
+#define IEP_DEFAULT_INC_USEC(usec) MIN(IEP_CLOCK_CYCLE * 1000 * IEP_MAX_COUNTER / ((uint64_t) usec), 16)
+#define IEP_CMP_COUNT_USE_ARG1C(usec) ((uint64_t) usec) * 1000 * (IEP_DEFAULT_INC_USEC(usec)) / IEP_CLOCK_CYCLE
+#define IEP_CMP_COUNT_USEC_ARG2(usec, inc) ((uint64_t) usec) * 1000 * inc / IEP_CLOCK_CYCLE
+
+bool setupIepClock();
+void startIepClock();
+void stopIepClock();
+void getIepClockTime(uint32_t* const time_ms, uint32_t* const time_ns);
+void processIepClockInterrupt();
+void setTimerSlotCallback(const IEPTimeSlot timeSlot, timeSlotCallback_t callback);
 
 bool setupIepTimer(const uint8_t inc, const uint32_t cnt);
 void enableIepTimer(const bool enable);

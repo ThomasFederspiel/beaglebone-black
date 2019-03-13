@@ -20,7 +20,7 @@
 #include "pru_ipc_types.hp"
 #include "PruEventDefinition.h"
 #include "PrussDriver.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 class IPCEventProxyRunnable;
 
@@ -47,6 +47,7 @@ protected:
 	void onMessage(const IPCMessageBase& message) override;
 	void onStart(ServiceAllocator& allocator) override;
 	StopStatus onStop(ServiceAllocator& allocator) override;
+	void onServicesReadyMessage(ServiceMessageBase& message) override;
 
 private:
 	void addPruEventDefinition(std::unique_ptr<AbstractEventDefinition> definition);
@@ -62,7 +63,7 @@ private:
 template <typename M>
 void IPCDeviceProxyService::addPruEventDefinition()
 {
-	addPruEventDefinition(tbox::make_unique<EventDefinition<M>>());
+	addPruEventDefinition(std::make_unique<EventDefinition<M>>());
 }
 
 #endif /* PRUIPC_IPCDEVICEPROXYERVICE_H_ */

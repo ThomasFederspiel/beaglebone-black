@@ -13,29 +13,31 @@
 #include "pru_ipc_types.hp"
 #include "pru_pwms_types.hp"
 #include "pru_eqep_types.hp"
+#include "pru_ipc_device_iep_types.hp"
 
 enum IPCDeviceEQepIoctlEnum
 {
 	IPCDeviceEQep_Open = 0,
 	IPCDeviceEQep_Close,
 	IPCDeviceEQep_Status,
+	IPCDeviceEQep_Odo,
 	IPCDeviceEQep_EnableQuadrature,
 	IPCDeviceEQep_disable
 };
 
-struct __attribute__((__packed__)) IPCDeviceEQep_Close
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_Close
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEQep_Open
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_Open
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEQep_EnableQuadrature
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_EnableQuadrature
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
@@ -48,17 +50,19 @@ struct __attribute__((__packed__)) IPCDeviceEQep_EnableQuadrature
 	uint16_t captureTimeTick_ns;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEQep_disable
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_disable
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 };
 
-struct __attribute__((__packed__)) IPCDeviceEQep_Status
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_Status
 {
 	struct IPCDeviceIoctl device;
 	uint16_t /* PwmssDeviceEnum */ pwmssDevice;
 	
+	struct IPCDeviceIep_Clock pruClock;
+
 	// Position counter value latched when unit time out has occured
 	uint32_t capCounter;
 	
@@ -78,6 +82,23 @@ struct __attribute__((__packed__)) IPCDeviceEQep_Status
 	uint16_t unitTime_ms;
 	uint16_t ueventPulses;
 	uint16_t captureTimeTick_ns;
+};
+
+struct __attribute__((__packed__, aligned(4))) IPCDeviceEQep_Odo
+{
+	struct IPCDeviceIoctl device;
+	
+	struct IPCDeviceIep_Clock pruClock;
+
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice_1;
+	
+	// Count of number of pulses, device 1
+	uint32_t counter_1;
+	
+	uint16_t /* PwmssDeviceEnum */ pwmssDevice_2;
+	
+	// Count of number of pulses, device 2
+	uint32_t counter_2;
 };
 
 #endif /* PRU_IPC_DEVICE_EQEP_TYPES_HP_ */

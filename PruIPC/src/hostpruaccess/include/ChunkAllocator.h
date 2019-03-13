@@ -98,7 +98,8 @@ public:
 		{
 			chunk = std::make_shared<MemoryChunk>(m_memory, m_baseAddress + m_allocOffset, m_allocOffset, size);
 
-			m_allocOffset += size;
+			// Keep offset byte aligned
+			m_allocOffset += size + size % 2;
 		}
 
 		return std::move(chunk);

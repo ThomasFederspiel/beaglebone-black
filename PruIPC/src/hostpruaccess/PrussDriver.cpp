@@ -19,7 +19,7 @@
 #include "Logger.h"
 #include "prussdrv/prussdrv.h"
 #include "prussdrv/pruss_intc_mapping.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 MODULE_LOG(PrussDriver);
 
@@ -476,6 +476,6 @@ DDRMemory& PrussDriver::getDDR()
 
 void PrussDriver::initShramAndDDR()
 {
-	m_shramMemory = tbox::make_unique<SHRAMMemory>();
-	m_ddrMemory = tbox::make_unique<DDRMemory>();
+	m_shramMemory = std::make_unique<SHRAMMemory>();
+	m_ddrMemory = std::make_unique<DDRMemory>();
 }

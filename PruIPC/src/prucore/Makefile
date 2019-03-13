@@ -10,4 +10,5 @@ PRU_CPP_FILES = $(wildcard *.pcpp)
 
 PRU_STATIC_LIBRARY := libprucore.lib
 
-include ../../mk/top.mk
+#include ../../mk/top.mk
+include $(MK_DIR)/top.mk

@@ -19,19 +19,19 @@ enum IPCDeviceGpioIoctlEnum
 	IPCDeviceGpio_Toggle
 };
 
-struct __attribute__((__packed__)) IPCDeviceGpio_Set
+struct __attribute__((__packed__, aligned(4))) IPCDeviceGpio_Set
 {
 	struct IPCDeviceIoctl device;
 	uint32_t pin;
 };
 
-struct __attribute__((__packed__)) IPCDeviceGpio_Clear
+struct __attribute__((__packed__, aligned(4))) IPCDeviceGpio_Clear
 {
 	struct IPCDeviceIoctl device;
 	uint32_t pin;
 };
 
-struct __attribute__((__packed__)) IPCDeviceGpio_Toggle
+struct __attribute__((__packed__, aligned(4))) IPCDeviceGpio_Toggle
 {
 	struct IPCDeviceIoctl device;
 	uint32_t pin;

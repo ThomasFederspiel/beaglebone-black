@@ -13,7 +13,7 @@
 
 // project
 #include "exceptionMacros.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 
 namespace
@@ -27,7 +27,7 @@ RAMMemory::RAMMemory(const RamIdEnum ramId) : m_ramId(ramId), m_allocator()
 {
 	TB_ASSERT(ramId < RamIdEOE);
 
-	m_allocator = tbox::make_unique<ChunkAllocator>(*this, baseAddress(), size());
+	m_allocator = std::make_unique<ChunkAllocator>(*this, baseAddress(), size());
 }
 
 std::shared_ptr<IMemory> RAMMemory::allocateMemoryChunk(const std::size_t size)
@@ -72,8 +72,9 @@ void RAMMemory::read(void* const dest, const std::size_t offset, const std::size
 	prussdrv_map_prumem(m_ramId, (void**) &ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(dest, ptr + offset, size);
+	std::memcpy(dest, ptr + offset, size);
 }
 
 void RAMMemory::write(const void* const source, const std::size_t offset, const std::size_t size)
@@ -87,8 +88,9 @@ void RAMMemory::write(const void* const source, const std::size_t offset, const 
 	prussdrv_map_prumem(m_ramId, (void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memcpy(ptr + offset, source, size);
+	std::memcpy(ptr + offset, source, size);
 }
 
 void RAMMemory::fill(const uint8_t value, const std::size_t offset, const std::size_t size)
@@ -107,6 +109,7 @@ void RAMMemory::fill(const uint8_t value, const std::size_t offset, const std::s
 	prussdrv_map_prumem(m_ramId, (void**)&ptr);
 
 	TB_ASSERT(ptr);
+	TB_ASSERT(reinterpret_cast<std::uintptr_t>(ptr + offset) % 2 == 0);
 
-	memset(ptr + offset, value, realSize);
+	std::memset(ptr + offset, value, realSize);
 }

@@ -14,20 +14,37 @@
 // project
 #include "ServiceMessageBase.h"
 #include "IPCMessageTypes.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
+
+#include "pru_ipc_device_iep_types.hp"
 
 using namespace pruipcservice;
+
+static constexpr uint64_t evalPruClock(const IPCDeviceIep_Clock& pruClock)
+{
+	return pruClock.tick_ms * 1000000 + pruClock.tick_ns;
+}
 
 class IPCDeviceProxyEventBase : public ServiceMessageBase
 {
 public:
-	IPCDeviceProxyEventBase(const MessageType_t eventMessageType) : ServiceMessageBase(eventMessageType),
-		m_pruId(PrussDriver::PruProxy::PruIdEnum::PruIdEOE)
+	explicit IPCDeviceProxyEventBase(const MessageType_t eventMessageType) :
+		ServiceMessageBase(eventMessageType), m_pruId(PrussDriver::PruProxy::PruIdEnum::PruIdEOE)
 	{
 	}
 
 	explicit IPCDeviceProxyEventBase(const MessageType_t eventMessageType, const PrussDriver::PruProxy::PruIdEnum pruId) :
 			ServiceMessageBase(eventMessageType), m_pruId(pruId)
+	{
+	}
+
+	explicit IPCDeviceProxyEventBase(const MessageType_t eventMessageType, const IPCDeviceProxyEventBase::properties_t properties) :
+		ServiceMessageBase(eventMessageType, properties), m_pruId(PrussDriver::PruProxy::PruIdEnum::PruIdEOE)
+	{
+	}
+
+	explicit IPCDeviceProxyEventBase(const MessageType_t eventMessageType, const IPCDeviceProxyEventBase::properties_t properties, const PrussDriver::PruProxy::PruIdEnum pruId) :
+			ServiceMessageBase(eventMessageType, properties), m_pruId(pruId)
 	{
 	}
 
@@ -53,7 +70,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<IPCDeviceProxyEventBase>(*this);
+		return std::make_unique<IPCDeviceProxyEventBase>(*this);
 	}
 
 private:

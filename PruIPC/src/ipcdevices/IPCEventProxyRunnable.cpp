@@ -10,6 +10,11 @@
 // standard
 #include <chrono>
 
+#ifdef INSTRUMENTATION_LTTNG
+// lttng
+#include <lttng/tracelog.h>
+#endif
+
 // project
 #include "AbstractService.h"
 #include "exceptionMacros.h"
@@ -17,6 +22,7 @@
 #include "Logger.h"
 #include "LoggerUtil.h"
 #include "pru_ipc_types.hp"
+#include "pru_ipc_devices.hp"
 #include "tboxdefs.h"
 
 // local
@@ -35,6 +41,9 @@ IPCEventProxyRunnable::IPCEventProxyRunnable(const std::string& name, IEventMess
 		m_eventRegistrationDone(false)
 {
 	TB_ASSERT(m_eventChannel != nullptr);
+
+	// ;+
+	//	setPolicy(IScheduler::POLICY_RR, 10);
 
 	PrussDriver& prussDrv = PrussDriver::instance();
 	m_ipcHostDirectionalChannelContext = prussDrv.getSHRAM().allocateMemoryChunk(sizeof(struct IPCHostDirectionalChannelContext));
@@ -104,11 +113,24 @@ void IPCEventProxyRunnable::stop()
 	stopBuffer();
 }
 
+
+#ifdef INSTRUMENTATION_LTTNG
+#include "StopWatch.h"
+static StopWatch<std::chrono::microseconds> w2;
+#endif
+
 void IPCEventProxyRunnable::operator()()
 {
+	enableBuffer();
+
 	while (!m_terminated)
 	{
 		m_eventChannel->waitEvent();
+
+#ifdef INSTRUMENTATION_LTTNG
+		w2.start();
+		tracelog(TRACE_INFO, "Start process pru event");
+#endif
 
 		if (!m_terminated)
 		{
@@ -118,6 +140,11 @@ void IPCEventProxyRunnable::operator()()
 				readPruEvents();
 			}
 		}
+
+#ifdef INSTRUMENTATION_LTTNG
+		const auto dur = w2.duration(true);
+		tracelog(TRACE_INFO, "End process pru event, time = %d ns", dur);
+#endif
 	}
 
 	const auto rc = m_eventChannel->close();
@@ -136,9 +163,6 @@ uint32_t IPCEventProxyRunnable::getTransmitBufferOffset()
 
 	TB_ASSERT(bufferIndex != UNDEFINED_INDEX);
 
-	// ;+
-	// INFO("bufferIndex = " << bufferIndex);
-
 	switch (bufferIndex)
 	{
 	case 0:
@@ -151,6 +175,8 @@ uint32_t IPCEventProxyRunnable::getTransmitBufferOffset()
 
 	TB_DEFAULT(bufferIndex);
 	}
+
+	TB_ASSERT(transmitBufferOffset % 2 == 0);
 
 	return transmitBufferOffset;
 }
@@ -170,23 +196,18 @@ void IPCEventProxyRunnable::readPruEvents()
 		m_ipcHostDirectionalChannelContext->read(&device, bufferOffset, sizeof(device));
 
 		if (device.device != IPC_EOB)
-
 		{
-			// ;+
-			// INFO("readPruEvents device = " << device.device);
-			// INFO("readPruEvents device = " << toDeviceString(static_cast<IPCDeviceEnum>(device.device)));
-
 			bufferOffset += processPruEvent(device, bufferOffset);
 		}
 	} while (device.device != IPC_EOB);
 
-	// ;+
-	// INFO("readPruEvents acknowledge");
 	acknowledge();
 }
 
 uint32_t IPCEventProxyRunnable::processPruEvent(const IPCDeviceIoctl& device, const uint32_t offset)
 {
+	TB_ASSERT(offset % 2 == 0);
+
 	auto deviceIter = m_eventDefinitionMap.find(static_cast<IPCDeviceEnum>(device.device));
 
 	TB_ASSERT(deviceIter != m_eventDefinitionMap.end(), "Device = " << device.device)
@@ -199,9 +220,7 @@ uint32_t IPCEventProxyRunnable::processPruEvent(const IPCDeviceIoctl& device, co
 
 	const auto size = action->size();
 	TB_ASSERT(size != 0);
-
-	// ;+
-	// INFO("size = " << size);
+	TB_ASSERT(size % 2 == 0);
 
 	uint8_t data[size];
 	m_ipcHostDirectionalChannelContext->read(data, offset, size);
@@ -229,7 +248,17 @@ void IPCEventProxyRunnable::stopBuffer()
 	TransmitRegister transmitRegister;
 	m_ipcHostDirectionalChannelContext->read(&transmitRegister, offsetof(struct IPCHostDirectionalChannelContext, transmitRegister), sizeof(TransmitRegister));
 
-	transmitRegister |= TRANSMIT_BUFFER_STOP_REG_MASK;
+	transmitRegister |= TRANSMIT_BUFFER_TERMINATE_REG_MASK;
+
+	m_ipcHostDirectionalChannelContext->write(&transmitRegister, offsetof(struct IPCHostDirectionalChannelContext, transmitRegister), sizeof(TransmitRegister));
+}
+
+void IPCEventProxyRunnable::enableBuffer()
+{
+	TransmitRegister transmitRegister;
+	m_ipcHostDirectionalChannelContext->read(&transmitRegister, offsetof(struct IPCHostDirectionalChannelContext, transmitRegister), sizeof(TransmitRegister));
+
+	transmitRegister &= ~TRANSMIT_BUFFER_DISABLED_REG_MASK;
 
 	m_ipcHostDirectionalChannelContext->write(&transmitRegister, offsetof(struct IPCHostDirectionalChannelContext, transmitRegister), sizeof(TransmitRegister));
 }
@@ -253,7 +282,7 @@ bool IPCEventProxyRunnable::isBufferActive()
 bool IPCEventProxyRunnable::isBufferCorrupted(const uint32_t bufferOffset)
 {
 	uint8_t checkPattern = 0;
-	m_ipcHostDirectionalChannelContext->read(&checkPattern, bufferOffset + PRU_IPC_TX_BUFFER_EXTENDED_SIZE - 1, sizeof(checkPattern));
+	m_ipcHostDirectionalChannelContext->read(&checkPattern, bufferOffset + PRU_IPC_TX_BUFFER_EXTENDED_SIZE - OVERFLOW_CTRL_BYTES, sizeof(checkPattern));
 
 	return checkPattern != CorruptCtrlValue;
 }

@@ -19,7 +19,7 @@
 // project
 #include "ServiceMessageBase.h"
 #include "IPCMessageTypes.h"
-#include "tboxdefs.h"
+#include "stdExtension.h"
 
 // local
 #include "IPCDeviceProxyEventBase.h"
@@ -54,7 +54,7 @@ public:
 	{
 		static_assert(sizeof(m_traceData) == sizeof(IPCDeviceTrace_Status::traceData), "Different sizes");
 
-		memcpy(m_traceData, traceStatus.traceData, sizeof(m_traceData));
+		std::memcpy(m_traceData, traceStatus.traceData, sizeof(m_traceData));
 	}
 
 	IPCDeviceProxyEventTrace& operator=(IPCDeviceProxyEventTrace idpe)
@@ -73,7 +73,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<IPCDeviceProxyEventTrace>(*this);
+		return std::make_unique<IPCDeviceProxyEventTrace>(*this);
 	}
 
 	const TraceDataType* getTrace() const

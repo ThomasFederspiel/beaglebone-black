@@ -17,7 +17,7 @@ enum IPCDeviceTraceIoctlEnum
 	IPCDeviceTrace_Status = 0
 };
 
-struct __attribute__((__packed__)) IPCDeviceTrace_Status
+struct __attribute__((__packed__, aligned(4))) IPCDeviceTrace_Status
 {
 	struct IPCDeviceIoctl device;
 	uint32_t traceData[6];
