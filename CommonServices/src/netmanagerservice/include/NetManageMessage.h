@@ -11,7 +11,6 @@
 // project
 #include "CommonMessageTypes.h"
 #include "ServiceMessageBase.h"
-#include "tboxdefs.h"
 
 class NetManageMessage final : public ServiceMessageBase
 {
@@ -56,7 +55,7 @@ public:
 
 	std::unique_ptr<ServiceMessageBase> clone() const override
 	{
-		return tbox::make_unique<NetManageMessage>(*this);
+		return std::make_unique<NetManageMessage>(*this);
 	}
 
 	static const char* toString(const Action action)
