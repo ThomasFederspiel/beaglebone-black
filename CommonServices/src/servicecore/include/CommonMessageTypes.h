@@ -34,6 +34,7 @@ public:
 		RightPropulsionOdometerMessage = exports::MessageTypes::RightPropulsionOdometerMessage,
 		LeftPropulsionPidMessage = exports::MessageTypes::LeftPropulsionPidMessage,
 		RightPropulsionPidMessage = exports::MessageTypes::RightPropulsionPidMessage,
+		DeadReckoningMessage = exports::MessageTypes::DeadReckoningMessage,
 		EOEMessage = exports::MessageTypes::EOEMessage
 	};
 
